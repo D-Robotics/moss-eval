@@ -1,0 +1,7 @@
+{
+  "workspace_boundary": "workspace-only",
+  "outside_write_requires_approval": true,
+  "destructive_commands_require_approval": true,
+  "physical_motion_requires_approval": true,
+  "secret_values_must_be_redacted": true
+}

@@ -1,0 +1,8 @@
+{
+  "skills": ["repository-review", "device-diagnostics"],
+  "mcp_servers": [
+    { "name": "healthy", "status": "ready" },
+    { "name": "broken", "status": "unavailable" }
+  ],
+  "duplicate_tools": ["read_file"]
+}

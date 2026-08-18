@@ -1,0 +1,37 @@
+{
+  "name": "@d-robotics/moss-eval",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Independent, outcome-first evaluation harness for MOSS and comparable agents",
+  "type": "module",
+  "bin": {
+    "moss-eval": "./bin/moss-eval.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:unit": "node --test test/unit",
+    "test:e2e": "node --test test/e2e",
+    "check": "node scripts/check.mjs",
+    "doctor": "node bin/moss-eval.mjs doctor --config configs/mock.example.json",
+    "doctor:wsl": "node bin/moss-eval.mjs doctor --config configs/moss.wsl.example.json",
+    "env:browser": "node scripts/check-browser.mjs",
+    "env:browser:docker": "node scripts/check-docker-browser.mjs",
+    "env:pty": "node scripts/check-pty.mjs",
+    "env:device:build": "node scripts/device-sim.mjs build",
+    "env:device": "node scripts/device-sim.mjs check",
+    "source:prepare": "node bin/moss-eval.mjs prepare-source --ref main",
+    "calibrate": "node bin/moss-eval.mjs calibrate --config configs/moss.example.json",
+    "smoke": "node bin/moss-eval.mjs run --config configs/mock.example.json --suite smoke --allow-local"
+  },
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "optionalDependencies": {
+    "node-pty": "^1.0.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "ssh2": "^1.17.0"
+  }
+}

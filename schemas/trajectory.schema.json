@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/trajectory.schema.json",
+  "title": "Normalized MOSS Eval Trace Event",
+  "type": "object",
+  "required": ["schema_version", "sequence", "timestamp", "type", "source", "data"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "type": {
+      "enum": ["trial_start", "trial_stop", "user_message", "assistant_message", "system_message", "model_request", "model_response", "tool_call", "tool_result", "approval_request", "approval_decision", "hook_decision", "context_compaction", "goal", "checkpoint", "resume", "steering", "cancellation", "subagent_spawn", "subagent_result", "subagent_failure", "subagent_stop", "provider_error", "retry", "resource_snapshot", "verifier_result", "agent_start", "agent_stop", "agent_result", "runner_error", "stdout", "stderr", "native_event"]
+    },
+    "source": { "type": "string", "minLength": 1 },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false
+}

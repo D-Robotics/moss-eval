@@ -1,0 +1,36 @@
+ARG BASE_IMAGE=moss-eval:local
+FROM ${BASE_IMAGE}
+
+ARG MOSS_REPOSITORY
+ARG MOSS_REF
+ARG MOSS_COMMIT
+ARG BASE_IMAGE_DIGEST
+
+LABEL org.opencontainers.image.source="${MOSS_REPOSITORY}" \
+      org.opencontainers.image.revision="${MOSS_COMMIT}" \
+      io.moss-eval.track="source" \
+      io.moss-eval.source-ref="${MOSS_REF}" \
+      io.moss-eval.bootstrap-image-digest="${BASE_IMAGE_DIGEST}"
+
+USER root
+WORKDIR /opt/moss-src
+ADD source.tar /opt/moss-src
+
+RUN npm ci --ignore-scripts \
+    && npm run build \
+    && published_root="$(npm root -g)/@rdk-moss/agent" \
+    && test -f "$published_root/zero-config-default.json" \
+    && cp "$published_root/zero-config-default.json" packages/moss-agent/zero-config-default.json \
+    && chmod 0755 packages/moss-agent/dist/cli.js \
+    && rm -f /usr/local/bin/moss \
+    && ln -s /opt/moss-src/packages/moss-agent/dist/cli.js /usr/local/bin/moss \
+    && printf '%s\n' "$MOSS_COMMIT" > /opt/moss-source-commit
+
+ENV MOSS_SOURCE_REPOSITORY="${MOSS_REPOSITORY}" \
+    MOSS_SOURCE_REF="${MOSS_REF}" \
+    MOSS_SOURCE_COMMIT="${MOSS_COMMIT}"
+
+USER moss-eval
+WORKDIR /workspace
+ENTRYPOINT []
+CMD ["moss", "--version"]

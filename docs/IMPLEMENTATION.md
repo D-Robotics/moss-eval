@@ -1,0 +1,28 @@
+# Implementation checklist
+
+- [x] 独立仓库结构和 CLI
+- [x] Task Loader、校验和 JSON Schema
+- [x] Command/MOSS Adapter
+- [x] One-shot 和 Stream JSON
+- [x] PTY Runner
+- [x] ACP stdio 驱动
+- [x] Docker 隔离、Local 显式许可
+- [x] Fixture、Manifest、Diff 和 Artifact
+- [x] Outcome、Trace、Safety、Budget、LLM Grader
+- [x] Fault Injector
+- [x] Secret Redaction 和 Experiment Fingerprint
+- [x] pass@1、pass@k、pass^k、Wilson 区间、成本和时延
+- [x] Baseline Comparison 和 Release Gate
+- [x] agent_eval_service Export/Publish
+- [x] 50 项候选核心任务
+- [x] 50 项参考解与 150 项 Oracle 反例自动校准
+- [x] Unit/E2E/Smoke/CI
+- [x] 交互终端状态面板与 CI 逐行进度日志
+- [x] Release/Source 双 Track、固定 Git Commit 源码构建和 Provenance 指纹
+- [x] MOSS Session/Usage 原生遥测、隐私提取和跨源一致性校验
+- [x] 模型调用/Token 修正、工具耗时与可选 Tool Precision/Recall/F1
+- [x] 在 WSL Docker 执行机上构建并验证真实 MOSS 0.6.0 镜像
+- [x] 验证真实 MOSS Stream JSON 与 ACP stdio
+- [x] 安装并自检真实 MOSS PTY、Playwright Chromium 和隔离 SSH 设备模拟环境
+- [ ] 在真实 MOSS 上校准 PTY/Browser/Device 场景
+- [ ] 领域人员逐项执行参考解并批准 Regression Suite

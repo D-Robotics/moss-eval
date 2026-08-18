@@ -1,0 +1,6 @@
+{
+  "viewport": { "desktop": 1280, "mobile": 390 },
+  "form": { "required": ["name", "email"], "submitted": false },
+  "states": ["empty", "loading", "error", "success"],
+  "console_errors": ["TypeError: button handler is undefined"]
+}

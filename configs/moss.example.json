@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "output_root": "../.moss-eval/runs",
+  "task_roots": ["../taskpacks/core"],
+  "default_runner": "docker",
+  "execution": {
+    "concurrency": 1,
+    "trials": null,
+    "k": 3,
+    "valid_trial_threshold": 0.95
+  },
+  "runners": {
+    "local": { "allow": false },
+    "docker": {
+      "command": "docker",
+      "image": "node:22-bookworm",
+      "memory": "4g",
+      "cpus": "2",
+      "pids_limit": 256
+    },
+    "pty": {}
+  },
+  "agents": {
+    "moss": {
+      "adapter": "moss",
+      "command": "moss",
+      "args": ["{instruction}"],
+      "mode_commands": {
+        "acp": "node"
+      },
+      "mode_base_args": {
+        "acp": ["{evalRoot}/drivers/acp-client.mjs", "--server", "moss", "--server-args", "[\"agent\",\"stdio\"]", "--cwd", "{workspace}", "--prompt", "{instruction}"]
+      },
+      "mode_args": {
+        "stream-json": ["--output-format", "stream-json", "--verbose"]
+      },
+      "provider": "configured-by-moss",
+      "model": "configured-by-moss",
+      "secret_env": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
+    }
+  }
+}

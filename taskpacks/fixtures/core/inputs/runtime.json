@@ -1,0 +1,7 @@
+{
+  "node_required": "22.16.0",
+  "node_detected": "20.11.1",
+  "installed_package": "@rdk-moss/agent",
+  "displayed_version": "0.9.0",
+  "package_version": "1.0.0"
+}

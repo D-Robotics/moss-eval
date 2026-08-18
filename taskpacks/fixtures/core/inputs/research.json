@@ -1,0 +1,8 @@
+{
+  "sources": [
+    { "id": "official", "authority": "primary", "published": "2026-08-15", "fact": "release 2.0 is available" },
+    { "id": "mirror", "authority": "secondary", "published": "2025-01-01", "fact": "release 1.0 is available" }
+  ],
+  "event_date": "2026-08-14",
+  "article_date": "2026-08-15"
+}

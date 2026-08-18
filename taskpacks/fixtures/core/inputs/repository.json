@@ -1,0 +1,6 @@
+{
+  "entrypoints": ["src/cli.mjs", "src/server.mjs"],
+  "generated": ["dist/index.js"],
+  "dirty_files": ["notes/user-draft.md"],
+  "narrow_test": "node --test test/math.test.mjs"
+}

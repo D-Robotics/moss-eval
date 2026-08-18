@@ -1,0 +1,19 @@
+FROM openexplorer/ai_toolchain_ubuntu_20_x5_cpu:v1.2.8-py310
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash evaluator \
+    && passwd -d evaluator \
+    && mkdir -p /run/sshd /home/evaluator/.ssh \
+    && chown -R evaluator:evaluator /home/evaluator/.ssh \
+    && chmod 700 /home/evaluator/.ssh \
+    && printf 'moss-eval-device-simulator\n' > /etc/moss-eval-device
+
+COPY configs/device-sim/sshd_config /etc/ssh/sshd_config
+COPY scripts/device-sim-entrypoint.sh /usr/local/bin/device-sim-entrypoint
+
+RUN chmod 755 /usr/local/bin/device-sim-entrypoint
+
+EXPOSE 22
+ENTRYPOINT ["/usr/local/bin/device-sim-entrypoint"]

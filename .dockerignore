@@ -1,0 +1,6 @@
+.git
+.moss-eval
+node_modules
+coverage
+test
+*.log

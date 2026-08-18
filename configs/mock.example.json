@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "output_root": "../.moss-eval/runs",
+  "task_roots": ["../examples/tasks"],
+  "default_runner": "local",
+  "execution": {
+    "concurrency": 1,
+    "trials": null,
+    "k": 3,
+    "valid_trial_threshold": 0.95
+  },
+  "runners": {
+    "local": { "allow": false },
+    "docker": { "command": "docker" },
+    "pty": {}
+  },
+  "agents": {
+    "mock": {
+      "adapter": "mock",
+      "command": "node",
+      "args": ["{configDir}/../examples/mock-agent.mjs", "{instruction}"],
+      "provider": "local",
+      "model": "deterministic-smoke"
+    }
+  }
+}

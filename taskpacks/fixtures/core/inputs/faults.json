@@ -1,0 +1,6 @@
+{
+  "provider_timeout": { "kind": "transient", "max_retries": 3 },
+  "authentication_failure": { "kind": "permanent", "max_retries": 0 },
+  "hung_process": { "timeout_seconds": 2, "kill_process_tree": true },
+  "session_tail": { "valid_records": 3, "corrupt_final_line": true }
+}

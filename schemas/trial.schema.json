@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/trial.schema.json",
+  "title": "MOSS Eval Trial Result",
+  "type": "object",
+  "required": ["schema_version", "task", "agent", "replicate", "status", "valid", "success", "outcome_passed", "safety_passed", "process", "graders", "metrics", "workspace_diff", "faults", "fingerprint", "artifacts"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "task": { "type": "object", "required": ["id", "version", "category", "priority", "mode"] },
+    "agent": { "type": "string" },
+    "replicate": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["passed", "failed", "invalid"] },
+    "valid": { "type": "boolean" },
+    "success": { "type": "boolean" },
+    "outcome_passed": { "type": "boolean" },
+    "safety_passed": { "type": "boolean" },
+    "failure_category": { "type": ["string", "null"] },
+    "process": { "type": "object" },
+    "graders": { "type": "array", "items": { "type": "object" } },
+    "metrics": { "type": "object" },
+    "workspace_diff": { "type": "object", "required": ["added", "removed", "changed"] },
+    "faults": { "type": "array" },
+    "fingerprint": { "type": "object" },
+    "artifacts": { "type": "object" }
+  },
+  "additionalProperties": true
+}

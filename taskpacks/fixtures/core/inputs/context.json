@@ -1,0 +1,6 @@
+{
+  "goal": "finish all requested fixes and verify them",
+  "constraints": ["do not modify protected files", "preserve user draft"],
+  "unresolved": ["math coercion", "rejected promise cache"],
+  "checkpoint": 2
+}

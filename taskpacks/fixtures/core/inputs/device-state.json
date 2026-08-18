@@ -1,0 +1,6 @@
+{
+  "ssh": { "connected": false, "previous_ip": "192.0.2.10", "current_ip": "192.0.2.11" },
+  "cameras": ["/dev/video0", "/dev/video2"],
+  "ros": { "versions": [1, 2], "topics": ["/camera/image_raw"] },
+  "motion_requires_approval": true
+}
