@@ -1,4 +1,5 @@
 import { graderResult } from './result.mjs';
+import crypto from 'node:crypto';
 
 function parseJudgeJson(text) {
   const start = text.indexOf('{');
@@ -20,20 +21,24 @@ export async function runLlmRubricVerifier(grader, context) {
       durationMs: Date.now() - started,
     });
   }
+  if (judge.consent !== true) {
+    return graderResult(grader, grader.required ? 'error' : 'skipped', {
+      reason: 'LLM judge requires explicit per-run consent',
+      durationMs: Date.now() - started,
+    });
+  }
   const endpoint =
     judge.base_url.replace(/\/$/, '') +
     (judge.base_url.endsWith('/chat/completions') ? '' : '/chat/completions');
+  const disclosed = new Set(judge.disclosed_fields || ['task', 'outcome_results', 'final_response']);
   const prompt = [
     'You are an evaluation grader. Return JSON only.',
     'Allowed verdicts: pass, fail, uncertain.',
     'Rubric:',
-    grader.rubric || '',
-    'Task:',
-    context.task.instruction,
-    'Outcome grader results:',
-    JSON.stringify(context.outcomeResults),
-    'Final response:',
-    context.traceSummary.final_response || '',
+    JSON.stringify(grader.rubric, null, 2),
+    ...(disclosed.has('task') ? ['Task:', context.task.instruction] : []),
+    ...(disclosed.has('outcome_results') ? ['Outcome grader results:', JSON.stringify(context.outcomeResults)] : []),
+    ...(disclosed.has('final_response') ? ['Final response:', context.traceSummary.final_response || ''] : []),
     'Return a JSON object with verdict, score, and reason.',
   ].join('\n\n');
   try {
@@ -61,6 +66,16 @@ export async function runLlmRubricVerifier(grader, context) {
       details: { verdict: judged.verdict },
       durationMs: Date.now() - started,
     });
+    result.rubric = structuredClone(grader.rubric);
+    result.judge = {
+      model: judge.model,
+      provider: judge.provider || null,
+      rubric_version: grader.rubric?.version ?? String(grader.version),
+      consent: true,
+      disclosed_fields: [...disclosed],
+      prompt_sha256: crypto.createHash('sha256').update(prompt).digest('hex'),
+      calibration_dataset: grader.calibration_dataset || null,
+    };
     result.score = Number.isFinite(judged.score)
       ? Math.max(0, Math.min(1, judged.score))
       : result.score;

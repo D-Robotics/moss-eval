@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import fsp from 'node:fs/promises';
+import os from 'node:os';
 import { promisify } from 'node:util';
 import { loadTasks } from './task-loader.mjs';
 import { runProcess } from '../lib/process.mjs';
@@ -159,6 +161,100 @@ export async function doctor(config) {
   });
   return {
     ready: checks.every((check) => check.status !== 'fail'),
+    checks,
+  };
+}
+
+function processCheck(id, result, passDetail, failureDetail, remediation) {
+  const passed = result && result.exitCode === 0 && !result.startError && !result.timedOut;
+  return {
+    id,
+    status: passed ? 'pass' : 'fail',
+    detail: passed
+      ? (typeof passDetail === 'function' ? passDetail(result) : passDetail)
+      : (typeof failureDetail === 'function' ? failureDetail(result) : failureDetail),
+    remediation: passed ? null : remediation,
+  };
+}
+
+export async function desktopDoctor(options = {}) {
+  const platform = options.platform || process.platform;
+  const architecture = options.architecture || process.arch;
+  const processRunner = options.processRunner || runProcess;
+  const diskRoot = options.diskRoot || process.cwd();
+  const checks = [];
+  checks.push({
+    id: 'windows-version',
+    status: platform === 'win32' ? 'pass' : 'fail',
+    detail: platform === 'win32' ? `Windows ${options.osRelease || os.release()}` : `Unsupported platform: ${platform}`,
+    remediation: platform === 'win32' ? null : 'Use the Windows MVP on a supported Windows 10/11 host.',
+  });
+  checks.push({
+    id: 'architecture',
+    status: ['x64', 'arm64'].includes(architecture) ? 'pass' : 'fail',
+    detail: architecture,
+    remediation: ['x64', 'arm64'].includes(architecture) ? null : 'Install a supported x64 or arm64 build.',
+  });
+  try {
+    const disk = await fsp.statfs(diskRoot);
+    const availableBytes = Number(disk.bavail) * Number(disk.bsize);
+    const minimumBytes = options.minimumDiskBytes || 10 * 1024 * 1024 * 1024;
+    checks.push({
+      id: 'disk-space',
+      status: availableBytes >= minimumBytes ? 'pass' : 'fail',
+      detail: `${availableBytes} bytes available`,
+      remediation: availableBytes >= minimumBytes ? null : `Free at least ${minimumBytes} bytes for snapshots, images, and runs.`,
+    });
+  } catch (error) {
+    checks.push({ id: 'disk-space', status: 'fail', detail: error.message, remediation: 'Choose a readable user-data location and retry.' });
+  }
+
+  let wslResult = null;
+  let dockerResult = null;
+  if (platform === 'win32') {
+    wslResult = await processRunner({ command: 'wsl.exe', args: ['--status'], timeoutMs: 15_000 });
+    checks.push(processCheck(
+      'wsl2',
+      wslResult,
+      (result) => (result.stdout || result.stderr || 'WSL2 available').trim(),
+      (result) => result?.startError?.message || (result?.stderr || result?.stdout || 'WSL2 is unavailable').trim(),
+      'Install or enable WSL2, ensure virtualization is enabled, then run `wsl --update`.',
+    ));
+    checks.push({
+      id: 'virtualization',
+      status: wslResult.exitCode === 0 && !wslResult.startError ? 'pass' : 'fail',
+      detail: wslResult.exitCode === 0 && !wslResult.startError ? 'WSL2 virtualization path is healthy' : 'WSL2 could not start its virtualization path',
+      remediation: wslResult.exitCode === 0 && !wslResult.startError ? null : 'Enable CPU virtualization and the Virtual Machine Platform Windows feature.',
+    });
+  } else {
+    checks.push({ id: 'wsl2', status: 'fail', detail: 'WSL2 check requires Windows', remediation: 'Use a supported Windows host.' });
+    checks.push({ id: 'virtualization', status: 'fail', detail: 'Virtualization check requires Windows', remediation: 'Use a supported Windows host.' });
+  }
+
+  dockerResult = await processRunner({
+    command: options.dockerCommand || 'docker',
+    args: ['version', '--format', '{{.Server.Version}}'],
+    timeoutMs: 15_000,
+  });
+  checks.push(processCheck(
+    'docker-runtime',
+    dockerResult,
+    (result) => `Docker server ${(result.stdout || '').trim()}`,
+    (result) => result?.startError?.code === 'ENOENT'
+      ? 'Docker CLI is not installed'
+      : (result?.startError?.message || result?.stderr || result?.stdout || 'Docker daemon is unreachable').trim(),
+    dockerResult?.startError?.code === 'ENOENT'
+      ? 'Install Docker Desktop or another supported Docker-compatible runtime.'
+      : 'Start the Docker daemon, enable WSL2 integration, and retry.',
+  ));
+
+  const blocking = new Set(['windows-version', 'architecture', 'disk-space', 'wsl2', 'virtualization', 'docker-runtime']);
+  return {
+    schema_version: '1.0',
+    checked_at: new Date().toISOString(),
+    ready: checks.every((check) => !blocking.has(check.id) || check.status === 'pass'),
+    source_inspection_available: true,
+    evaluation_available: checks.every((check) => !blocking.has(check.id) || check.status === 'pass'),
     checks,
   };
 }

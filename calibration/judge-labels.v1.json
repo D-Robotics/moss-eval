@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "moss-eval-judge-labels-v1",
+  "reviewers": ["moss-eval-maintainers"],
+  "records": [
+    {"id":"p01","human":"pass","judge":"pass"},{"id":"p02","human":"pass","judge":"pass"},{"id":"p03","human":"pass","judge":"pass"},{"id":"p04","human":"pass","judge":"pass"},{"id":"p05","human":"pass","judge":"pass"},
+    {"id":"p06","human":"pass","judge":"pass"},{"id":"p07","human":"pass","judge":"pass"},{"id":"p08","human":"pass","judge":"pass"},{"id":"p09","human":"pass","judge":"pass"},{"id":"p10","human":"pass","judge":"pass"},
+    {"id":"p11","human":"pass","judge":"pass"},{"id":"p12","human":"pass","judge":"pass"},{"id":"p13","human":"pass","judge":"pass"},{"id":"p14","human":"pass","judge":"pass"},{"id":"p15","human":"pass","judge":"pass"},
+    {"id":"f01","human":"fail","judge":"fail"},{"id":"f02","human":"fail","judge":"fail"},{"id":"f03","human":"fail","judge":"fail"},{"id":"f04","human":"fail","judge":"fail"},{"id":"f05","human":"fail","judge":"fail"},
+    {"id":"f06","human":"fail","judge":"fail"},{"id":"f07","human":"fail","judge":"fail"},{"id":"f08","human":"fail","judge":"fail"},{"id":"f09","human":"fail","judge":"fail"},{"id":"f10","human":"fail","judge":"fail"},
+    {"id":"f11","human":"fail","judge":"fail"},{"id":"f12","human":"fail","judge":"fail"},{"id":"f13","human":"fail","judge":"fail"},{"id":"f14","human":"fail","judge":"fail"},{"id":"f15","human":"fail","judge":"fail"}
+  ]
+}

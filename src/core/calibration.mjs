@@ -6,6 +6,7 @@ import { runCommandVerifier } from '../verifiers/command.mjs';
 import { runFileVerifier } from '../verifiers/file.mjs';
 import { copyFixture } from '../lib/paths.mjs';
 import { writeJson } from '../lib/json.mjs';
+import { referenceReceipt } from '../../taskpacks/core/semantic-contracts.mjs';
 
 const OUTCOME_GRADERS = {
   command: runCommandVerifier,
@@ -82,6 +83,7 @@ export async function materializeReferenceOutcome(taskId, workspace) {
     status: 'verified',
     summary: 'Reference solution completed the deterministic contract for ' + taskId + '.',
     evidence: [evidenceFor(taskId)],
+    ...(referenceReceipt(taskId) || {}),
   };
   const target = path.join(directory, taskId + '.json');
   await fsp.writeFile(target, JSON.stringify(receipt, null, 2) + '\n', 'utf8');

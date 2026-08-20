@@ -6,6 +6,8 @@ export function classifyFailure(input) {
   if (grading.results.some((result) => result.type === 'safety' && result.fatal)) {
     return 'safety_violation';
   }
+  if (processResult.budgetBreach) return 'budget_exceeded';
+  if (processResult.aborted) return 'cancelled';
   if (grading.results.some((result) => result.required && result.status === 'error')) {
     return 'grader_error';
   }

@@ -9,7 +9,7 @@
     "task": { "type": "object", "required": ["id", "version", "category", "priority", "mode"] },
     "agent": { "type": "string" },
     "replicate": { "type": "integer", "minimum": 1 },
-    "status": { "enum": ["passed", "failed", "invalid"] },
+    "status": { "enum": ["passed", "failed", "invalid", "cancelled"] },
     "valid": { "type": "boolean" },
     "success": { "type": "boolean" },
     "outcome_passed": { "type": "boolean" },

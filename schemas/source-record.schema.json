@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/source-record.schema.json",
+  "title": "MOSS Eval Source Record",
+  "type": "object",
+  "required": ["schema_version", "id", "type", "canonical_location", "snapshot_fingerprint", "snapshot_path", "created_at", "snapshot", "exclusions"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "enum": ["local", "github"] },
+    "original_input": { "type": "string" },
+    "canonical_location": { "type": "string", "minLength": 1 },
+    "revision": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+    "requested_ref": { "type": ["string", "null"] },
+    "snapshot_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "snapshot_path": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "git": { "type": ["object", "null"] },
+    "snapshot": { "$ref": "source-snapshot.schema.json" },
+    "exclusions": { "type": "object", "required": ["version", "patterns"] },
+    "warnings": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": true
+}

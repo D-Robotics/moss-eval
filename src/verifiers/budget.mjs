@@ -13,6 +13,12 @@ export function runBudgetGate(task, context) {
   const summary = context.traceSummary;
   const usage = summary.usage || {};
   const failures = [];
+  if (context.processResult?.budgetBreach) {
+    failures.push(
+      `${context.processResult.budgetBreach.type} exceeded ` +
+      `${context.processResult.budgetBreach.limit_seconds ?? context.processResult.budgetBreach.limit ?? 'configured limit'}`,
+    );
+  }
   exceeds(failures, 'input tokens', usage.input_tokens, budget.max_input_tokens);
   exceeds(failures, 'output tokens', usage.output_tokens, budget.max_output_tokens);
   exceeds(failures, 'total tokens', usage.total_tokens, budget.max_tokens);

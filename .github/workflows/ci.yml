@@ -18,3 +18,24 @@ jobs:
       - run: npm run calibrate
       - run: npm run doctor
       - run: npm run smoke
+      - run: node --test test/unit/evaluation-quality.test.mjs test/unit/desktop-security.test.mjs test/e2e/desktop-workflow.test.mjs
+
+  windows-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci --no-audit
+        working-directory: app
+      - run: npm run build:provenance
+        working-directory: app
+      - run: npm run dist:dir
+        working-directory: app
+      - run: node scripts/packaged-smoke.mjs dist/win-unpacked/resources
+        working-directory: app
+      - run: node scripts/packaged-worker-smoke.mjs "dist/win-unpacked/MOSS Eval.exe"
+        working-directory: app

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/source-snapshot.schema.json",
+  "title": "MOSS Eval Source Snapshot Manifest",
+  "type": "object",
+  "required": ["schema_version", "fingerprint", "created_at", "file_count", "total_bytes", "files", "exclusions", "limits", "immutable"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "file_count": { "type": "integer", "minimum": 0 },
+    "total_bytes": { "type": "integer", "minimum": 0 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "exclusions": { "type": "object" },
+    "limits": { "type": "object" },
+    "immutable": { "const": true }
+  },
+  "additionalProperties": false
+}

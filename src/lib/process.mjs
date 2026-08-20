@@ -43,9 +43,16 @@ export async function runProcess(specification) {
     outputLimit = DEFAULT_OUTPUT_LIMIT,
     onStdout,
     onStderr,
+    signal,
   } = specification;
 
   if (!command) throw new Error('Process command is required');
+  if (signal?.aborted) {
+    const error = new Error('Process was cancelled before start');
+    error.name = 'AbortError';
+    error.code = 'ABORT_ERR';
+    throw error;
+  }
   const startedAt = new Date();
   const startMs = Date.now();
   let stdout = '';
@@ -53,6 +60,7 @@ export async function runProcess(specification) {
   let timedOut = false;
   let startError = null;
   let timeoutHandle;
+  let aborted = false;
 
   const child = spawn(command, args, {
     cwd,
@@ -74,6 +82,11 @@ export async function runProcess(specification) {
   if (input !== null && input !== undefined) child.stdin.end(String(input));
   else child.stdin.end();
 
+  const abortListener = () => {
+    aborted = true;
+    void terminateProcess(child);
+  };
+  signal?.addEventListener('abort', abortListener, { once: true });
   const exit = await new Promise((resolve) => {
     timeoutHandle = setTimeout(async () => {
       timedOut = true;
@@ -85,6 +98,7 @@ export async function runProcess(specification) {
     child.once('close', (code, signal) => resolve({ code, signal }));
   });
   clearTimeout(timeoutHandle);
+  signal?.removeEventListener('abort', abortListener);
 
   return {
     command,
@@ -93,6 +107,7 @@ export async function runProcess(specification) {
     exitCode: exit.code,
     signal: exit.signal,
     timedOut,
+    aborted,
     startError: startError ? { code: startError.code, message: startError.message } : null,
     stdout,
     stderr,

@@ -51,3 +51,32 @@ test('task validator accepts set-based tool expectations and rejects invalid dec
     /tool_expectations.required_all/,
   );
 });
+
+test('task validator preserves structured LLM rubrics and rejects string rubrics', async () => {
+  const [task] = await loadTasks([path.join(root, 'taskpacks/core')]);
+  const rubric = {
+    version: 'quality-v1',
+    criteria: [{ id: 'clarity', description: 'Response is clear', weight: 1 }],
+    score_scale: { min: 0, max: 1 },
+  };
+  const withRubric = {
+    ...task,
+    graders: [
+      ...task.graders,
+      {
+        id: 'quality', type: 'llm_rubric', version: '1', required: false,
+        timeout_seconds: 10, rubric,
+      },
+    ],
+  };
+  assert.doesNotThrow(() => validateTask(withRubric));
+  assert.deepEqual(withRubric.graders.at(-1).rubric, rubric);
+  assert.throws(
+    () => validateTask({
+      ...withRubric,
+      graders: withRubric.graders.map((grader) =>
+        grader.id === 'quality' ? { ...grader, rubric: 'clarity' } : grader),
+    }),
+    /requires an object rubric/,
+  );
+});

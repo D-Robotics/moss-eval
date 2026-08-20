@@ -289,6 +289,39 @@ export async function collectMossNativeTelemetry(workspace, options = {}) {
   };
 }
 
+export function unavailableNativeTelemetry(source = 'adapter-none') {
+  return {
+    schema_version: '1.0',
+    source,
+    available: false,
+    session: {
+      available: false,
+      files: [],
+      parsed_lines: 0,
+      invalid_lines: 0,
+      tool_call_count: 0,
+      tool_result_count: 0,
+      tool_error_count: 0,
+      conflicts: [],
+      tool_calls: [],
+    },
+    usage: {
+      available: false,
+      file: null,
+      parsed_lines: 0,
+      invalid_lines: 0,
+      invalid_records: 0,
+      records: [],
+      model_call_count: null,
+      input_tokens: null,
+      output_tokens: null,
+      total_tokens: null,
+      cache_read_tokens: null,
+      cache_creation_tokens: null,
+    },
+  };
+}
+
 function sortedIds(calls) {
   return [...new Set((calls || []).map((call) => call.call_id).filter(Boolean))].sort();
 }
@@ -414,6 +447,18 @@ export function scoreToolExpectations(toolCalls, expectations) {
         ? 0
         : null;
   const violations = [];
+  const formatValid = (toolCalls || []).filter((call) =>
+    typeof call?.tool === 'string' && call.tool.length > 0 && call.tool !== 'unknown' &&
+    call.arguments !== null && typeof call.arguments === 'object' && !Array.isArray(call.arguments),
+  ).length;
+  const argumentChecks = [];
+  for (const call of toolCalls || []) {
+    const requiredFields = expectations.argument_requirements?.[call.tool];
+    if (!requiredFields) continue;
+    const missing = requiredFields.filter((field) => call.arguments?.[field] === undefined);
+    argumentChecks.push({ call_id: call.call_id, tool: call.tool, missing, passed: missing.length === 0 });
+    if (missing.length) violations.push({ type: 'missing_tool_arguments', call_id: call.call_id, tool: call.tool, fields: missing });
+  }
   if (requiredAny.length > 0 && !requiredAny.some((tool) => observed.has(tool))) {
     violations.push({ type: 'missing_required_any', tools: requiredAny });
   }
@@ -442,6 +487,18 @@ export function scoreToolExpectations(toolCalls, expectations) {
       violations.push({ type: 'missing_verification_after_mutation' });
     }
   }
+  const expectedOrder = expectations.expected_order || [];
+  let orderPassed = null;
+  if (expectedOrder.length) {
+    let cursor = -1;
+    orderPassed = expectedOrder.every((tool) => {
+      cursor = observedSequence.indexOf(tool, cursor + 1);
+      return cursor >= 0;
+    });
+    if (!orderPassed) violations.push({ type: 'expected_order_not_observed', expected_order: expectedOrder });
+  }
+  const signatures = observedSequence.map((tool, index) => tool + '|' + JSON.stringify(toolCalls[index]?.arguments || {}));
+  const redundantCalls = signatures.length - new Set(signatures).size;
   return {
     eligible: true,
     expected_tools: [...expected],
@@ -449,6 +506,12 @@ export function scoreToolExpectations(toolCalls, expectations) {
     precision,
     recall,
     f1,
+    format_accuracy: ratio(formatValid, (toolCalls || []).length),
+    argument_accuracy: ratio(argumentChecks.filter((item) => item.passed).length, argumentChecks.length),
+    argument_checks: argumentChecks,
+    order_passed: orderPassed,
+    redundant_call_count: redundantCalls,
+    efficiency: (toolCalls || []).length ? Math.max(0, 1 - redundantCalls / toolCalls.length) : 1,
     policy_passed: violations.length === 0,
     violations,
   };

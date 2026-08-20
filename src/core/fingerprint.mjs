@@ -51,8 +51,14 @@ export async function createFingerprint(task, agentName, agent, config, runnerNa
           commit: sourceCommit,
           dirty: agent.source_dirty ?? null,
           bootstrap: agent.source_bootstrap || null,
+          snapshot_fingerprint: agent.source_snapshot_fingerprint || null,
         }
       : null,
+    prepared_target: agent.prepared_target_fingerprint ? {
+      fingerprint: agent.prepared_target_fingerprint,
+      adapter: agent.prepared_target_adapter || null,
+      sandbox_policy: agent.prepared_target_policy || null,
+    } : null,
     prompt_policy_hash: agent.prompt_policy_hash || null,
     tool_schema_hash: agent.tool_schema_hash || null,
     runner: runnerName,

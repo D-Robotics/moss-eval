@@ -3,6 +3,7 @@ import path from 'node:path';
 import { readJson } from '../lib/json.mjs';
 import { resolveRelative } from '../lib/paths.mjs';
 import { validateTask } from './task-validator.mjs';
+import { normalizeTaskRequirements } from './capabilities.mjs';
 
 async function discover(directory, output) {
   const entries = await fsp.readdir(directory, { withFileTypes: true });
@@ -43,6 +44,8 @@ function resolveTaskPaths(task, file) {
   copy.suites = Array.isArray(copy.suites) ? copy.suites : [copy.suite || 'default'];
   copy.environment.network = copy.environment.network || 'disabled';
   copy.environment.fixture = resolveRelative(directory, copy.environment.fixture);
+  copy.quality_tier = copy.quality_tier || 'experimental';
+  copy.capability_requirements = normalizeTaskRequirements(copy);
   copy._meta = { file, directory };
   return copy;
 }

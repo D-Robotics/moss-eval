@@ -2,7 +2,8 @@ import { spawn } from 'node:child_process';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 
-import { readJson, writeJson } from '../lib/json.mjs';
+import { hashObject, readJson, writeJson } from '../lib/json.mjs';
+import { createBuiltInTargetRegistry } from '../targets/index.mjs';
 
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -152,9 +153,20 @@ export async function prepareSourceTrack(options = {}) {
   ]);
   const imageDigest = await dockerImageDigest(distro, image);
 
+  const sourceFingerprint = hashObject({ repository, commit });
+  const sourceRecord = {
+    id: `legacy-source-${short}`,
+    snapshot_fingerprint: sourceFingerprint,
+    revision: commit,
+    canonical_location: repository,
+  };
+  const adapter = createBuiltInTargetRegistry().get('moss');
+  const preparationPlan = adapter.createPreparationPlan({ sourceRecord });
+  const adapterFingerprint = adapter.fingerprint({ sourceFingerprint });
+
   const baseConfig = await readJson(path.join(evaluationRoot, 'configs', 'moss.wsl.example.json'));
   const config = createSourceConfig(baseConfig, {
-    evaluationRoot, repository, ref, commit, checkout, image, version: packageJson.version,
+    evaluationRoot, repository, ref, commit, checkout, image: imageDigest, version: packageJson.version,
     baseImageDigest,
   });
   const configFile = path.join(trackRoot, 'config.json');
@@ -171,6 +183,15 @@ export async function prepareSourceTrack(options = {}) {
     version: packageJson.version,
     image,
     image_digest: imageDigest,
+    adapter: {
+      id: adapter.id,
+      version: adapter.version,
+      api_version: adapter.apiVersion,
+      fingerprint: adapterFingerprint,
+    },
+    source_fingerprint: sourceFingerprint,
+    preparation_plan: preparationPlan,
+    capabilities: adapter.describeCapabilities(),
     base_image: baseImage,
     base_image_digest: baseImageDigest,
     config: configFile,

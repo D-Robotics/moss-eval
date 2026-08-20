@@ -21,7 +21,8 @@
     "env:device": "node scripts/device-sim.mjs check",
     "source:prepare": "node bin/moss-eval.mjs prepare-source --ref main",
     "calibrate": "node bin/moss-eval.mjs calibrate --config configs/moss.example.json",
-    "smoke": "node bin/moss-eval.mjs run --config configs/mock.example.json --suite smoke --allow-local"
+    "smoke": "node bin/moss-eval.mjs run --config configs/mock.example.json --suite smoke --allow-local",
+    "release:check": "npm run check && npm test && npm run calibrate && npm run smoke && node --test test/unit/package-release.test.mjs"
   },
   "engines": {
     "node": ">=22.16.0"

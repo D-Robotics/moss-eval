@@ -26,6 +26,7 @@ export class LocalRunner {
       cwd: context.workspace,
       env: { ...process.env, ...command.env },
       timeoutMs: context.timeoutMs,
+      signal: context.signal,
       onStdout: context.onStdout,
       onStderr: context.onStderr,
     });

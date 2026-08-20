@@ -16,6 +16,29 @@ function delta(current, previous) {
   return Number.isFinite(current) && Number.isFinite(previous) ? current - previous : null;
 }
 
+function commonTaskMetric(previousTasks, currentTasks, field, eligibilityField) {
+  const pairs = [];
+  for (const [taskId, current] of currentTasks) {
+    const previous = previousTasks.get(taskId);
+    if (!previous || previous.applicability === 'NOT_APPLICABLE' || current.applicability === 'NOT_APPLICABLE') continue;
+    if (!previous[eligibilityField] || !current[eligibilityField]) continue;
+    pairs.push({ taskId, previous: Boolean(previous[field]), current: Boolean(current[field]) });
+  }
+  const previousValue = pairs.length
+    ? pairs.filter((pair) => pair.previous).length / pairs.length
+    : null;
+  const currentValue = pairs.length
+    ? pairs.filter((pair) => pair.current).length / pairs.length
+    : null;
+  return {
+    common_task_count: pairs.length,
+    task_ids: pairs.map((pair) => pair.taskId).sort(),
+    baseline: previousValue,
+    candidate: currentValue,
+    delta: delta(currentValue, previousValue),
+  };
+}
+
 export function compareSummaries(baseline, candidate, options = {}) {
   const baselineAgents = byAgent(baseline);
   const candidateAgents = byAgent(candidate);
@@ -27,6 +50,9 @@ export function compareSummaries(baseline, candidate, options = {}) {
     if (!previous) continue;
     const previousTasks = taskMap(previous);
     const currentTasks = taskMap(current);
+    const commonPass1 = commonTaskMetric(previousTasks, currentTasks, 'pass_1', 'pass_1_eligible');
+    const commonPassAtK = commonTaskMetric(previousTasks, currentTasks, 'pass_at_k', 'pass_at_k_eligible');
+    const commonPassPowK = commonTaskMetric(previousTasks, currentTasks, 'pass_pow_k', 'pass_at_k_eligible');
     const regressions = [];
     const improvements = [];
     for (const [taskId, task] of currentTasks) {
@@ -65,10 +91,24 @@ export function compareSummaries(baseline, candidate, options = {}) {
       candidate_source_commit: current.source_commit || null,
       gate,
       reasons,
+      coverage: {
+        baseline: previous.coverage || null,
+        candidate: current.coverage || null,
+        eligible_task_delta:
+          Number.isFinite(current.coverage?.eligible_tasks) && Number.isFinite(previous.coverage?.eligible_tasks)
+            ? current.coverage.eligible_tasks - previous.coverage.eligible_tasks
+            : null,
+        common_task_ids: commonPass1.task_ids,
+      },
+      common_task_metrics: {
+        pass_at_1: commonPass1,
+        pass_at_k: commonPassAtK,
+        pass_pow_k: commonPassPowK,
+      },
       deltas: {
-        pass_at_1: delta(value(current.pass_at_1), value(previous.pass_at_1)),
-        pass_at_k: delta(value(current.pass_at_k), value(previous.pass_at_k)),
-        pass_pow_k: delta(value(current.pass_pow_k), value(previous.pass_pow_k)),
+        pass_at_1: commonPass1.delta,
+        pass_at_k: commonPassAtK.delta,
+        pass_pow_k: commonPassPowK.delta,
         cost_per_success_growth: costGrowth,
         latency_p95_ms: delta(current.latency_ms.p95, previous.latency_ms.p95),
       },

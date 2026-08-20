@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/harness-manifest.schema.json",
+  "title": "MOSS Eval Harness Manifest",
+  "type": "object",
+  "required": ["schema_version", "adapter", "runtime", "launch", "capabilities"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "adapter": {
+      "type": "object",
+      "required": ["id", "api_version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+        "api_version": { "const": "1.0" }
+      },
+      "additionalProperties": false
+    },
+    "runtime": { "enum": ["node", "python", "container"] },
+    "preparation": {
+      "type": "object",
+      "properties": {
+        "working_directory": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["command"],
+            "properties": {
+              "command": { "type": "string", "minLength": 1 },
+              "args": { "type": "array", "items": { "type": "string" } },
+              "network": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "launch": {
+      "type": "object",
+      "required": ["command", "protocol"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "working_directory": { "type": "string" },
+        "protocol": { "enum": ["one-shot", "stream-json", "pty", "acp"] }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["modes", "telemetry_level"],
+      "properties": {
+        "modes": { "type": "array", "items": { "enum": ["one-shot", "stream-json", "pty", "acp"] }, "minItems": 1, "uniqueItems": true },
+        "telemetry_level": { "enum": ["L0", "L1", "L2", "L3"] },
+        "tools": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "optional": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "secrets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "type": "object",
+      "properties": {
+        "preparation_required": { "type": "boolean" },
+        "runtime_required": { "type": "boolean" },
+        "allowed_hosts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "privileged": { "const": false },
+        "docker_socket": { "const": false },
+        "host_mounts": { "maxItems": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

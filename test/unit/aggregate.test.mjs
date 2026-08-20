@@ -71,3 +71,21 @@ test('aggregate excludes telemetry mismatches from trusted tool quality', () => 
   assert.equal(summary.tools.total_calls, 2);
   assert.equal(summary.tools.quality.macro_f1, 1);
 });
+
+test('aggregate preserves unknown cost, token, and latency coverage instead of coercing zero', () => {
+  const known = trial('known', 1, true);
+  known.metrics = { ...known.metrics, total_tokens: 10 };
+  const unknown = trial('unknown', 1, true);
+  unknown.metrics = { cost_usd: null, duration_ms: null, total_tokens: null };
+
+  const summary = aggregateTrials([known, unknown], { k: 1 }).agents[0];
+  assert.equal(summary.cost.total_usd, null);
+  assert.equal(summary.cost.known_total_usd, 0.1);
+  assert.equal(summary.cost.coverage.value, 0.5);
+  assert.equal(summary.cost.unknown_trial_count, 1);
+  assert.equal(summary.cost.per_successful_trial_usd, null);
+  assert.equal(summary.tokens.total, null);
+  assert.equal(summary.tokens.known_total, 10);
+  assert.equal(summary.tokens.coverage.value, 0.5);
+  assert.equal(summary.latency_ms.coverage.value, 0.5);
+});

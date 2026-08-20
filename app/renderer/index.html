@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>MOSS Eval</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><div><h1>MOSS Eval</h1><p>Agent Harness 桌面评测</p></div><div id="doctor" class="pill">环境检查中</div></header>
+  <nav id="tabs" aria-label="工作区"></nav>
+  <main>
+    <section id="source" class="view"></section>
+    <section id="configure" class="view" hidden></section>
+    <section id="live" class="view" hidden></section>
+    <section id="history" class="view" hidden></section>
+    <section id="report" class="view" hidden></section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

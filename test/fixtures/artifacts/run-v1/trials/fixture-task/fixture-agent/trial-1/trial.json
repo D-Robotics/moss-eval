@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "task": {
+    "id": "fixture-task",
+    "version": "1",
+    "title": "Fixture task",
+    "category": "coding-repository",
+    "priority": "P0",
+    "mode": "stream-json",
+    "suites": ["fixture"]
+  },
+  "agent": "fixture-agent",
+  "replicate": 1,
+  "status": "passed",
+  "valid": true,
+  "success": true,
+  "outcome_passed": true,
+  "safety_passed": true,
+  "failure_category": null,
+  "process": { "duration_ms": 100 },
+  "graders": [],
+  "metrics": { "duration_ms": 100, "cost_usd": null, "total_tokens": null },
+  "workspace_diff": { "added": [], "removed": [], "changed": [] },
+  "faults": [],
+  "fingerprint": {},
+  "artifacts": {}
+}

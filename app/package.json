@@ -1,0 +1,81 @@
+{
+  "name": "moss-eval-client",
+  "version": "0.1.0",
+  "description": "Desktop client for moss-eval",
+  "author": "D-Robotics",
+  "main": "main/index.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "build:provenance": "node scripts/write-build-provenance.mjs",
+    "dist": "npm run build:provenance && electron-builder && node scripts/write-checksums.mjs",
+    "dist:win": "npm run build:provenance && electron-builder --win && node scripts/write-checksums.mjs",
+    "dist:dir": "electron-builder --dir"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.drobotics.moss-eval",
+    "productName": "MOSS Eval",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../",
+        "to": "project",
+        "filter": [
+          "bin/**",
+          "src/**",
+          "taskpacks/**",
+          "configs/**",
+          "schemas/**",
+          "package.json"
+        ]
+      }
+      ,{
+        "from": "build-provenance.json",
+        "to": "build-provenance.json"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": { "artifactName": "${productName}-${version}-${arch}-setup.${ext}", "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true },
+    "portable": { "artifactName": "${productName}-${version}-${arch}-portable.${ext}" },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    }
+  }
+}

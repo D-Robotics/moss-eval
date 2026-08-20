@@ -1,5 +1,6 @@
 import { resolveRuntimeEnvironment } from '../core/config.mjs';
 import { expandList, expandTemplate } from './template.mjs';
+import { unavailableNativeTelemetry } from '../core/native-telemetry.mjs';
 
 export class CommandAdapter {
   constructor(name, configuration) {
@@ -26,11 +27,13 @@ export class CommandAdapter {
     const args = expandList([...baseArgs, ...modeArgs], variables);
     const command = expandTemplate(config.mode_commands?.[task.mode] || config.command, variables);
     const input = config.input === 'instruction' ? task.instruction : config.input || null;
+    const secretEnvironment = Object.fromEntries((config.secret_env || []).flatMap((name) => typeof process.env[name] === 'string' ? [[name, process.env[name]]] : []));
     return {
       command,
       args,
       input,
       env: {
+        ...secretEnvironment,
         ...resolveRuntimeEnvironment(config.env || {}),
         ...resolveRuntimeEnvironment(task.environment.env || {}),
         ...context.faultEnvironment,
@@ -43,7 +46,12 @@ export class CommandAdapter {
         agent: this.name,
         model: config.model || null,
         provider: config.provider || null,
+        secret_env_names: [...(config.secret_env || [])],
       },
     };
+  }
+
+  async collectTelemetry() {
+    return unavailableNativeTelemetry('command-adapter');
   }
 }

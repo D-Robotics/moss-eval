@@ -27,6 +27,7 @@
         "cpu": { "type": "number", "exclusiveMinimum": 0 },
         "memory_mb": { "type": "number", "exclusiveMinimum": 0 },
         "disk_mb": { "type": "number", "exclusiveMinimum": 0 },
+        "pids": { "type": "integer", "exclusiveMinimum": 0 },
         "timeout_seconds": { "type": "number", "exclusiveMinimum": 0 },
         "network": { "enum": ["disabled", "public", "allowlist"] },
         "allowed_hosts": { "type": "array", "items": { "type": "string" } },
@@ -89,9 +90,30 @@
         "must_verify_after_mutation": { "type": "boolean" },
         "mutation_tools": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
         "verification_tools": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+        ,"expected_order": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        ,"argument_requirements": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string", "minLength": 1 } } }
       },
       "additionalProperties": false
     },
+    "capability_requirements": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "modes": { "type": "array", "items": { "enum": ["one-shot", "stream-json", "pty", "acp", "embedded", "browser", "device"] }, "uniqueItems": true },
+        "min_telemetry_level": { "enum": ["L0", "L1", "L2", "L3"] },
+        "required_tools": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "required_any_tools": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "required_tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "runners": { "type": "array", "items": { "enum": ["local", "docker", "pty"] }, "uniqueItems": true },
+        "sandbox_features": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "quality_tier": { "enum": ["gated", "experimental"] },
+    "oracle": { "type": "object" },
+    "allowed_alternate_paths": { "type": "array", "items": { "type": "string" } },
+    "controls": { "type": "object" },
+    "provenance": { "type": "object" },
     "artifacts": { "type": "array", "items": { "type": "string" } },
     "reference_solution": {}
   },

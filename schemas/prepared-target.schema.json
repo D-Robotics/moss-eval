@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/prepared-target.schema.json",
+  "title": "MOSS Eval Prepared Target",
+  "type": "object",
+  "required": ["schema_version", "target_fingerprint", "created_at", "source", "adapter", "effective_configuration_hash", "preparation", "sandbox_policy", "runtime", "image_digest", "capabilities", "telemetry"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "target_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "required": ["id", "fingerprint"],
+      "properties": {
+        "id": { "type": "string" },
+        "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "revision": { "type": ["string", "null"] },
+        "canonical_location": { "type": "string" }
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "required": ["id", "version", "api_version", "fingerprint"],
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" },
+        "api_version": { "const": "1.0" },
+        "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "effective_configuration_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "preparation": { "type": "object" },
+    "launch": { "type": ["object", "null"] },
+    "sandbox_policy": { "type": "object" },
+    "runtime": { "type": "object" },
+    "image_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "configured_image": { "type": ["string", "null"] },
+    "capabilities": { "type": "object" },
+    "required_secrets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "runtime_network_required": { "type": "boolean" },
+    "telemetry": { "type": "object" }
+  },
+  "additionalProperties": true
+}

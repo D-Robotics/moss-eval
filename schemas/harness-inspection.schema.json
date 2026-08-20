@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/harness-inspection.schema.json",
+  "title": "MOSS Eval Harness Inspection",
+  "type": "object",
+  "required": ["schema_version", "source_fingerprint", "status", "candidates", "evidence", "manifest", "warnings", "requires_confirmation"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "source_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "status": { "enum": ["detected", "manifest", "inconclusive", "ambiguous", "invalid_manifest"] },
+    "candidates": { "type": "array", "items": { "type": "object" } },
+    "evidence": { "type": "array", "items": { "type": "object" } },
+    "manifest": { "type": ["object", "null"] },
+    "warnings": { "type": "array", "items": { "type": "object" } },
+    "requires_confirmation": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

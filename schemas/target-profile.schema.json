@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://d-robotics.github.io/moss-eval/schemas/target-profile.schema.json",
+  "title": "MOSS Eval Guided Target Profile",
+  "type": "object",
+  "required": ["schema_version", "id", "source_fingerprint", "created_at", "confirmed_at", "configuration", "configuration_fingerprint"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string" },
+    "source_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "confirmed_at": { "type": "string", "format": "date-time" },
+    "configuration": { "$ref": "harness-manifest.schema.json" },
+    "configuration_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

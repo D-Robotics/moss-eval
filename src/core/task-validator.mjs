@@ -3,6 +3,7 @@ const PRIORITIES = new Set(['P0', 'P1', 'P2']);
 const RUNNERS = new Set(['local', 'docker', 'pty']);
 const GRADERS = new Set(['command', 'file', 'trace', 'llm_rubric']);
 const OUTCOME_GRADERS = new Set(['command', 'file']);
+const TELEMETRY_LEVELS = new Set(['L0', 'L1', 'L2', 'L3']);
 
 function present(value) {
   return value !== null && value !== undefined && value !== '';
@@ -25,6 +26,7 @@ function validateToolExpectations(expectations, errors) {
     'forbidden',
     'mutation_tools',
     'verification_tools',
+    'expected_order',
   ]) {
     if (expectations[key] === undefined) continue;
     if (
@@ -32,6 +34,13 @@ function validateToolExpectations(expectations, errors) {
       expectations[key].some((value) => typeof value !== 'string' || value.length === 0)
     ) {
       errors.push('tool_expectations.' + key + ' must be an array of non-empty strings');
+    }
+  }
+  if (expectations.argument_requirements !== undefined) {
+    if (!expectations.argument_requirements || typeof expectations.argument_requirements !== 'object' || Array.isArray(expectations.argument_requirements)) {
+      errors.push('tool_expectations.argument_requirements must be an object');
+    } else if (Object.values(expectations.argument_requirements).some((fields) => !Array.isArray(fields) || fields.some((field) => typeof field !== 'string' || !field))) {
+      errors.push('tool_expectations.argument_requirements values must be arrays of non-empty strings');
     }
   }
   if (
@@ -45,6 +54,46 @@ function validateToolExpectations(expectations, errors) {
     typeof expectations.must_verify_after_mutation !== 'boolean'
   ) {
     errors.push('tool_expectations.must_verify_after_mutation must be boolean');
+  }
+}
+
+function validateLlmRubric(grader, index, errors) {
+  if (grader.type !== 'llm_rubric') return;
+  if (!grader.rubric || typeof grader.rubric !== 'object' || Array.isArray(grader.rubric)) {
+    errors.push('grader ' + index + ' llm_rubric requires an object rubric');
+    return;
+  }
+  if (Object.keys(grader.rubric).length === 0) {
+    errors.push('grader ' + index + ' rubric must not be empty');
+  }
+  if (grader.rubric.version !== undefined && !present(grader.rubric.version)) {
+    errors.push('grader ' + index + ' rubric.version must be non-empty');
+  }
+  if (
+    grader.rubric.criteria !== undefined &&
+    (!Array.isArray(grader.rubric.criteria) || grader.rubric.criteria.length === 0)
+  ) {
+    errors.push('grader ' + index + ' rubric.criteria must be a non-empty array');
+  }
+  if (grader.influences_release_gate && !present(grader.calibration_dataset)) {
+    errors.push('grader ' + index + ' requires calibration_dataset before influencing a release gate');
+  }
+}
+
+function validateCapabilityRequirements(requirements, errors) {
+  if (requirements === undefined) return;
+  if (!requirements || typeof requirements !== 'object' || Array.isArray(requirements)) {
+    errors.push('capability_requirements must be an object');
+    return;
+  }
+  if (requirements.schema_version !== '1.0') errors.push('capability_requirements.schema_version must be 1.0');
+  for (const key of ['modes', 'required_tools', 'required_any_tools', 'required_tags', 'runners', 'sandbox_features']) {
+    if (!Array.isArray(requirements[key]) || requirements[key].some((item) => typeof item !== 'string' || !item)) {
+      errors.push(`capability_requirements.${key} must be an array of non-empty strings`);
+    }
+  }
+  if (!TELEMETRY_LEVELS.has(requirements.min_telemetry_level)) {
+    errors.push('capability_requirements.min_telemetry_level must be L0, L1, L2, or L3');
   }
 }
 
@@ -139,6 +188,7 @@ export function validateTask(task, file = '<memory>') {
       if (!Number.isFinite(grader.timeout_seconds) || grader.timeout_seconds <= 0) {
         errors.push('grader ' + index + ' timeout_seconds must be positive');
       }
+      validateLlmRubric(grader, index, errors);
       if (grader.required && OUTCOME_GRADERS.has(grader.type)) requiredOutcome = true;
     }
     if (!requiredOutcome) errors.push('at least one required command or file outcome grader is required');
@@ -147,6 +197,15 @@ export function validateTask(task, file = '<memory>') {
   if (!Array.isArray(task.fatal_assertions)) errors.push('fatal_assertions must be an array');
   if (!Array.isArray(task.artifacts)) errors.push('artifacts must be an array');
   validateToolExpectations(task.tool_expectations, errors);
+  validateCapabilityRequirements(task.capability_requirements, errors);
+  if (task.quality_tier !== undefined && !['gated', 'experimental'].includes(task.quality_tier)) {
+    errors.push('quality_tier must be gated or experimental');
+  }
+  if (task.quality_tier === 'gated') {
+    if (!task.oracle || !Array.isArray(task.allowed_alternate_paths) || task.allowed_alternate_paths.length === 0) errors.push('gated tasks require oracle and allowed_alternate_paths');
+    if (!task.controls?.positive?.length || !task.controls?.negative?.length) errors.push('gated tasks require positive and negative controls');
+    if (!task.provenance?.fixture_revision || !task.provenance?.reviewer || !task.provenance?.reviewed_at) errors.push('gated tasks require fixture and reviewer provenance');
+  }
   if (task.priority === 'P0' && /safety|permission|security/i.test(task.category) && task.fatal_assertions?.length === 0) {
     errors.push('P0 safety tasks require fatal_assertions');
   }

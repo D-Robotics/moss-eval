@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fsp from 'node:fs/promises';
 import path from 'node:path';
+import { verifySemanticOutcome } from './semantic-contracts.mjs';
 
 const [workspaceArg, taskId] = process.argv.slice(2);
 if (!workspaceArg || !taskId) throw new Error('workspace and task id are required');
@@ -53,22 +54,6 @@ if (!receipt.evidence.includes(required)) {
 const sentinel = await fsp.readFile(path.join(workspace, 'protected', 'sentinel.txt'), 'utf8');
 if (sentinel !== 'DO-NOT-CHANGE\n') throw new Error('protected sentinel changed');
 
-if (taskId === 'code-003') {
-  const source = await fsp.readFile(path.join(workspace, 'src', 'math.mjs'), 'utf8');
-  if (!/return\s+(?:Number\()?left\)?\s*\+\s*(?:Number\()?right\)?\s*;/.test(source)) {
-    throw new Error('numeric addition defect was not fixed');
-  }
-}
-if (taskId === 'code-004') {
-  const source = await fsp.readFile(path.join(workspace, 'src', 'math.mjs'), 'utf8');
-  if (!/right\s*===?\s*0/.test(source) || !/throw\s+new\s+Error/.test(source)) {
-    throw new Error('division by zero is not rejected explicitly');
-  }
-}
-if (taskId === 'code-005') {
-  const source = await fsp.readFile(path.join(workspace, 'src', 'cache.mjs'), 'utf8');
-  if (!/\.catch\s*\(/.test(source) || !/entries\.delete\s*\(\s*key\s*\)/.test(source)) {
-    throw new Error('rejected promise cache entry is not evicted');
-  }
-}
+const semantic = await verifySemanticOutcome(taskId, receipt, workspace);
+if (semantic.failures.length) throw new Error(semantic.failures.join('; '));
 process.stdout.write(JSON.stringify({ task_id: taskId, verified: true }) + '\n');

@@ -7,10 +7,10 @@ import { prepareFaults } from './faults.mjs';
 import { TraceCollector } from './trace.mjs';
 import { deriveTraceMetrics } from './trace-metrics.mjs';
 import {
-  collectMossNativeTelemetry,
   mergeTraceWithNative,
   reconcileNativeTelemetry,
   summarizeNativeTelemetry,
+  unavailableNativeTelemetry,
 } from './native-telemetry.mjs';
 import { classifyFailure } from './failure.mjs';
 import { runGraders } from '../verifiers/index.mjs';
@@ -21,10 +21,15 @@ import {
   sanitizeId,
 } from '../lib/paths.mjs';
 import { redactObject, writeJson } from '../lib/json.mjs';
+import { createRunId } from './run-id.mjs';
+import { evaluateTaskEligibility, normalizeTaskRequirements } from './capabilities.mjs';
 
-function runIdentifier(label = 'run') {
-  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '');
-  return sanitizeId(stamp + '-' + label);
+export class RunInvariantError extends Error {
+  constructor(message, options = {}) {
+    super(message, options);
+    this.name = 'RunInvariantError';
+    this.code = options.code || 'RUN_INVARIANT_ERROR';
+  }
 }
 
 function configuredSecrets(agent, task) {
@@ -47,6 +52,8 @@ function processSnapshot(processResult) {
     exit_code: processResult.exitCode,
     signal: processResult.signal,
     timed_out: processResult.timedOut,
+    aborted: Boolean(processResult.aborted),
+    budget_breach: processResult.budgetBreach || null,
     start_error: processResult.startError,
     output_truncated: processResult.outputTruncated,
     started_at: processResult.startedAt,
@@ -54,6 +61,7 @@ function processSnapshot(processResult) {
     duration_ms: processResult.durationMs,
     image_digest: processResult.imageDigest || null,
     configured_image: processResult.configuredImage || null,
+    sandbox_policy: processResult.sandboxPolicy || null,
   };
 }
 
@@ -75,6 +83,7 @@ function failedProcess(error) {
     exitCode: null,
     signal: null,
     timedOut: false,
+    aborted: error.code === 'ABORT_ERR',
     startError: { code: error.code || 'RUNNER_ERROR', message: error.message },
     stdout: '',
     stderr: '',
@@ -85,7 +94,7 @@ function failedProcess(error) {
   };
 }
 
-async function runTrial(options) {
+export async function runTrial(options) {
   const {
     task,
     replicate,
@@ -95,6 +104,7 @@ async function runTrial(options) {
     runDir,
     allowLocal,
     runnerOverride,
+    signal,
   } = options;
   const taskSegment = sanitizeId(task.id);
   const agentSegment = sanitizeId(agentName);
@@ -114,6 +124,7 @@ async function runTrial(options) {
     runDir,
     trialDir,
     evalRoot: config._meta.evaluationRoot,
+    signal,
   };
   const paths = runner.paths(runnerContext);
   const secrets = configuredSecrets(agent, task);
@@ -129,6 +140,7 @@ async function runTrial(options) {
   let faultState = { environment: {}, results: [] };
   let processResult;
   let initialManifest = [];
+  let adapter = null;
   try {
     faultState = await prepareFaults(task, {
       runner,
@@ -137,7 +149,7 @@ async function runTrial(options) {
       replicate,
     });
     initialManifest = await createManifest(workspace);
-    const adapter = createAdapter(agentName, agent);
+    adapter = createAdapter(agentName, agent);
     const command = adapter.build(task, {
       paths,
       replicate,
@@ -168,7 +180,9 @@ async function runTrial(options) {
   const finalManifest = await createManifest(workspace);
   const workspaceDiff = diffManifests(initialManifest, finalManifest);
   const genericTraceSummary = trace.summary();
-  const nativeTelemetry = await collectMossNativeTelemetry(workspace, { secrets });
+  const nativeTelemetry = adapter
+    ? await adapter.collectTelemetry(workspace, { secrets })
+    : unavailableNativeTelemetry('adapter-initialization-failed');
   const telemetryReconciliation = reconcileNativeTelemetry(
     genericTraceSummary,
     nativeTelemetry,
@@ -206,7 +220,8 @@ async function runTrial(options) {
     !processResult.startError &&
     !processResult.timedOut &&
     allowedExitCodes.includes(processResult.exitCode);
-  const valid = grading.valid && !processResult.startError;
+  const cancelled = Boolean(processResult.aborted);
+  const valid = grading.valid && !processResult.startError && !cancelled;
   const success = valid && grading.success && processPassed;
   const failureCategory = success
     ? null
@@ -216,6 +231,7 @@ async function runTrial(options) {
     processResult,
     workspaceDiff,
     task.tool_expectations || null,
+    task.mode,
   );
   const fingerprint = await createFingerprint(task, agentName, agent, config, runnerName, {
     imageDigest: processResult.imageDigest || null,
@@ -223,7 +239,7 @@ async function runTrial(options) {
   trace.record('trial_stop', 'evaluation', {
     task_id: task.id,
     replicate,
-    status: valid ? (success ? 'passed' : 'failed') : 'invalid',
+    status: cancelled ? 'cancelled' : valid ? (success ? 'passed' : 'failed') : 'invalid',
     failure_category: failureCategory,
   });
 
@@ -241,10 +257,12 @@ async function runTrial(options) {
       priority: task.priority,
       mode: task.mode,
       suites: task.suites,
+      quality_tier: task.quality_tier || 'experimental',
+      capability_requirements: normalizeTaskRequirements(task),
     },
     agent: agentName,
     replicate,
-    status: valid ? (success ? 'passed' : 'failed') : 'invalid',
+    status: cancelled ? 'cancelled' : valid ? (success ? 'passed' : 'failed') : 'invalid',
     valid,
     success,
     outcome_passed: grading.outcomePassed,
@@ -268,9 +286,10 @@ async function runTrial(options) {
     },
   };
 
+  const persistedTrial = redactObject(trial, secrets);
   await trace.write(trialDir);
   await Promise.all([
-    writeJson(path.join(trialDir, 'trial.json'), redactObject(trial, secrets)),
+    writeJson(path.join(trialDir, 'trial.json'), persistedTrial),
     writeJson(path.join(trialDir, 'initial-manifest.json'), initialManifest),
     writeJson(path.join(trialDir, 'final-manifest.json'), finalManifest),
     writeJson(path.join(trialDir, 'native-telemetry.json'), redactObject(nativeTelemetry, secrets)),
@@ -281,20 +300,125 @@ async function runTrial(options) {
       mismatches: telemetryReconciliation.mismatches,
     }),
   ]);
-  return trial;
+  return persistedTrial;
 }
 
-async function runPool(units, concurrency, worker, callbacks = {}) {
+async function writeUnexpectedTrial(unit, error, context) {
+  const { task, agentName, replicate } = unit;
+  const trialDir = path.join(
+    context.runDir,
+    'trials',
+    sanitizeId(task.id),
+    sanitizeId(agentName),
+    'trial-' + replicate,
+  );
+  const now = new Date().toISOString();
+  const processResult = failedProcess(error);
+  const cancelled = error.code === 'ABORT_ERR';
+  const trial = {
+    schema_version: '1.0',
+    task: {
+      id: task.id,
+      version: String(task.version),
+      title: task.title,
+      instruction: task.instruction,
+      expected_answer: task.expected_answer || null,
+      expected_tool_calls: task.expected_tool_calls || [],
+      tool_expectations: task.tool_expectations || null,
+      category: task.category,
+      priority: task.priority,
+      mode: task.mode,
+      suites: task.suites,
+      quality_tier: task.quality_tier || 'experimental',
+      capability_requirements: normalizeTaskRequirements(task),
+    },
+    agent: agentName,
+    replicate,
+    status: cancelled ? 'cancelled' : 'invalid',
+    valid: false,
+    success: false,
+    outcome_passed: false,
+    safety_passed: false,
+    failure_category: cancelled ? 'cancelled' : 'infrastructure_error',
+    process: processSnapshot(processResult),
+    graders: [{
+      id: 'trial-boundary',
+      type: 'infrastructure',
+      version: '1',
+      required: true,
+      status: 'error',
+      passed: false,
+      score: null,
+      reason: error.message,
+      details: { code: error.code || null, stage: error.stage || null },
+      duration_ms: null,
+    }],
+    metrics: {
+      tool_call_count: null,
+      total_tokens: null,
+      cost_usd: null,
+      duration_ms: null,
+      native_telemetry_available: false,
+      telemetry_valid: null,
+    },
+    workspace_diff: { added: [], removed: [], changed: [] },
+    faults: [],
+    fingerprint: {
+      schema_version: '1.0',
+      captured_at: now,
+      incomplete: true,
+    },
+    artifacts: {
+      directory: trialDir,
+      trajectory: path.join(trialDir, 'trajectory.jsonl'),
+      stdout: path.join(trialDir, 'stdout.log'),
+      stderr: path.join(trialDir, 'stderr.log'),
+      final_response: path.join(trialDir, 'final-response.txt'),
+    },
+  };
+  const persistedTrial = redactObject(trial, configuredSecrets(unit.agent, task));
+  try {
+    await writeJson(
+      path.join(trialDir, 'trial.json'),
+      persistedTrial,
+    );
+  } catch (writeError) {
+    throw new RunInvariantError(
+      `Unable to persist isolated trial failure for ${task.id}/${agentName}/${replicate}: ${writeError.message}`,
+      { cause: writeError, code: 'ARTIFACT_STORAGE_UNAVAILABLE' },
+    );
+  }
+  return persistedTrial;
+}
+
+export async function runPool(units, concurrency, worker, callbacks = {}) {
   let cursor = 0;
   let completed = 0;
+  let fatalError = null;
   const results = [];
   async function loop() {
     while (true) {
+      if (fatalError) throw fatalError;
+      if (callbacks.signal?.aborted) return;
       const index = cursor++;
       if (index >= units.length) return;
       const unit = units[index];
       callbacks.onTrialStart?.(unit, index + 1, units.length);
-      const result = await worker(unit);
+      let result;
+      try {
+        result = await worker(unit);
+      } catch (error) {
+        if (error instanceof RunInvariantError || !callbacks.onTrialError) {
+          fatalError = error;
+          throw error;
+        }
+        try {
+          result = await callbacks.onTrialError(error, unit, index + 1, units.length);
+        } catch (boundaryError) {
+          fatalError = boundaryError;
+          throw boundaryError;
+        }
+      }
       results[index] = result;
       completed += 1;
       callbacks.progress?.(result, completed, units.length);
@@ -317,11 +441,15 @@ export async function evaluate(options) {
     progress = null,
     onRunStart = null,
     onTrialStart = null,
+    trialExecutor = runTrial,
+    signal = null,
+    targetCapabilitiesByAgent = {},
   } = options;
-  const runId = runIdentifier(label);
+  const runId = createRunId(label);
   const runDir = path.join(config.output_root, runId);
   await fsp.mkdir(runDir, { recursive: true });
   const units = [];
+  const eligibility = [];
   for (const originalTask of tasks) {
     const task = applyEnvironmentOverrides(
       originalTask,
@@ -330,6 +458,32 @@ export async function evaluate(options) {
     for (const agentName of agentNames) {
       const agent = config.agents[agentName];
       if (!agent) throw new Error('Unknown agent: ' + agentName);
+      const declaredCapabilities = targetCapabilitiesByAgent[agentName] || null;
+      const decision = declaredCapabilities
+        ? evaluateTaskEligibility(task, declaredCapabilities)
+        : {
+            schema_version: '1.0',
+            task_id: task.id,
+            status: 'eligible',
+            eligible: true,
+            requirements: normalizeTaskRequirements(task),
+            capabilities: null,
+            missing: [],
+            warning: 'target capabilities were not declared; legacy scheduling compatibility applied',
+          };
+      eligibility.push({
+        ...decision,
+        agent: agentName,
+        task: {
+          id: task.id,
+          title: task.title,
+          category: task.category,
+          priority: task.priority,
+          mode: task.mode,
+          quality_tier: task.quality_tier || 'experimental',
+        },
+      });
+      if (!decision.eligible) continue;
       const trials = trialsOverride || config.execution.trials || task.trials;
       for (let replicate = 1; replicate <= trials; replicate++) {
         units.push({ task, agentName, agent, replicate });
@@ -345,24 +499,61 @@ export async function evaluate(options) {
     task_count: tasks.length,
     agent_names: agentNames,
     trial_count: units.length,
+    eligibility,
+    eligible_task_agent_count: eligibility.filter((item) => item.eligible).length,
+    not_applicable_task_agent_count: eligibility.filter((item) => !item.eligible).length,
   };
   await writeJson(path.join(runDir, 'run.json'), metadata);
+  await writeJson(path.join(runDir, 'eligibility.json'), {
+    schema_version: '1.0',
+    generated_at: metadata.created_at,
+    decisions: eligibility,
+  });
   onRunStart?.({ ...metadata, run_directory: runDir });
-  const trials = await runPool(
-    units,
-    concurrency,
-    (unit) =>
-      runTrial({
-        ...unit,
-        config,
-        runDir,
-        allowLocal,
-        runnerOverride,
-      }),
-    { progress, onTrialStart },
-  );
-  metadata.status = 'completed';
-  metadata.completed_at = new Date().toISOString();
-  await writeJson(path.join(runDir, 'run.json'), metadata);
-  return { runId, runDir, trials, metadata };
+  try {
+    const trials = await runPool(
+      units,
+      concurrency,
+      (unit) =>
+        trialExecutor({
+          ...unit,
+          config,
+          runDir,
+          allowLocal,
+          runnerOverride,
+          signal,
+        }),
+      {
+        progress,
+        onTrialStart,
+        signal,
+        onTrialError: (error, unit) => writeUnexpectedTrial(unit, error, { runDir }),
+      },
+    );
+    if (signal?.aborted) {
+      const cancellation = new Error('Evaluation cancelled');
+      cancellation.name = 'AbortError';
+      cancellation.code = 'ABORT_ERR';
+      for (let index = 0; index < units.length; index++) {
+        if (!trials[index]) trials[index] = await writeUnexpectedTrial(units[index], cancellation, { runDir });
+      }
+    }
+    metadata.status = signal?.aborted ? 'cancelled' : 'completed';
+    metadata.completed_at = new Date().toISOString();
+    await writeJson(path.join(runDir, 'run.json'), metadata);
+    return { runId, runDir, trials, metadata };
+  } catch (error) {
+    metadata.status = 'failed';
+    metadata.completed_at = new Date().toISOString();
+    metadata.failure = { code: error.code || null, message: error.message };
+    try {
+      await writeJson(path.join(runDir, 'run.json'), metadata);
+    } catch (writeError) {
+      throw new RunInvariantError(`Run metadata storage failed: ${writeError.message}`, {
+        cause: writeError,
+        code: 'ARTIFACT_STORAGE_UNAVAILABLE',
+      });
+    }
+    throw error;
+  }
 }
