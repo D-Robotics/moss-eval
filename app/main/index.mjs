@@ -63,11 +63,27 @@ async function createWindow() {
   }
   mainWindow = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1100, minHeight: 700, show: false,
-    webPreferences: { preload: path.join(import.meta.dirname, 'preload.mjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true },
+    webPreferences: { preload: path.join(import.meta.dirname, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true },
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.webContents.on('will-navigate', (event, url) => { if (url !== mainWindow.webContents.getURL()) event.preventDefault(); });
   await mainWindow.loadFile(path.join(import.meta.dirname, '..', 'renderer', 'index.html'));
+  if (process.env.MOSS_EVAL_PACKAGED_RENDERER_SMOKE === '1') {
+    const result = await mainWindow.webContents.executeJavaScript(`({
+      api: typeof window.mossEval,
+      tab_count: document.querySelectorAll('#tabs button').length,
+      source_heading: document.querySelector('#source h2')?.textContent || null
+    })`);
+    if (result.api !== 'object' || result.tab_count !== 5 || result.source_heading !== 'GitHub 仓库') {
+      throw new Error(`Packaged renderer smoke failed: ${JSON.stringify(result)}`);
+    }
+    if (process.env.MOSS_EVAL_SMOKE_MARKER) {
+      await fsp.writeFile(process.env.MOSS_EVAL_SMOKE_MARKER, JSON.stringify(result) + '\n', 'utf8');
+    }
+    process.stdout.write('packaged renderer preload passed\n');
+    app.quit();
+    return;
+  }
   mainWindow.show();
 }
 

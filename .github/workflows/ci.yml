@@ -39,3 +39,5 @@ jobs:
         working-directory: app
       - run: node scripts/packaged-worker-smoke.mjs "dist/win-unpacked/MOSS Eval.exe"
         working-directory: app
+      - run: node scripts/packaged-renderer-smoke.mjs "dist/win-unpacked/MOSS Eval.exe"
+        working-directory: app

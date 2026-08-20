@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+const { contextBridge, ipcRenderer } = require('electron');
 
 const request = async (operation, payload = {}) => {
   const response = await ipcRenderer.invoke('moss-eval:request', operation, payload);
@@ -22,5 +22,9 @@ contextBridge.exposeInMainWorld('mossEval', Object.freeze({
   listTasks: () => request('tasks:list'),
   getSettings: () => request('settings:get'),
   updateSettings: (settings) => request('settings:update', settings),
-  onEvent: (listener) => { const handler = (_event, data) => listener(data); ipcRenderer.on('moss-eval:event', handler); return () => ipcRenderer.removeListener('moss-eval:event', handler); },
+  onEvent: (listener) => {
+    const handler = (_event, data) => listener(data);
+    ipcRenderer.on('moss-eval:event', handler);
+    return () => ipcRenderer.removeListener('moss-eval:event', handler);
+  },
 }));

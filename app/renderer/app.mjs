@@ -106,4 +106,4 @@ function renderReport(){
 api.onEvent((event)=>{state.events.push(event);const id=eventRunId(event);if(!state.activeRun&&id)state.activeRun=id;if(byId('live')&&!byId('live').hidden)renderLive();if(event.type==='run_completed'||event.type==='run_failed')loadHistory();});
 
 renderTabs();renderSource();renderConfigure();renderLive();renderHistory();renderReport();
-safely(async()=>{const result=await api.doctor();const target=byId('doctor');target.textContent=result.ready?'环境就绪':'环境需处理';target.className=`pill ${result.ready?'ok':'warn'}`;target.title=(result.checks||[]).map(c=>c.message).join('\n');})();
+safely(async()=>{const result=await api.doctor();const target=byId('doctor');target.textContent=result.ready?'环境就绪':'环境需处理';target.className=`pill ${result.ready?'ok':'warn'}`;target.title=(result.checks||[]).map(c=>`[${c.status}] ${c.id}: ${c.detail}${c.remediation?`\n处理建议: ${c.remediation}`:''}`).join('\n\n');})();

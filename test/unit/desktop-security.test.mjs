@@ -20,16 +20,21 @@ test('narrow IPC rejects arbitrary process, PID, path and setting operations', (
 });
 
 test('preload and BrowserWindow configuration expose no arbitrary process or filesystem bridge', async () => {
-  const preload = await fsp.readFile(path.join(root, 'app/main/preload.mjs'), 'utf8');
+  const preload = await fsp.readFile(path.join(root, 'app/main/preload.cjs'), 'utf8');
   const main = await fsp.readFile(path.join(root, 'app/main/index.mjs'), 'utf8');
   const renderer = await fsp.readFile(path.join(root, 'app/renderer/app.mjs'), 'utf8');
   assert.doesNotMatch(preload, /runCommand|killCommand|readConfig|writeConfig|showOpenDialog/);
+  assert.match(preload, /require\('electron'\)/);
+  assert.doesNotMatch(preload, /^\s*import\s/m);
+  assert.match(main, /preload\.cjs/);
   assert.match(main, /contextIsolation:\s*true/);
   assert.match(main, /sandbox:\s*true/);
   assert.match(main, /nodeIntegration:\s*false/);
   assert.match(main, /setWindowOpenHandler\(\(\) => \(\{ action: 'deny' \}\)\)/);
   assert.doesNotMatch(renderer, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|\.eval\(/);
   assert.match(renderer, /textContent/);
+  assert.match(renderer, /c\.detail/);
+  assert.match(renderer, /c\.remediation/);
 });
 
 test('worker handshake is versioned and unknown operations cannot execute', async () => {
