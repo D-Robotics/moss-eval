@@ -35,6 +35,7 @@
         "to": "project",
         "filter": [
           "bin/**",
+          "drivers/**",
           "src/**",
           "taskpacks/**",
           "configs/**",

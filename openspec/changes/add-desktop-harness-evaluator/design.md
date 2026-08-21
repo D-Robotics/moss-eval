@@ -128,9 +128,25 @@ The change is delivered in four stages:
 
 The UI and core expose unsupported later-phase features explicitly rather than accepting them and degrading silently.
 
+### 10. Make local sandbox prerequisites a resumable onboarding flow
+
+The Windows MVP continues to use a separately installed Docker Desktop runtime. The environment doctor distinguishes Docker CLI installation from daemon readiness, probes WSL2 and the active virtualization path, and resolves supported per-user and all-user Docker installation locations without requiring the user to edit `PATH`.
+
+The renderer offers only fixed, trusted remediation actions: official Docker and Microsoft setup guidance, starting a discovered Docker Desktop executable, and retrying the doctor. It never accepts a renderer-supplied executable or URL. When preparation is requested before prerequisites are ready, the client stores the reviewed preparation request and configuration draft in application-local renderer storage. It polls while the app remains open and retries exactly once when the doctor becomes ready; the same pending request is restored after an application or machine restart. The request is cleared before automatic execution so build failures cannot create an unbounded retry loop.
+
+Alternative considered: silently downloading, accepting licenses, or elevating an installer. This was rejected because prerequisite installation may require license review, UAC, enterprise policy, BIOS changes, or a restart. The MVP provides a one-click route to trusted installers/documentation and automates only starting an already installed Docker Desktop runtime.
+
+### 11. Treat MOSS model configuration as ephemeral run authorization
+
+The desktop evaluation form exposes a fixed provider selector, model name, provider-derived base URL, password-masked API key, explicit runtime-network authorization, and a connection-test action. Preset providers use evaluator-owned HTTPS endpoints; only `openai-compatible` accepts a user-editable HTTPS base URL. The renderer never stores the API key in local storage or the resumable preparation draft.
+
+The API key crosses the schema-validated IPC and worker boundary only for the requested connection test or run. The MOSS adapter materializes a randomly named config file beneath the evaluator-owned trial directory, passes only its container path through `--config-file`, and deletes it in a `finally` block after the container exits. Secret values are registered with trace redaction but are excluded from fingerprints, events, canonical artifacts, exports, and command arguments. A custom model run requires an explicit per-run public-network authorization; denial blocks before the Agent starts.
+
+Connection testing runs the same prepared image under the same bounded Docker policy with public network explicitly authorized. It performs a minimal provider model-list or chat-compatible request without launching repository-controlled commands, returns only status, latency, and sanitized diagnostics, and never persists the supplied key.
+
 ## Risks / Trade-offs
 
-- [Windows sandbox prerequisites create onboarding friction] → Provide a non-mutating doctor, exact failed checks, remediation, retry, and allow source inspection before prerequisites are ready.
+- [Windows sandbox prerequisites create onboarding friction] → Provide a non-mutating doctor, exact failed checks, fixed trusted remediation actions, persisted preparation intent, automatic retry after recovery, and allow source inspection before prerequisites are ready.
 - [Docker network controls vary by engine] → Treat the policy actually enforced by the runtime as provenance, deny when required isolation cannot be verified, and do not overclaim destination-level filtering.
 - [Static Harness detection can be wrong] → Show evidence and confidence, require confirmation for ambiguity, validate inside the sandbox, and bind profiles to source hashes.
 - [Copying large local repositories costs time and disk] → Apply exclusions and limits, stream hashing/copying, deduplicate immutable snapshots by fingerprint, and show size before preparation.
@@ -138,6 +154,7 @@ The UI and core expose unsupported later-phase features explicitly rather than a
 - [A broad adapter API can become unstable] → Version a minimal data contract, keep adapters declarative where possible, and add adapter conformance fixtures before admitting more built-ins.
 - [Long-running workers or containers may survive crashes] → Persist ownership metadata, reconcile on startup, terminate only resources carrying evaluator-owned labels, and never kill arbitrary PIDs.
 - [LLM judges can leak code or produce unstable scores] → Default them off, disclose fields/providers, redact, calibrate, allow uncertain, and keep deterministic pass independent.
+- [User-entered model credentials can leak through renderer state, process arguments, or artifacts] → Keep keys out of persistent UI state and arguments, use transient evaluator-owned files, delete them after use, and test redaction across IPC, events, traces, and exports.
 - [Historical artifacts may not match the canonical schema] → Provide versioned readers or an explicit copy-on-migrate command; never overwrite original runs during migration.
 - [Supporting only 15–20 gated tasks reduces headline coverage] → Label broader tasks experimental and prioritize trustworthy semantic coverage over an inflated task count.
 

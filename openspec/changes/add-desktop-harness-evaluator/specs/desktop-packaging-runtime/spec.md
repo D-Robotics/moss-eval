@@ -33,6 +33,25 @@ The client SHALL run a non-mutating environment doctor for Windows version, arch
 - **WHEN** Docker-compatible tooling exists but its daemon cannot be reached
 - **THEN** the doctor distinguishes that condition from an absent installation and offers a retry after remediation
 
+#### Scenario: Docker is installed outside PATH
+- **WHEN** Docker Desktop is installed in a supported per-user or all-user location but its CLI is absent from the client process PATH
+- **THEN** the doctor discovers the fixed installation location, reports Docker as installed, and configures preparation and trials to use the discovered CLI
+
+### Requirement: Guided and resumable prerequisite onboarding
+The client SHALL expose only fixed trusted actions for missing local sandbox prerequisites, SHALL direct users to official Docker or Microsoft installation guidance, SHALL be able to start a discovered Docker Desktop installation, and SHALL retry environment checks without discarding the reviewed evaluation workflow.
+
+#### Scenario: Docker Desktop is not installed
+- **WHEN** the doctor reports that Docker tooling is absent
+- **THEN** the client offers a one-click action to open the official Docker Desktop Windows installation page and continues to monitor a saved pending preparation request
+
+#### Scenario: Environment becomes ready after remediation
+- **WHEN** a user requested target preparation, the client persisted that reviewed request, and a later doctor check reports all blocking prerequisites healthy
+- **THEN** the client restores the source and configuration draft and automatically submits that preparation exactly once without requiring the user to refill the workflow
+
+#### Scenario: Automatic preparation fails after readiness
+- **WHEN** the resumed preparation reaches Docker but fails for a build, source, authorization, or network reason
+- **THEN** the client shows the error, preserves the visible workflow draft, and does not retry repeatedly without a new user action
+
 ### Requirement: Packaged process resolution
 The application SHALL resolve packaged resources from the runtime resource directory and launch the dedicated evaluation worker through an Electron-supported packaged-process mechanism rather than assuming `process.execPath` is a standalone Node executable.
 

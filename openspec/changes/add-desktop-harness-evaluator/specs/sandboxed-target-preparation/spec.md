@@ -50,3 +50,18 @@ The system SHALL support cooperative cancellation and bounded forced termination
 #### Scenario: Cancel an active preparation
 - **WHEN** the user cancels preparation
 - **THEN** the system stops the active sandbox within a bounded interval, marks preparation cancelled, and leaves the source snapshot and original source intact
+
+### Requirement: Ephemeral model credential delivery
+The system SHALL deliver user-entered MOSS model settings through a transient evaluator-owned config file, SHALL pass only the file path to MOSS, and SHALL remove the file after connection testing or Trial execution. The API key MUST NOT appear in Docker arguments, environment assignments, events, fingerprints, canonical artifacts, exports, renderer persistence, or error messages.
+
+#### Scenario: Run MOSS with user-entered model settings
+- **WHEN** a user starts an authorized MOSS Trial with complete model configuration
+- **THEN** the adapter creates a mode-restricted temporary config, invokes MOSS with its in-container path, redacts the key from captured output, and deletes the host file in a `finally` block
+
+#### Scenario: Runtime network is denied
+- **WHEN** a user supplies an external model configuration but does not authorize public runtime network access
+- **THEN** the system blocks the connection test or evaluation before launching MOSS and does not materialize the API key
+
+#### Scenario: Container launch or provider request fails
+- **WHEN** the process fails, times out, or is cancelled after temporary credential material is created
+- **THEN** cleanup still removes the temporary config and only sanitized diagnostics are retained

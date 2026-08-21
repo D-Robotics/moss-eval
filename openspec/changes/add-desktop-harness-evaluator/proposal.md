@@ -10,7 +10,8 @@
 - Run all untrusted build and evaluation activity in an isolated Docker/WSL environment with explicit approvals for network access and secrets, bounded resources, and no access to the original local source directory or Docker control socket.
 - Add capability-aware task selection and telemetry levels so unsupported tasks are reported as `NOT_APPLICABLE`, failures are isolated per trial, and comparisons disclose coverage instead of treating missing capabilities as failures.
 - Replace broad desktop IPC and development-only process launching with a schema-validated desktop orchestration API and a dedicated evaluation worker supporting inspection, preparation, start, progress, cancellation, history, comparison, and report export.
-- Make the desktop client installable under read-only application directories while keeping configuration, snapshots, runs, caches, and logs under the user data directory; provide prerequisite diagnostics and Windows installer/portable distributions.
+- Make the desktop client installable under read-only application directories while keeping configuration, snapshots, runs, caches, and logs under the user data directory; provide prerequisite diagnostics, official installation guidance, resumable onboarding, and Windows installer/portable distributions.
+- Add an explicit MOSS model setup flow for provider, model, optional custom base URL, ephemeral API key, runtime-network authorization, and a bounded connection test so source checkouts can be evaluated without relying on publish-time bundled defaults.
 - Harden the initial task suite around deterministic semantic outcome checks and diagnostic transcript checks, with optional, calibrated LLM-as-Judge scoring only where deterministic grading is insufficient.
 - Define security, privacy, provenance, reliability, and packaging acceptance gates for shipping the desktop client.
 

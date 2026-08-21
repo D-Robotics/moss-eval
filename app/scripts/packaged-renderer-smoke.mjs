@@ -34,7 +34,24 @@ try {
   assert.deepEqual(result, {
     api: 'object',
     tab_count: 5,
-    source_heading: 'GitHub 仓库',
+    primary_step_count: 3,
+    primary_step_labels: ['选择 Agent','配置评测','运行与结果'],
+    source_heading: '你想评测哪个 Agent？',
+    source_mode_count: 2,
+    source_safety_visible: true,
+    revision_is_advanced: true,
+    guarded_message: '请先选择并分析要评测的 Agent',
+    stayed_on_source: true,
+    missing_local_message: '请先选择电脑上的 Agent 项目文件夹',
+    prerequisite_panel: true,
+    pending_storage_key: null,
+    model_provider_present: false,
+    model_protocol_count: 3,
+    model_protocol_is_advanced: true,
+    model_api_key_type: 'password',
+    model_base_url_editable: true,
+    generic_secrets_hidden: true,
+    api_key_persisted: false,
   });
   process.stdout.write('packaged renderer preload passed\n');
 } finally {

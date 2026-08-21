@@ -17,12 +17,23 @@ test('narrow IPC rejects arbitrary process, PID, path and setting operations', (
   assert.throws(() => validateIpcRequest('settings:update', { command: 'anything' }), /Unknown setting/);
   assert.deepEqual(validateIpcRequest('run:cancel', { run_id: 'owned-run.1' }), { run_id: 'owned-run.1' });
   assert.deepEqual(validateIpcRequest('prepare:cancel', { preparation_id: 'prepare-1' }), { preparation_id: 'prepare-1' });
+  assert.deepEqual(validateIpcRequest('prerequisite:remediate', { action: 'start-docker' }), { action: 'start-docker' });
+  assert.throws(() => validateIpcRequest('prerequisite:remediate', { action: 'run-command', command: 'calc.exe' }), /Unsupported prerequisite action/);
+  const modelRequest={target_fingerprint:'a'.repeat(64),approve_runtime_network:true,model_configuration:{provider:'openai-compatible',model:'custom-model',base_url:'https://models.example.com',api_key:'secret'}};
+  assert.deepEqual(validateIpcRequest('model:testConnection',modelRequest),modelRequest);
+  const minimalModelRequest={target_fingerprint:'b'.repeat(64),approve_runtime_network:true,model_configuration:{protocol:'auto',model:'deepseek-v4-flash',base_url:'https://ai-api.d-robotics.cc/v1',api_key:'secret'}};
+  assert.deepEqual(validateIpcRequest('model:testConnection',minimalModelRequest),minimalModelRequest);
+  assert.throws(()=>validateIpcRequest('model:testConnection',{...modelRequest,approve_runtime_network:false}),/authorization/);
+  assert.throws(()=>validateIpcRequest('model:testConnection',{...modelRequest,model_configuration:{...modelRequest.model_configuration,base_url:'http://localhost:11434'}}),/HTTPS/);
+  assert.throws(()=>validateIpcRequest('model:testConnection',{...modelRequest,model_configuration:{...modelRequest.model_configuration,command:'calc.exe'}}),/Unknown model configuration/);
+  assert.throws(()=>validateIpcRequest('model:testConnection',{...minimalModelRequest,model_configuration:{...minimalModelRequest.model_configuration,protocol:'vendor-name'}}),/protocol/);
 });
 
 test('preload and BrowserWindow configuration expose no arbitrary process or filesystem bridge', async () => {
   const preload = await fsp.readFile(path.join(root, 'app/main/preload.cjs'), 'utf8');
   const main = await fsp.readFile(path.join(root, 'app/main/index.mjs'), 'utf8');
   const renderer = await fsp.readFile(path.join(root, 'app/renderer/app.mjs'), 'utf8');
+  const workflow = await fsp.readFile(path.join(root, 'app/renderer/workflow.mjs'), 'utf8');
   assert.doesNotMatch(preload, /runCommand|killCommand|readConfig|writeConfig|showOpenDialog/);
   assert.match(preload, /require\('electron'\)/);
   assert.doesNotMatch(preload, /^\s*import\s/m);
@@ -35,6 +46,21 @@ test('preload and BrowserWindow configuration expose no arbitrary process or fil
   assert.match(renderer, /textContent/);
   assert.match(renderer, /c\.detail/);
   assert.match(renderer, /c\.remediation/);
+  assert.match(renderer, /moss-eval\.pending-preparation\.v1/);
+  assert.match(renderer, /resumePendingPreparation/);
+  assert.match(renderer, /localStorage\.setItem/);
+  assert.match(preload, /remediatePrerequisite/);
+  assert.match(preload, /testModelConnection/);
+  assert.match(renderer, /type:'password'/);
+  assert.match(renderer, /api_key:modelApiKey\.value/);
+  assert.doesNotMatch(renderer, /captureDraft=.*api_key/);
+  assert.doesNotMatch(renderer, /id:'model-provider'/);
+  assert.match(renderer, /id:'model-protocol'/);
+  assert.match(renderer, /genericSecretsPanel\.hidden=moss/);
+  assert.match(renderer, /aria-busy/);
+  assert.match(workflow, /请先选择并分析要评测的 Agent/);
+  assert.match(workflow, /请先选择电脑上的 Agent 项目文件夹/);
+  assert.match(renderer, /查看技术详情/);
 });
 
 test('worker handshake is versioned and unknown operations cannot execute', async () => {
@@ -70,4 +96,12 @@ test('shared evaluation service classifies interrupted and corrupt run history',
     assert.equal(runs.find((run) => run.id === 'interrupted').status, 'interrupted');
     assert.equal(runs.find((run) => run.id === 'corrupt').status, 'corrupt');
   } finally { await fsp.rm(directory, { recursive: true, force: true }); }
+});
+
+test('desktop worker runtime accepts only a bounded Docker command value', async () => {
+  const service = new EvaluationService({ paths: { projectRoot: root, sources: 'sources', targets: 'targets', runs: 'runs' } });
+  assert.deepEqual(service.configureRuntime({ docker_command: 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe' }), { docker_command_configured: true });
+  assert.throws(() => service.configureRuntime({ docker_command: 'docker\ncalc.exe' }), /Invalid Docker runtime command/);
+  assert.throws(() => service.configureRuntime({ docker_command: 'C:\\Windows\\System32\\calc.exe' }), /Invalid Docker runtime command/);
+  assert.throws(() => service.configureRuntime({}), /Invalid Docker runtime command/);
 });

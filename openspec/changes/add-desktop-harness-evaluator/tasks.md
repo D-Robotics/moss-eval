@@ -44,6 +44,7 @@
 - [x] 5.5 Add redaction across process output, normalized events, raw traces, UI projections, logs, and exported reports.
 - [x] 5.6 Implement cooperative cancellation, bounded forced termination, cleanup, and evaluator-owned resource reconciliation after crashes.
 - [x] 5.7 Add adversarial tests for traversal, symlink escape, prohibited mounts/privileges, secret leakage, denied network, and sandbox unavailability.
+- [x] 5.8 Discover supported Docker Desktop CLI locations, separate installation/daemon health, verify the WSL2 virtualization path, and expose only fixed trusted remediation actions.
 
 ## 6. Capability-Aware Scheduling and Metrics
 
@@ -86,6 +87,7 @@
 - [x] 9.6 Build history reconstruction from canonical artifacts and mark completed, interrupted, cancelled, corrupt, and unsupported-schema runs accurately.
 - [x] 9.7 Build coverage-aware comparison and redacted JSON plus human-readable report export.
 - [x] 9.8 Add an end-to-end desktop fixture that evaluates a pinned public-style MOSS source and a local snapshot without modifying its original directory.
+- [x] 9.9 Add prerequisite onboarding UI that persists a reviewed pending preparation and resumes it exactly once when the doctor becomes healthy, including across client restart.
 
 ## 10. Packaging, CI, and Release
 
@@ -96,3 +98,11 @@
 - [x] 10.5 Add CI gates for schemas, core units, artifact compatibility, adapter conformance, grader controls, sandbox policy, desktop security, and selected end-to-end evaluations.
 - [x] 10.6 Document supported inputs, prerequisites, security/permission model, data locations, telemetry levels, metric semantics, limitations, and troubleshooting.
 - [ ] 10.7 Run the full release checklist against a clean Windows environment and publish only when provenance, coverage, regression, security, and packaged smoke gates pass.
+- [x] 10.8 Document the Docker-dependent MVP onboarding flow and add doctor, IPC, renderer-resume, and packaged-runtime regression coverage.
+
+## 11. MOSS Model Configuration
+
+- [x] 11.1 Add validated provider presets, model/base-URL configuration, explicit runtime-network authorization, and a bounded connection-test service.
+- [x] 11.2 Add ephemeral MOSS config-file delivery and guaranteed cleanup without placing API keys in arguments, environment projections, fingerprints, events, or artifacts.
+- [x] 11.3 Add the Provider, Model, Base URL, masked API Key, network authorization, and connection-test controls to the desktop workflow without persisting the API key.
+- [x] 11.4 Add security, adapter, runner, IPC, renderer, connection-test, and packaged smoke coverage; document the model setup and troubleshooting flow.

@@ -99,6 +99,25 @@ test('MOSS built-in target adapter preserves mode and telemetry behavior from th
   assert.equal(targetAdapter.describeCapabilities().telemetry_level, 'L3');
 });
 
+test('MOSS adapter marks a missing model configuration as an invalid runtime precondition', () => {
+  const adapter = createAdapter('moss', {
+    adapter: 'moss',
+    command: 'moss',
+    args: ['{instruction}'],
+  });
+
+  assert.deepEqual(adapter.diagnoseProcess({
+    exitCode: 3,
+    stderr: '[moss] No model configured yet.\nMoss needs a model configuration before it can run.',
+  }), {
+    invalid: true,
+    category: 'configuration_error',
+    code: 'MOSS_MODEL_NOT_CONFIGURED',
+    message: 'MOSS requires a model configuration before evaluation can start.',
+  });
+  assert.equal(adapter.diagnoseProcess({ exitCode: 0, stderr: '' }), null);
+});
+
 test('prepared targets use deterministic fingerprints, immutable digests, cache reuse, and invalidation', async (t) => {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'moss-eval-targets-'));
   t.after(() => fsp.rm(root, { recursive: true, force: true }));

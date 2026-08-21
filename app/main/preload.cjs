@@ -8,12 +8,14 @@ const request = async (operation, payload = {}) => {
 
 contextBridge.exposeInMainWorld('mossEval', Object.freeze({
   doctor: () => request('doctor'),
+  remediatePrerequisite: (action) => request('prerequisite:remediate', { action }),
   addGithubSource: (url, ref) => request('source:addGithub', { url, ref }),
   addLocalSource: (directory) => request('source:addLocal', { directory }),
   selectDirectory: () => request('dialog:selectDirectory'),
   inspect: (sourceRecord) => request('inspect', { source_record: sourceRecord }),
   prepare: (reviewedConfiguration) => request('prepare', reviewedConfiguration),
   cancelPreparation: (preparationId) => request('prepare:cancel', { preparation_id: preparationId }),
+  testModelConnection: (configuration) => request('model:testConnection', configuration),
   startRun: (configuration) => request('run:start', configuration),
   cancelRun: (runId) => request('run:cancel', { run_id: runId }),
   listRuns: () => request('run:list'),

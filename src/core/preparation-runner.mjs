@@ -3,6 +3,7 @@ import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { runProcess } from '../lib/process.mjs';
+import { withExecutableDirectory } from '../lib/process-environment.mjs';
 import { createSandboxPolicy } from './sandbox-policy.mjs';
 
 function safeBuildValue(value, label) {
@@ -40,6 +41,7 @@ export function renderPreparationDockerfile(plan, baseImage='node:22-bookworm') 
 export async function buildPreparedImage(input, options={}) {
   const processRunner=options.processRunner||runProcess;
   const dockerCommand=options.dockerCommand||'docker';
+  const dockerEnvironment=withExecutableDirectory(dockerCommand,options.environment||process.env);
   const needsNetwork=(input.plan.steps||[]).some((step)=>step.network===true);
   const requestedNetwork=needsNetwork?'public':'disabled';
   const policy=createSandboxPolicy({...(input.sandboxPolicy||{}),network:requestedNetwork},input.authorization||null);
@@ -49,27 +51,30 @@ export async function buildPreparedImage(input, options={}) {
   const tag=`moss-eval-prepared:${crypto.createHash('sha256').update(input.sourceRecord.snapshot_fingerprint+JSON.stringify(input.plan)).digest('hex').slice(0,24)}`;
   const startedAt=new Date().toISOString();
   try{
-    let baseInspect=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',input.baseImage],cwd:temporary,timeoutMs:30000,signal:input.signal,outputLimit:10000});
+    let baseInspect=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',input.baseImage],cwd:temporary,env:dockerEnvironment,timeoutMs:30000,signal:input.signal,outputLimit:10000});
     if(baseInspect.exitCode!==0){
       if(!input.authorization?.network?.approved){const error=new Error('Base image is unavailable locally and pulling it requires build network authorization');error.code='BASE_IMAGE_UNAVAILABLE';throw error;}
-      const pulled=await processRunner({command:dockerCommand,args:['pull',input.baseImage],cwd:temporary,timeoutMs:policy.resources.timeout_seconds*1000,signal:input.signal,outputLimit:options.outputLimit||2_000_000});
+      const pulled=await processRunner({command:dockerCommand,args:['pull',input.baseImage],cwd:temporary,env:dockerEnvironment,timeoutMs:policy.resources.timeout_seconds*1000,signal:input.signal,outputLimit:options.outputLimit||2_000_000});
       if(pulled.exitCode!==0){const error=new Error(`Unable to pull base image: ${pulled.stderr||pulled.stdout}`);error.code='BASE_IMAGE_PULL_FAILED';throw error;}
-      baseInspect=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',input.baseImage],cwd:temporary,timeoutMs:30000,signal:input.signal,outputLimit:10000});
+      baseInspect=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',input.baseImage],cwd:temporary,env:dockerEnvironment,timeoutMs:30000,signal:input.signal,outputLimit:10000});
     }
     const baseImageDigest=String(baseInspect.stdout||'').trim().toLowerCase();
     if(baseInspect.exitCode!==0||!/^sha256:[0-9a-f]{64}$/.test(baseImageDigest)){const error=new Error('Base image could not be pinned to an immutable digest');error.code='BASE_IMAGE_DIGEST_UNAVAILABLE';throw error;}
-    await fsp.writeFile(dockerfile,renderPreparationDockerfile(input.plan,baseImageDigest),'utf8');
+    const baseImageReference=`moss-eval-base:${baseImageDigest.slice(7,31)}`;
+    const tagged=await processRunner({command:dockerCommand,args:['image','tag',baseImageDigest,baseImageReference],cwd:temporary,env:dockerEnvironment,timeoutMs:30000,signal:input.signal,outputLimit:10000});
+    if(tagged.exitCode!==0){const error=new Error(`Base image could not be assigned an evaluator-owned immutable local reference: ${tagged.stderr||tagged.stdout||tagged.startError?.message||'unknown Docker error'}`);error.code='BASE_IMAGE_LOCAL_REFERENCE_FAILED';throw error;}
+    await fsp.writeFile(dockerfile,renderPreparationDockerfile(input.plan,baseImageReference),'utf8');
     options.onEvent?.({type:'preparation_build_started',data:{source_fingerprint:input.sourceRecord.snapshot_fingerprint,tag,policy}});
-    const args=['build','--network',policy.network==='disabled'?'none':'default','--memory',`${policy.resources.memory_mb}m`,'--cpu-quota',String(Math.round(policy.resources.cpu*100000)),'--label','com.d-robotics.moss-eval.owner=true','--label',`com.d-robotics.moss-eval.source=${input.sourceRecord.snapshot_fingerprint}`];
-    const childEnvironment={...process.env};
+    const args=['build','--pull=false','--network',policy.network==='disabled'?'none':'default','--memory',`${policy.resources.memory_mb}m`,'--cpu-quota',String(Math.round(policy.resources.cpu*100000)),'--label','com.d-robotics.moss-eval.owner=true','--label',`com.d-robotics.moss-eval.source=${input.sourceRecord.snapshot_fingerprint}`];
+    const childEnvironment={...dockerEnvironment};
     for(const [name,value] of Object.entries(input.secretValues||{})){childEnvironment[name]=value;args.push('--secret',`id=${name},env=${name}`);}
     args.push('--file',dockerfile,'--tag',tag,input.sourceRecord.snapshot_path);
     const build=await processRunner({command:dockerCommand,args,cwd:temporary,env:childEnvironment,timeoutMs:policy.resources.timeout_seconds*1000,signal:input.signal,outputLimit:options.outputLimit||2_000_000});
     if(build.exitCode!==0){const error=new Error(`Prepared target build failed: ${build.stderr||build.stdout||build.startError?.message||'unknown Docker error'}`);error.code=build.timedOut?'PREPARATION_TIMEOUT':'PREPARATION_BUILD_FAILED';error.result=build;throw error;}
-    const inspected=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',tag],cwd:temporary,timeoutMs:30000,signal:input.signal,outputLimit:10000});
+    const inspected=await processRunner({command:dockerCommand,args:['image','inspect','--format','{{.Id}}',tag],cwd:temporary,env:dockerEnvironment,timeoutMs:30000,signal:input.signal,outputLimit:10000});
     const imageDigest=String(inspected.stdout||'').trim().toLowerCase();
     if(inspected.exitCode!==0||!/^sha256:[0-9a-f]{64}$/.test(imageDigest)){const error=new Error('Docker did not return an immutable image digest');error.code='PREPARED_IMAGE_DIGEST_UNAVAILABLE';throw error;}
-    const result={schema_version:'1.0',started_at:startedAt,completed_at:new Date().toISOString(),image_digest:imageDigest,configured_base_image:input.baseImage,base_image_digest:baseImageDigest,tag,policy,command:{command:dockerCommand,args},logs:{stdout:build.stdout||'',stderr:build.stderr||''}};
+    const result={schema_version:'1.0',started_at:startedAt,completed_at:new Date().toISOString(),image_digest:imageDigest,configured_base_image:input.baseImage,base_image_digest:baseImageDigest,base_image_reference:baseImageReference,tag,policy,command:{command:dockerCommand,args},logs:{stdout:build.stdout||'',stderr:build.stderr||''}};
     options.onEvent?.({type:'preparation_build_completed',data:{source_fingerprint:input.sourceRecord.snapshot_fingerprint,image_digest:imageDigest}});
     return result;
   }finally{await fsp.rm(temporary,{recursive:true,force:true});}

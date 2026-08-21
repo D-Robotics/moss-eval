@@ -76,7 +76,8 @@ test('Docker runner applies bounded policy and does not expose secret values in 
       startedAt: new Date().toISOString(), endedAt: new Date().toISOString(), durationMs: 10_000,
     };
   };
-  const runner = new DockerRunner({ process_runner: processRunner });
+  const dockerCommand=path.resolve('D:/Docker/resources/bin/docker.exe');
+  const runner = new DockerRunner({ process_runner: processRunner, command:dockerCommand, environment:{PATH:'C:\\Windows\\System32'} });
   const root = path.resolve('D:/fixture');
   const result = await runner.run({
     command: 'agent', args: [], input: null,
@@ -102,6 +103,8 @@ test('Docker runner applies bounded policy and does not expose secret values in 
   assert.ok(runCall.args.includes('MODEL_API_KEY'));
   assert.doesNotMatch(JSON.stringify(runCall.args), new RegExp(secret));
   assert.equal(runCall.env.MODEL_API_KEY, secret);
+  assert.equal(runCall.command,dockerCommand);
+  assert.equal(runCall.env.PATH.split(path.delimiter)[0],path.dirname(dockerCommand));
   assert.deepEqual(result.budgetBreach, { type: 'wall_time', limit_seconds: 10 });
 });
 

@@ -54,4 +54,8 @@ export class CommandAdapter {
   async collectTelemetry() {
     return unavailableNativeTelemetry('command-adapter');
   }
+
+  diagnoseProcess() {
+    return null;
+  }
 }

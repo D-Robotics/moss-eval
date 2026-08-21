@@ -61,3 +61,22 @@ The client SHALL keep context isolation and renderer sandboxing enabled, disable
 #### Scenario: Trace contains markup or script text
 - **WHEN** Harness output contains HTML, script, or event-handler text
 - **THEN** the renderer displays it as inert text and no code executes in the renderer context
+
+### Requirement: Explicit MOSS model configuration
+The desktop client SHALL allow a MOSS user to select DeepSeek, Qwen, OpenAI, Anthropic, or OpenAI Compatible; enter a model; review the effective base URL; enter a password-masked API key; explicitly authorize model-network access; and test the connection before starting an evaluation.
+
+#### Scenario: Select a preset provider
+- **WHEN** the user selects DeepSeek, Qwen, OpenAI, or Anthropic
+- **THEN** the client fills the trusted provider base URL, keeps it read-only, and requires a model and API key before connection testing or evaluation
+
+#### Scenario: Configure an OpenAI-compatible provider
+- **WHEN** the user selects OpenAI Compatible
+- **THEN** the client permits an explicit HTTPS base URL and validates it before any network request
+
+#### Scenario: Test a model connection
+- **WHEN** the user supplies valid model settings and authorizes runtime network access
+- **THEN** the client runs a bounded connection test through the prepared target and reports sanitized success, latency, or failure diagnostics without starting a task Trial
+
+#### Scenario: Renderer reloads or preparation resumes
+- **WHEN** the renderer reloads or restores a pending preparation draft
+- **THEN** provider, model, and non-secret base URL settings may be restored but the API key is empty and must never have been written to local storage

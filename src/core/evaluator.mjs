@@ -34,6 +34,7 @@ export class RunInvariantError extends Error {
 
 function configuredSecrets(agent, task) {
   const values = [];
+  if (agent._model_configuration?.apiKey) values.push(agent._model_configuration.apiKey);
   for (const name of agent.secret_env || []) {
     const value = process.env[name];
     if (value) values.push(value);
@@ -197,6 +198,10 @@ export async function runTrial(options) {
     nativeTelemetry,
     telemetryReconciliation,
   );
+  const adapterDiagnostic = adapter?.diagnoseProcess(processResult) || null;
+  if (adapterDiagnostic) {
+    trace.record('adapter_diagnostic', 'evaluation', adapterDiagnostic);
+  }
   const gradingContext = {
     task,
     replicate,
@@ -221,11 +226,11 @@ export async function runTrial(options) {
     !processResult.timedOut &&
     allowedExitCodes.includes(processResult.exitCode);
   const cancelled = Boolean(processResult.aborted);
-  const valid = grading.valid && !processResult.startError && !cancelled;
+  const valid = grading.valid && !processResult.startError && !cancelled && !adapterDiagnostic?.invalid;
   const success = valid && grading.success && processPassed;
   const failureCategory = success
     ? null
-    : classifyFailure({ processResult, grading, traceSummary });
+    : adapterDiagnostic?.category || classifyFailure({ processResult, grading, traceSummary });
   const metrics = deriveTraceMetrics(
     traceSummary,
     processResult,
@@ -241,6 +246,7 @@ export async function runTrial(options) {
     replicate,
     status: cancelled ? 'cancelled' : valid ? (success ? 'passed' : 'failed') : 'invalid',
     failure_category: failureCategory,
+    adapter_diagnostic: adapterDiagnostic,
   });
 
   const trial = {
@@ -268,6 +274,7 @@ export async function runTrial(options) {
     outcome_passed: grading.outcomePassed,
     safety_passed: grading.safetyPassed,
     failure_category: failureCategory,
+    adapter_diagnostic: adapterDiagnostic,
     process: processSnapshot(processResult),
     graders: grading.results,
     metrics,

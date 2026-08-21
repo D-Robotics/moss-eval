@@ -5,6 +5,7 @@ import os from 'node:os';
 import { promisify } from 'node:util';
 import { loadTasks } from './task-loader.mjs';
 import { runProcess } from '../lib/process.mjs';
+import { findDockerCli } from './desktop-runtime.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -177,6 +178,18 @@ function processCheck(id, result, passDetail, failureDetail, remediation) {
   };
 }
 
+function parseWslVersion(result) {
+  const output = `${result?.stdout || ''}\n${result?.stderr || ''}`.replaceAll('\0', '');
+  const match = output.match(/WSL[^0-9]*(\d+)\.(\d+)\.(\d+)/i);
+  return match ? match.slice(1, 4).map(Number) : null;
+}
+
+function supportedWslVersion(version) {
+  if (!version) return false;
+  const [major, minor, patch] = version;
+  return major > 2 || (major === 2 && (minor > 1 || (minor === 1 && patch >= 5)));
+}
+
 export async function desktopDoctor(options = {}) {
   const platform = options.platform || process.platform;
   const architecture = options.architecture || process.arch;
@@ -210,51 +223,101 @@ export async function desktopDoctor(options = {}) {
   }
 
   let wslResult = null;
+  let virtualizationResult = null;
   let dockerResult = null;
   if (platform === 'win32') {
-    wslResult = await processRunner({ command: 'wsl.exe', args: ['--status'], timeoutMs: 15_000 });
-    checks.push(processCheck(
-      'wsl2',
-      wslResult,
-      (result) => (result.stdout || result.stderr || 'WSL2 available').trim(),
-      (result) => result?.startError?.message || (result?.stderr || result?.stdout || 'WSL2 is unavailable').trim(),
-      'Install or enable WSL2, ensure virtualization is enabled, then run `wsl --update`.',
-    ));
+    wslResult = await processRunner({ command: 'wsl.exe', args: ['--version'], timeoutMs: 15_000 });
+    const wslVersion = parseWslVersion(wslResult);
+    const wslHealthy = wslResult.exitCode === 0 && !wslResult.startError && !wslResult.timedOut && supportedWslVersion(wslVersion);
+    const wslCheck = {
+      id: 'wsl2',
+      status: wslHealthy ? 'pass' : 'fail',
+      detail: wslHealthy
+        ? `WSL ${wslVersion.join('.')} meets the required 2.1.5 minimum`
+        : (wslResult.startError?.message || (wslVersion ? `WSL ${wslVersion.join('.')} is below the required 2.1.5 minimum` : 'WSL version is unavailable or too old')).trim(),
+      remediation: wslHealthy ? null : 'Install or enable WSL2, ensure virtualization is enabled, then run `wsl --update`.',
+    };
+    checks.push(wslCheck);
+    if (wslCheck.status === 'fail') Object.assign(wslCheck, { action: 'install-wsl', action_label: '查看 WSL2 安装步骤' });
+    virtualizationResult = await processRunner({
+      command: 'powershell.exe',
+      args: ['-NoProfile', '-NonInteractive', '-Command', '(Get-CimInstance Win32_ComputerSystem).HypervisorPresent'],
+      timeoutMs: 15_000,
+    });
+    const virtualizationHealthy = virtualizationResult.exitCode === 0
+      && !virtualizationResult.startError
+      && /^true$/i.test(String(virtualizationResult.stdout || '').trim());
     checks.push({
       id: 'virtualization',
-      status: wslResult.exitCode === 0 && !wslResult.startError ? 'pass' : 'fail',
-      detail: wslResult.exitCode === 0 && !wslResult.startError ? 'WSL2 virtualization path is healthy' : 'WSL2 could not start its virtualization path',
-      remediation: wslResult.exitCode === 0 && !wslResult.startError ? null : 'Enable CPU virtualization and the Virtual Machine Platform Windows feature.',
+      status: virtualizationHealthy ? 'pass' : 'fail',
+      detail: virtualizationHealthy
+        ? 'Windows hypervisor and hardware virtualization path are active'
+        : (virtualizationResult.startError?.message || virtualizationResult.stderr || virtualizationResult.stdout || 'Windows hypervisor is not active').trim(),
+      remediation: virtualizationHealthy ? null : 'Enable CPU virtualization in BIOS/UEFI and the Virtual Machine Platform Windows feature, then restart Windows.',
+      action: virtualizationHealthy ? null : 'virtualization-help',
+      action_label: virtualizationHealthy ? null : '查看虚拟化启用步骤',
     });
   } else {
-    checks.push({ id: 'wsl2', status: 'fail', detail: 'WSL2 check requires Windows', remediation: 'Use a supported Windows host.' });
-    checks.push({ id: 'virtualization', status: 'fail', detail: 'Virtualization check requires Windows', remediation: 'Use a supported Windows host.' });
+    checks.push({ id: 'wsl2', status: 'fail', detail: 'WSL2 check requires Windows', remediation: 'Use a supported Windows host.', action: null, action_label: null });
+    checks.push({ id: 'virtualization', status: 'fail', detail: 'Virtualization check requires Windows', remediation: 'Use a supported Windows host.', action: null, action_label: null });
   }
 
+  let dockerCommand = options.dockerCommand || 'docker';
   dockerResult = await processRunner({
-    command: options.dockerCommand || 'docker',
+    command: dockerCommand,
     args: ['version', '--format', '{{.Server.Version}}'],
     timeoutMs: 15_000,
+  });
+  if (dockerResult?.startError?.code === 'ENOENT' && platform === 'win32' && !options.dockerCommand) {
+    const discovered = findDockerCli({ environment: options.environment, fileExists: options.fileExists });
+    if (discovered) {
+      dockerCommand = discovered;
+      dockerResult = await processRunner({
+        command: dockerCommand,
+        args: ['version', '--format', '{{.Server.Version}}'],
+        timeoutMs: 15_000,
+      });
+    }
+  }
+  const dockerInstalled = dockerResult?.startError?.code !== 'ENOENT';
+  const dockerReady = dockerInstalled && dockerResult.exitCode === 0 && !dockerResult.startError && !dockerResult.timedOut;
+  checks.push({
+    id: 'docker-installation',
+    status: dockerInstalled ? 'pass' : 'fail',
+    detail: dockerInstalled ? `Docker CLI ${dockerCommand}` : 'Docker CLI is not installed',
+    remediation: dockerInstalled ? null : 'Install Docker Desktop using the official Windows installer and keep the WSL2 backend enabled.',
+    action: dockerInstalled ? null : 'install-docker',
+    action_label: dockerInstalled ? null : '下载并安装 Docker Desktop',
   });
   checks.push(processCheck(
     'docker-runtime',
     dockerResult,
     (result) => `Docker server ${(result.stdout || '').trim()}`,
-    (result) => result?.startError?.code === 'ENOENT'
-      ? 'Docker CLI is not installed'
+    (result) => !dockerInstalled
+      ? 'Docker daemon check is blocked until Docker Desktop is installed'
       : (result?.startError?.message || result?.stderr || result?.stdout || 'Docker daemon is unreachable').trim(),
-    dockerResult?.startError?.code === 'ENOENT'
-      ? 'Install Docker Desktop or another supported Docker-compatible runtime.'
-      : 'Start the Docker daemon, enable WSL2 integration, and retry.',
+    !dockerInstalled
+      ? 'Install Docker Desktop before checking its daemon.'
+      : 'Start Docker Desktop, wait for its engine to become ready, then retry.',
   ));
+  const dockerRuntimeCheck = checks.at(-1);
+  Object.assign(dockerRuntimeCheck, {
+    action: dockerInstalled && !dockerReady ? 'start-docker' : null,
+    action_label: dockerInstalled && !dockerReady ? '启动 Docker Desktop' : null,
+  });
 
-  const blocking = new Set(['windows-version', 'architecture', 'disk-space', 'wsl2', 'virtualization', 'docker-runtime']);
+  const blocking = new Set(['windows-version', 'architecture', 'disk-space', 'wsl2', 'virtualization', 'docker-installation', 'docker-runtime']);
   return {
     schema_version: '1.0',
     checked_at: new Date().toISOString(),
     ready: checks.every((check) => !blocking.has(check.id) || check.status === 'pass'),
     source_inspection_available: true,
     evaluation_available: checks.every((check) => !blocking.has(check.id) || check.status === 'pass'),
+    runtime: {
+      docker_command: dockerInstalled ? dockerCommand : null,
+      docker_installed: dockerInstalled,
+      docker_daemon_ready: dockerReady,
+    },
     checks,
   };
 }

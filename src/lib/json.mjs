@@ -52,6 +52,7 @@ export function redactObject(value, secrets = []) {
       for (const secret of secretValues) output = output.split(secret).join('[REDACTED]');
       output = output
         .replace(/(api[_-]?key|token|password|secret)(["']?\s*[:=]\s*["']?)[^\s"',}]+/gi, '$1$2[REDACTED]')
+        .replace(/\bsk-[A-Za-z0-9_-]{2,}\*{3,}[A-Za-z0-9_-]{2,}\b/g, '[REDACTED]')
         .replace(/\b(sk-[A-Za-z0-9_-]{12,})\b/g, '[REDACTED]');
       return output;
     }

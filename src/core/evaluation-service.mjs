@@ -1,5 +1,6 @@
 import fsp from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { inspectHarness } from './harness-inspection.mjs';
 import { ingestGitHubSource, ingestLocalSource } from './source-ingestion.mjs';
 import { loadConfig } from './config.mjs';
@@ -12,6 +13,8 @@ import { createPreparedTargetManifest, loadPreparedTarget, savePreparedTarget } 
 import { redactObject, writeJson } from '../lib/json.mjs';
 import { authorizedSecretValues, createAuthorizationRequest, grantAuthorization } from './authorization.mjs';
 import { buildPreparedImage } from './preparation-runner.mjs';
+import { createRunner } from '../runners/index.mjs';
+import { mossConfigFile, publicModelConfiguration, validateModelConfiguration } from './model-configuration.mjs';
 
 function identifier(value, label = 'identifier') {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(String(value || ''))) throw new Error(`Invalid ${label}`);
@@ -26,9 +29,19 @@ export class EvaluationService {
     this.controllers = new Map();
     this.preparationControllers = new Map();
     this.eventSink = options.eventSink || (() => {});
+    this.dockerCommand = options.dockerCommand || 'docker';
+    this.runnerFactory = options.runnerFactory || createRunner;
   }
 
   emit(type, data) { this.eventSink({ schema_version: '1.0', timestamp: new Date().toISOString(), type, data: redactObject(data, []) }); }
+
+  configureRuntime(runtime = {}) {
+    const command = String(runtime.docker_command || '');
+    const isDockerPath = path.isAbsolute(command) && path.basename(command).toLowerCase() === 'docker.exe';
+    if ((command !== 'docker' && !isDockerPath) || /[\r\n\0]/.test(command)) throw new Error('Invalid Docker runtime command');
+    this.dockerCommand = command;
+    return { docker_command_configured: true };
+  }
 
   addGithubSource(request) { return ingestGitHubSource(request.url, { ...request, sourcesRoot: this.paths.sources }); }
   addLocalSource(request) { return ingestLocalSource(request.directory, { ...request, sourcesRoot: this.paths.sources }); }
@@ -55,7 +68,7 @@ export class EvaluationService {
     if(imageDigest&&request.allow_prebuilt!==true)throw new Error('Prebuilt image digests require an explicit trusted override');
     const buildSecretValues=authorizedSecretValues(authorization,process.env);
     if(!imageDigest){
-      build=await buildPreparedImage({sourceRecord:request.source_record,plan:preparationPlan,baseImage:request.base_image||'node:22-bookworm',sandboxPolicy:request.sandbox_policy,authorization,secretValues:buildSecretValues,signal:controller.signal}, {onEvent:(event)=>this.emit(event.type,{...event.data,preparation_id:preparationId})});
+      build=await buildPreparedImage({sourceRecord:request.source_record,plan:preparationPlan,baseImage:request.base_image||'node:22-bookworm',sandboxPolicy:request.sandbox_policy,authorization,secretValues:buildSecretValues,signal:controller.signal}, {dockerCommand:this.dockerCommand,onEvent:(event)=>this.emit(event.type,{...event.data,preparation_id:preparationId})});
       imageDigest=build.image_digest;
     }
     const capabilities=adapter.describeCapabilities({manifest:request.configuration||null,configuration:request.configuration||null});
@@ -83,6 +96,79 @@ export class EvaluationService {
     } finally { this.preparationControllers.delete(preparationId); }
   }
 
+  async testModelConnection(request) {
+    const targetId = identifier(request.target_fingerprint, 'target fingerprint');
+    const preparedTarget = await loadPreparedTarget(path.join(this.paths.targets, targetId, 'prepared-target.json'));
+    if (preparedTarget.target_fingerprint !== targetId) throw new Error('Prepared target identity mismatch');
+    if (preparedTarget.adapter.id !== 'moss') throw Object.assign(new Error('Model connection testing is supported only for the MOSS adapter'), { code: 'MODEL_TEST_UNSUPPORTED' });
+    const configuration = validateModelConfiguration(request.model_configuration);
+    const authorizationRequest = createAuthorizationRequest({
+      operation: 'test-model-connection',
+      targetFingerprint: targetId,
+      network: { mode: 'public', purpose: 'Test the configured model provider' },
+      secretNames: ['MOSS_MODEL_API_KEY'],
+    });
+    const authorization = grantAuthorization(authorizationRequest, {
+      confirmed: true,
+      approveNetwork: request.approve_runtime_network === true,
+      approvedSecretNames: ['MOSS_MODEL_API_KEY'],
+    });
+    if (!authorization.network.approved) throw Object.assign(new Error('Model connection testing requires explicit runtime network authorization'), { code: 'RUNTIME_NETWORK_NOT_AUTHORIZED' });
+
+    const operationRoot = path.resolve(this.paths.cache, 'model-connections', `test-${randomUUID()}`);
+    const cacheRoot = path.resolve(this.paths.cache);
+    if (!operationRoot.startsWith(cacheRoot + path.sep)) throw new Error('Model connection test path escaped cache storage');
+    const workspace = path.join(operationRoot, 'workspace');
+    const trialDir = path.join(operationRoot, 'trial');
+    await Promise.all([fsp.mkdir(workspace, { recursive: true }), fsp.mkdir(trialDir, { recursive: true })]);
+    try {
+      const runner = this.runnerFactory('docker', { docker: { command: this.dockerCommand } });
+      const task = {
+        id: 'model-connection',
+        environment: {
+          image: preparedTarget.image_digest,
+          network: 'public',
+          authorization,
+          cpu: 1,
+          memory_mb: 512,
+          pids: 32,
+          disk_mb: 256,
+          read_only_root: true,
+        },
+      };
+      const result = await runner.run({
+        command: 'node',
+        args: ['/eval/drivers/model-connection-probe.mjs', '/run/.secrets/moss-model.json'],
+        input: null,
+        env: {},
+        metadata: { adapter: 'moss', operation: 'model-connection-test', secret_env_names: [] },
+        secret_files: [{ path: '.secrets/moss-model.json', content: mossConfigFile(configuration) }],
+      }, {
+        task,
+        replicate: 1,
+        workspace,
+        taskDir: path.join(this.paths.projectRoot, 'taskpacks', 'core'),
+        trialDir,
+        runDir: operationRoot,
+        evalRoot: this.paths.projectRoot,
+        timeoutMs: 30_000,
+      });
+      let diagnostic;
+      try { diagnostic = JSON.parse(String(result.stdout || '').trim().split(/\r?\n/).filter(Boolean).at(-1)); }
+      catch { diagnostic = { schema_version: '1.0', ok: false, status: null, latency_ms: result.durationMs, error_code: 'INVALID_CONNECTION_TEST_RESPONSE' }; }
+      return {
+        schema_version: '1.0',
+        configuration: publicModelConfiguration(configuration),
+        ok: result.exitCode === 0 && diagnostic.ok === true,
+        status: Number.isInteger(diagnostic.status) ? diagnostic.status : null,
+        latency_ms: Number.isFinite(diagnostic.latency_ms) ? diagnostic.latency_ms : result.durationMs,
+        error_code: diagnostic.error_code || (result.timedOut ? 'CONNECTION_TEST_TIMEOUT' : result.exitCode === 0 ? null : 'MODEL_CONNECTION_FAILED'),
+      };
+    } finally {
+      await fsp.rm(operationRoot, { recursive: true, force: true });
+    }
+  }
+
   cancelPreparation(preparationId) {
     const safe=identifier(preparationId,'preparation identifier');
     const controller=this.preparationControllers.get(safe);
@@ -98,7 +184,9 @@ export class EvaluationService {
     if (path.dirname(configFile) !== path.join(this.paths.projectRoot, 'configs')) throw new Error('Config path escaped resources');
     const config = await loadConfig(configFile);
     config.output_root = this.paths.runs;
+    config.runners.docker.command = this.dockerCommand;
     let preparedTarget = null;
+    let modelConfiguration = null;
     if (request.target_fingerprint) {
       const targetId = identifier(request.target_fingerprint, 'target fingerprint');
       preparedTarget = await loadPreparedTarget(path.join(this.paths.targets, targetId, 'prepared-target.json'));
@@ -108,10 +196,14 @@ export class EvaluationService {
         runner: 'docker',
         image: preparedTarget.image_digest,
       };
-      if(preparedTarget.runtime_network_required){
+      if (request.model_configuration) {
+        if (preparedTarget.adapter.id !== 'moss') throw Object.assign(new Error('Model configuration is supported only for the MOSS adapter'), { code: 'MODEL_CONFIGURATION_UNSUPPORTED' });
+        modelConfiguration = validateModelConfiguration(request.model_configuration);
+      }
+      if(preparedTarget.runtime_network_required || modelConfiguration){
         const runtimeAuthorizationRequest=createAuthorizationRequest({operation:'evaluate-target',targetFingerprint:preparedTarget.target_fingerprint,network:{mode:'public',purpose:'Harness runtime declared outbound access'}});
         const runtimeAuthorization=grantAuthorization(runtimeAuthorizationRequest,{confirmed:true,approveNetwork:request.approve_runtime_network===true});
-        if(!runtimeAuthorization.network.approved)throw new Error('Target runtime network requires explicit approval');
+        if(!runtimeAuthorization.network.approved)throw Object.assign(new Error('Target runtime network requires explicit approval'), { code: 'RUNTIME_NETWORK_NOT_AUTHORIZED' });
         config.execution.environment_overrides.network='public';
         config.execution.environment_overrides.authorization=runtimeAuthorization;
       }
@@ -123,6 +215,11 @@ export class EvaluationService {
         agent.prepared_target_fingerprint = preparedTarget.target_fingerprint;
         agent.prepared_target_adapter = preparedTarget.adapter;
         agent.prepared_target_policy = preparedTarget.sandbox_policy;
+        if (modelConfiguration) {
+          Object.defineProperty(agent, '_model_configuration', { value: modelConfiguration, enumerable: false, configurable: false });
+          agent.provider = modelConfiguration.provider;
+          agent.model = modelConfiguration.model;
+        }
         const approvedSecrets=new Set(request.approved_secret_names||[]);
         for(const name of approvedSecrets)if(!(preparedTarget.required_secrets||[]).includes(name))throw new Error(`Cannot approve undeclared runtime secret: ${name}`);
         agent.secret_env=(preparedTarget.required_secrets||[]).filter((name)=>approvedSecrets.has(name));

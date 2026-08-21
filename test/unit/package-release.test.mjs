@@ -19,6 +19,7 @@ test('Windows packages are reproducibly configured with provenance, NSIS and por
   assert.equal(pkg.devDependencies['electron-builder'],lock.packages['node_modules/electron-builder'].version);
   assert.deepEqual(pkg.build.win.target.map(target=>target.target),['nsis','portable']);
   assert.ok(pkg.build.extraResources.some(resource=>resource.to==='build-provenance.json'));
+  assert.ok(pkg.build.extraResources.some(resource=>resource.to==='project'&&resource.filter.includes('drivers/**')));
   assert.match(pkg.scripts['dist:win'],/write-checksums/);
 });
 
