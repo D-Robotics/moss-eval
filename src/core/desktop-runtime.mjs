@@ -20,22 +20,22 @@ export const PREREQUISITE_ACTIONS = Object.freeze({
 });
 
 function compact(values) {
-  return [...new Set(values.filter(Boolean).map((value) => path.normalize(value)))];
+  return [...new Set(values.filter(Boolean).map((value) => path.win32.normalize(value)))];
 }
 
 export function dockerCliCandidates(environment = process.env) {
   return compact([
-    environment.LOCALAPPDATA && path.join(environment.LOCALAPPDATA, 'Programs', 'DockerDesktop', 'resources', 'bin', 'docker.exe'),
-    environment.LOCALAPPDATA && path.join(environment.LOCALAPPDATA, 'Programs', 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
-    environment.ProgramFiles && path.join(environment.ProgramFiles, 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
+    environment.LOCALAPPDATA && path.win32.join(environment.LOCALAPPDATA, 'Programs', 'DockerDesktop', 'resources', 'bin', 'docker.exe'),
+    environment.LOCALAPPDATA && path.win32.join(environment.LOCALAPPDATA, 'Programs', 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
+    environment.ProgramFiles && path.win32.join(environment.ProgramFiles, 'Docker', 'Docker', 'resources', 'bin', 'docker.exe'),
   ]);
 }
 
 export function dockerDesktopCandidates(environment = process.env) {
   return compact([
-    environment.LOCALAPPDATA && path.join(environment.LOCALAPPDATA, 'Programs', 'DockerDesktop', 'Docker Desktop.exe'),
-    environment.LOCALAPPDATA && path.join(environment.LOCALAPPDATA, 'Programs', 'Docker', 'Docker', 'Docker Desktop.exe'),
-    environment.ProgramFiles && path.join(environment.ProgramFiles, 'Docker', 'Docker', 'Docker Desktop.exe'),
+    environment.LOCALAPPDATA && path.win32.join(environment.LOCALAPPDATA, 'Programs', 'DockerDesktop', 'Docker Desktop.exe'),
+    environment.LOCALAPPDATA && path.win32.join(environment.LOCALAPPDATA, 'Programs', 'Docker', 'Docker', 'Docker Desktop.exe'),
+    environment.ProgramFiles && path.win32.join(environment.ProgramFiles, 'Docker', 'Docker', 'Docker Desktop.exe'),
   ]);
 }
 

@@ -76,8 +76,9 @@ test('Docker runner applies bounded policy and does not expose secret values in 
       startedAt: new Date().toISOString(), endedAt: new Date().toISOString(), durationMs: 10_000,
     };
   };
-  const dockerCommand=path.resolve('D:/Docker/resources/bin/docker.exe');
-  const runner = new DockerRunner({ process_runner: processRunner, command:dockerCommand, environment:{PATH:'C:\\Windows\\System32'} });
+  const dockerCommand=process.platform==='win32'?path.resolve('D:/Docker/resources/bin/docker.exe'):path.resolve('/opt/docker/bin/docker');
+  const basePath=process.platform==='win32'?'C:\\Windows\\System32':'/usr/bin';
+  const runner = new DockerRunner({ process_runner: processRunner, command:dockerCommand, environment:{PATH:basePath} });
   const root = path.resolve('D:/fixture');
   const result = await runner.run({
     command: 'agent', args: [], input: null,

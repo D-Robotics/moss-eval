@@ -8,10 +8,10 @@ const environment = { LOCALAPPDATA: 'C:\\Users\\test\\AppData\\Local', ProgramFi
 test('desktop runtime recognizes supported per-user and all-user Docker locations', () => {
   const cli = dockerCliCandidates(environment);
   const desktop = dockerDesktopCandidates(environment);
-  assert.ok(cli.includes(path.normalize('C:\\Users\\test\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe')));
-  assert.ok(cli.includes(path.normalize('C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe')));
-  assert.ok(desktop.includes(path.normalize('C:\\Users\\test\\AppData\\Local\\Programs\\DockerDesktop\\Docker Desktop.exe')));
-  assert.ok(desktop.includes(path.normalize('C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe')));
+  assert.ok(cli.includes(path.win32.normalize('C:\\Users\\test\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe')));
+  assert.ok(cli.includes(path.win32.normalize('C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe')));
+  assert.ok(desktop.includes(path.win32.normalize('C:\\Users\\test\\AppData\\Local\\Programs\\DockerDesktop\\Docker Desktop.exe')));
+  assert.ok(desktop.includes(path.win32.normalize('C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe')));
   assert.equal(findDockerCli({ environment, fileExists: (candidate) => candidate === cli[0] }), cli[0]);
   assert.equal(findDockerDesktop({ environment, fileExists: (candidate) => candidate === desktop.at(-1) }), desktop.at(-1));
 });

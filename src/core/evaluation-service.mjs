@@ -37,7 +37,7 @@ export class EvaluationService {
 
   configureRuntime(runtime = {}) {
     const command = String(runtime.docker_command || '');
-    const isDockerPath = path.isAbsolute(command) && path.basename(command).toLowerCase() === 'docker.exe';
+    const isDockerPath = (path.isAbsolute(command) || path.win32.isAbsolute(command)) && path.win32.basename(command).toLowerCase() === 'docker.exe';
     if ((command !== 'docker' && !isDockerPath) || /[\r\n\0]/.test(command)) throw new Error('Invalid Docker runtime command');
     this.dockerCommand = command;
     return { docker_command_configured: true };
