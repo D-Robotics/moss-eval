@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-provider-truncated-stream",
+  "task_id": "real-moss-provider-truncated-stream",
+  "track": "harness-regression",
+  "source_evidence_digest": "f5584d701d91d317837348f114d5e68b1ae3e5cb9c6ef79e3c9e8697cd116cef",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-tool-error-metadata-loss",
+  "version": "1.0.0",
+  "title": "Preserve structured tool error metadata",
+  "track": "harness-regression",
+  "category": "tool-failure-recovery",
+  "construct": {
+    "primary": "structured-error-boundary",
+    "tags": [
+      "tool-failure-recovery",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/47",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-tool-error-metadata-loss."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe structured-error-boundary decision. Write results/real-moss-tool-error-metadata-loss.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: code=\"POLICY_BLOCK\", retryable=false, metadata_preserved=true. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "6fa3b20ebe19dceeb1431c2cc4f104e91311d54961cc131f76cebc56214f2be6",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "693b0a99421adb895c22747759e7f3a604d0b92b0f2150a85c931c59d1c4eb17",
+    "family": "rf-moss-tool-error-metadata-loss-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "12701e358d27a729ba699ed8768d776ae81a5716f112ed7cdfa671d53d45cd74",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "eb912950a59e241ddfa722d68f8ee2bcb15cf83d64a73e144cc5fff0c9b8cdb9",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "214bbe6f8e334170dbb8f75ee5935e03532d967ec1900121d1575e93376317aa",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "c90dfd75c81fa56550d68d6148f10c968b5cff1eac9bb804eca9684030dce06a",
+      "expected_pass": false,
+      "description": "Task-specific violation of code"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "7a01acb55ff493cb9f04577bc0b3a79cf7ef32380b026ea0df83721f65e0aef1",
+      "expected_pass": false,
+      "description": "Task-specific violation of retryable"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "1f847fa1ef0712e7e8cee2b6bba6a0af25f8ffa6f3b470392ede86cd7f6f9f0c",
+      "expected_pass": false,
+      "description": "Task-specific violation of metadata_preserved"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "8479cd979583e2639272ce98d87401262922a751a2b6cdd3d79bcbb262d31aa3",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-tool-error-metadata-loss"
+}

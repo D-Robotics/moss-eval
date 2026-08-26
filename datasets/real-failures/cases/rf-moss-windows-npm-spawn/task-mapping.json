@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-npm-spawn",
+  "task_id": "real-moss-windows-npm-spawn",
+  "track": "harness-regression",
+  "source_evidence_digest": "c5fc6f089e672a80b6a0de2f3848a7eb946ed0d38b8d1958036f2bceb54e9ba1",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

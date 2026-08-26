@@ -28,6 +28,7 @@ export async function runCommandVerifier(grader, context) {
     };
     const processResult = await context.runner.run(command, {
       ...context.runnerContext,
+      phase: 'grader',
       timeoutMs: grader.timeout_seconds * 1000,
       onStdout: null,
       onStderr: null,
@@ -63,6 +64,7 @@ export async function runCommandVerifier(grader, context) {
         timed_out: processResult.timedOut,
         stdout_tail: processResult.stdout.slice(-2000),
         stderr_tail: processResult.stderr.slice(-2000),
+        mount_policy: processResult.mountPolicy || null,
       },
       durationMs: Date.now() - started,
     });

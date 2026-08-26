@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-device-mutation",
+  "status": "preserved",
+  "original_signature": "rf-moss-plan-device-mutation:planning-mode-mutation-approval-gap",
+  "minimized_signature": "rf-moss-plan-device-mutation:planning-mode-mutation-approval-gap",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "79782f17604958f619ebc40e20bc8b6ae5b446fb13dd7807b0b9a6eb763f8d2c"
+}

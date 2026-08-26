@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-tool-error-metadata-loss",
+  "status": "verified",
+  "summary": "Verified the documented structured-error-boundary policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "code": "POLICY_BLOCK",
+  "retryable": true,
+  "metadata_preserved": true
+}

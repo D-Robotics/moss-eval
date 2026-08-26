@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-task-frame-caller-mutation",
+  "status": "verified",
+  "summary": "Verified the documented immutable-task-frame-boundary policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "input_mutated": false,
+  "output_status": "incorrect-aborted",
+  "referentially_distinct": true
+}

@@ -112,12 +112,15 @@ export async function loadRunArtifacts(runDirectory) {
   const summary = (await exists(summaryFile))
     ? assertSupportedSchema(await readJson(summaryFile), summaryFile, 'summary')
     : null;
+  const releaseDecisionFile = path.join(runDirectory, 'release-decision.json');
+  const releaseDecision = (await exists(releaseDecisionFile)) ? await readJson(releaseDecisionFile) : null;
   const trials = await loadRunTrials(runDirectory);
   return {
     id: metadata.run_id,
     path: path.resolve(runDirectory),
     metadata,
     summary,
+    release_decision: releaseDecision,
     trials,
   };
 }

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-verifier-path-traversal",
+  "status": "preserved",
+  "original_signature": "rf-moss-verifier-path-traversal:verifier-path-normalization-bypass",
+  "minimized_signature": "rf-moss-verifier-path-traversal:verifier-path-normalization-bypass",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "d7ba0e32b20b16c9746d3f5e01741e4eccd746e1b1bcef9a9426d0f742fbc90b"
+}

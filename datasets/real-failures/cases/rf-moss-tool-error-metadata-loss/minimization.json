@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-error-metadata-loss",
+  "status": "preserved",
+  "original_signature": "rf-moss-tool-error-metadata-loss:stringified-tool-error-metadata-loss",
+  "minimized_signature": "rf-moss-tool-error-metadata-loss:stringified-tool-error-metadata-loss",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "d0e9e5949247100bf30308b74d51330505dd1891274a4d8e5b0c4dc2f158ab71"
+}

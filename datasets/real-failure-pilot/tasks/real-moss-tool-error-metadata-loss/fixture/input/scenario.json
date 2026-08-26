@@ -1,0 +1,8 @@
+{
+  "error": {
+    "message": "denied",
+    "code": "POLICY_BLOCK",
+    "retryable": false,
+    "policy": "device-write"
+  }
+}

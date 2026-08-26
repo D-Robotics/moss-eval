@@ -1,0 +1,5 @@
+{
+  "retries": 12,
+  "shared_abort_signal": true,
+  "backoffs_complete_normally": true
+}

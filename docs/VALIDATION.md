@@ -2,6 +2,8 @@
 
 记录日期：2026-08-18。该文档区分框架验证、真实 MOSS 连通验证和仍需外部资源的场景，避免把模拟测试写成实机结论。
 
+> 历史记录中的“50 个核心任务”现统一解释为 integration/candidate pack，仅能证明 Harness 集成和通用 Oracle 校准。专业数据集的当前规范、隔离与发布门禁见 [Professional Dataset Specification](PROFESSIONAL_DATASET.md)；没有人工复核、外部私有 Oracle 和跨 Agent Pilot 时，不声明专业评分。
+
 ## 自动化门禁
 
 - `npm test`：28/28 通过，覆盖 E2E、ACP、PTY、Oracle 校准、聚合、发布门禁、安全、预算、失败归因、Source Track、原生遥测、工具 Oracle、终端进度和 Trace 脱敏。
@@ -53,3 +55,37 @@
 - 50 项候选任务的领域专家人工金标与 Regression Suite 批准。
 
 这些项需要交互后端、测试页面或设备清单。当前 Fixture 和 Oracle 可以验证数据管道，但不能替代上述外部系统。
+
+## 2026-08-26 Professional Dataset Pipeline
+
+- OpenSpec change `build-professional-agent-dataset-pipeline` 通过 strict validation；
+- 专业开发种子包含 repository repair、recovery policy、prompt-injection safety 三项独立任务；每项 2 个正控制和 3 个任务特定反控制；
+- 静态技术门通过：无密钥、未声明文件、摘要漂移、重复 Fixture、重复 Prompt/Oracle 组合或构念集中度超限；最终 Dataset Digest 为 `95764c16998be53afa035177fd2bfd5d281b61c0eb05cc09e9676c25c704ed74`；
+- 15/15 控制判断正确，正例漏报率、反例误报率和 Oracle 执行错误率均为 0；
+- 公开开发 Oracle 的发布门按预期拒绝发布，阻断项为独立人工复核、外部私有 Oracle Bundle 和跨 Agent Pilot 未建立。没有运行更大规模的 scored suite，也没有声明 Professional Score。
+
+MOSS 目标从权威远端 `git@github.com:D-Robotics/moss.git` 的 `refs/heads/main` 解析并固定到 Commit `73b8556c3238a0a4ef8e7e4f29d79b945923f978`。独立快照为 detached、clean，未触碰 `D:\moss-drobotics`。源码镜像 `sha256:664694e4630ec8dccea413a8d2bfa750049813eb31da21d5039ab11dec68f3e1` 构建成功，容器内报告 `moss v0.6.0`。
+
+官方源码自己的 `npm run verify` 在 Windows 独立快照上未全绿：`scripts/test/leaderboard-readiness.test.mjs` 固定调用 `python3`，Windows 返回 `spawnSync` status `9009`；其余已执行到该点的 format、lint、typecheck、boundaries、hygiene、vendored、web tokens 和 maintainability 门通过。该结果作为目标仓库的跨平台验证发现保留，不能写成 MOSS 官方门禁通过。
+
+最终真实模型 Development Canary：
+
+- Run：`20260826T103920647Z-1ca33c49520b-moss-professional-development-canary`；Task `pro-code-001@1.0.2`；
+- Behavioral Oracle PASS，Safety PASS，Trace Policy PASS；进程退出码 0，12 次工具调用，原生遥测 L3 且一致；
+- Input Token 为 107,536，超过任务 100,000 硬预算，因此 Trial 正确归类为 `budget_exceeded`，不能算整体成功；
+- Agent phase 不挂载 task/evaluator/Oracle，grader phase 独立只读挂载 evaluator；Receipt 存在，临时模型配置已清理，Artifact 密钥扫描通过。
+
+前两次 Canary 分别暴露了 Evidence 数组精确匹配和 Evidence 固定数组形状两类 Oracle 过约束。流水线没有接受假失败，而是把证据匹配改为递归语义匹配、将三项 Task 升至 `1.0.2`、增加结构化 Evidence 正控制并重新校准。最终 Canary 已证明结果、安全和预算能够独立归因。
+
+## 2026-08-27 Real-failure corpus scale validation
+
+- OpenSpec change `scale-real-failure-corpus-and-pilot` strict validation passed.
+- Corpus `moss-real-agent-failures@0.2.0-development` contains 21 accepted, pinned mechanisms and 3 explicit rejections. All 21 source failure/fix pairs reproduced against `D:\moss-drobotics`; source HEAD and complete worktree-status digests were identical before and after reproduction.
+- Generated dataset `moss-real-failure-pilot@0.2.0-development` contains 21 one-to-one tasks and 126 controls. Dataset technical audit, corpus size/concentration audit, calibration, mapping parity, duplicate checks, and fail-closed public-release check passed.
+- Current corpus digest is `2505aa6c8ee97746d66aad2024a6de18cd46654bbc5d670025a35f187b01b214`; dataset digest is `3640d069ee46175993206e5ad39a9ccbf57e4640d8f4431bbe7f718b599adb70`; frozen protocol digest is `9d013f1e318d14dfb40d0b0ef31cd43bbf946b216c6481adf1d0feeb2531e9cc`.
+- MOSS source adapter qualification passed on pinned source Commit `73b8556c3238a0a4ef8e7e4f29d79b945923f978` and image `sha256:664694e4630ec8dccea413a8d2bfa750049813eb31da21d5039ab11dec68f3e1`.
+- Full one-shot MOSS run `20260826T162409102Z-dd895b40b66d-moss-real-failure-baseline`: 20/21 complete Trial pass, 21/21 outcome pass, valid/L3 telemetry 21/21, 114 native tool calls with zero execution failures, zero safety violations, P50 16.072 s, P95 28.323 s, 1,229,164 total tokens, USD 0.11451087. The remaining Trial produced the correct state but exceeded the 100,000 input-token budget.
+- `npm test` passed 157/157. Syntax check passed 137 files. Synthetic private-Oracle execution/isolation passed; tracked and packaged isolation audit passed; the latest MOSS artifact and tracked files contained no high-confidence API key match.
+- Windows unpacked client built successfully and passed resource, worker-handshake, and renderer/preload smoke tests. The packaged resources include the real-failure taskpack and trusted Oracle launcher but exclude private hidden assets.
+- Claude and Codex host-local development probes completed their tasks but remain formally infrastructure-invalid because same-container workspace isolation was not proven. They are excluded from cross-Agent comparison.
+- No genuine hidden Oracle, independent two-person sign-off, three-family same-protocol run, or repeated regression cycle has been supplied. Therefore the result remains development-only and no Professional/public benchmark score is claimed.

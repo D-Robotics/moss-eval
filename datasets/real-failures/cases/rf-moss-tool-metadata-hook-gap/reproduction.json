@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-metadata-hook-gap",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "c493049c76a40d3f6084d960e5a8870e58710527",
+    "fixed_revision": "691c9c143dc929731018547bff88cc39a479ae64"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "96690b06a1fd841dfac8af4159fb3a4dad5fe6a8bd0b7ebaa4deebf6a7581e13"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/core/tools/tool-hooks.ts",
+      "failure_blob": "b0f186b4ccc6bc009bfefd8bea04b4d499731a00",
+      "fixed_blob": "547de3fcf7e01e50250b969ccf8f3590bf0c5193"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-tool-metadata-hook-gap:tool-approval-metadata-gap"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-tool-metadata-hook-gap:tool-approval-metadata-gap"
+      }
+    }
+  }
+}

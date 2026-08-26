@@ -1,5 +1,7 @@
 node_modules/
 .moss-eval/
+private-oracles/
+hidden-oracles/
 coverage/
 *.log
 *.tmp

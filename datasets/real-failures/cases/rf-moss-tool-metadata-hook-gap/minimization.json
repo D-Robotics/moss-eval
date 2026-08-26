@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-metadata-hook-gap",
+  "status": "preserved",
+  "original_signature": "rf-moss-tool-metadata-hook-gap:tool-approval-metadata-gap",
+  "minimized_signature": "rf-moss-tool-metadata-hook-gap:tool-approval-metadata-gap",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "96690b06a1fd841dfac8af4159fb3a4dad5fe6a8bd0b7ebaa4deebf6a7581e13"
+}

@@ -1,0 +1,13 @@
+{
+  "task_id": "real-moss-compaction-history-drop",
+  "status": "verified",
+  "summary": "Verified the documented history-preserving-context-compaction policy from the retained scenario evidence.",
+  "evidence": {
+    "input/scenario.json": {
+      "method": "independent policy derivation"
+    }
+  },
+  "history_preserved": true,
+  "missing_marker_policy": "keep-all",
+  "dropped_entry_count": 0
+}

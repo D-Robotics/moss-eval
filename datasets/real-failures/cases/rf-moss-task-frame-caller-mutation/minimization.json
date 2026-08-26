@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-task-frame-caller-mutation",
+  "status": "preserved",
+  "original_signature": "rf-moss-task-frame-caller-mutation:caller-owned-state-mutation",
+  "minimized_signature": "rf-moss-task-frame-caller-mutation:caller-owned-state-mutation",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "ab92c7f99db53e4bcb9b89d78c3a4b13f5b41ed3f905994f7ebd5cee1179a8f5"
+}

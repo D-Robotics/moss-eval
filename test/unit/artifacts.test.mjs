@@ -15,6 +15,7 @@ test('canonical artifact reader loads the current nested trial layout', async ()
   const run = await loadRunArtifacts(path.join(root, 'test/fixtures/artifacts/run-v1'));
   assert.equal(run.metadata.run_id, 'fixture-run-v1');
   assert.equal(run.summary.trial_count, 1);
+  assert.equal(run.release_decision.status, 'development-only');
   assert.equal(run.trials.length, 1);
   assert.equal(run.trials[0].task.id, 'fixture-task');
   assert.equal(run.trials[0].agent, 'fixture-agent');

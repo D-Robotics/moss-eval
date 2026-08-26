@@ -1,0 +1,5 @@
+{
+  "mode": "plan",
+  "tool": "batch_device_exec",
+  "operation": "restart fleet"
+}

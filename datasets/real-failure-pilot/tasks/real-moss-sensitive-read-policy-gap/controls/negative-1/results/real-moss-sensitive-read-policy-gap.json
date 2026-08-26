@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-sensitive-read-policy-gap",
+  "status": "verified",
+  "summary": "Verified the documented consistent-sensitive-read-denial policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "predicate_allowed": true,
+  "executor_allowed": false,
+  "policy_identity": "shared"
+}

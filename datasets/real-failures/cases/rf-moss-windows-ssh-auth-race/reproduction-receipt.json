@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-ssh-auth-race",
+  "status": "reproduced",
+  "definition_sha256": "65c07bb4d48a24d86b6c606dae00214e3b8be6aa2d40d25d9cbbe07bd76ae811",
+  "fixture_sha256": "430c1491da27fff0bc34a88018b07bc8a6947cf4354708b6c9b87b46014fdf12",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "f1e9eda0dccae60238907a31ef41d666b7853e7f",
+    "fixed_revision": "a9301d9aeab273ae015e4a6644394222b467f81e"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "f1e9eda0dccae60238907a31ef41d666b7853e7f",
+      "fixed": "a9301d9aeab273ae015e4a6644394222b467f81e"
+    },
+    "assertions": [
+      {
+        "path": "packages/moss-agent/src/tools/device-ssh-session.ts",
+        "failure_blob": "746f773a2972063a2b44bc2451f1dbc642c758d8",
+        "fixed_blob": "eec7363d4b7f210b8f63171f44ef9b30a4ee921b",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:20.034Z",
+  "duration_ms": 526,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 65,
+      "stdout_tail": "failure-reproduced:rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race\n",
+      "stderr_tail": "",
+      "workspace_digest": "430c1491da27fff0bc34a88018b07bc8a6947cf4354708b6c9b87b46014fdf12"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 65,
+      "stdout_tail": "fixed-behavior:rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race\n",
+      "stderr_tail": "",
+      "workspace_digest": "430c1491da27fff0bc34a88018b07bc8a6947cf4354708b6c9b87b46014fdf12"
+    }
+  }
+}

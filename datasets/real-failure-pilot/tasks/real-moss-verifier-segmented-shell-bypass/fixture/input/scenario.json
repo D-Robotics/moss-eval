@@ -1,0 +1,4 @@
+{
+  "command": "cat /sys/status; cat /etc/passwd",
+  "allowed_prefix": "cat /sys/"
+}

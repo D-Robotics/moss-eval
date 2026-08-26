@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-timeout-auth-misclassification",
+  "status": "verified",
+  "summary": "Verified the documented causal-provider-error-classification policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "classification": "timeout",
+  "authentication_error": true,
+  "retryable": true
+}

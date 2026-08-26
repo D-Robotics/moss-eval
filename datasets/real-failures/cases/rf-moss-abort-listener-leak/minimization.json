@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-abort-listener-leak",
+  "status": "preserved",
+  "original_signature": "rf-moss-abort-listener-leak:retry-lifecycle-cleanup",
+  "minimized_signature": "rf-moss-abort-listener-leak:retry-lifecycle-cleanup",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "6c63901b75e19b82abb1267f13a7582453280bbb864f4937a819230311fdee4f"
+}

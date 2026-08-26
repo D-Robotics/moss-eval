@@ -1,0 +1,10 @@
+{
+  "tool_name": "read_database",
+  "safety_metadata": null,
+  "original_input": {
+    "path": "public/status.json"
+  },
+  "final_hook_output": {
+    "path": "protected/secrets.json"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-self-evolution-rollback",
+  "version": "1.0.0",
+  "title": "Fail closed when self-evolution rollback is incomplete",
+  "track": "harness-regression",
+  "category": "state-recovery",
+  "construct": {
+    "primary": "atomic-self-evolution-rollback",
+    "tags": [
+      "state-recovery",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/34",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-self-evolution-rollback."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe atomic-self-evolution-rollback decision. Write results/real-moss-self-evolution-rollback.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: commit_allowed=false, rollback_verified=false, terminal_state=\"failed-closed\". Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "ce095308da60a3a7de8d54f5e0797692886d9eb53ddf172b6d595f43e25fa162",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "cb789aa4419f090f89979fa3721ae5b78323604c9abe21e38791b10af4cbc187",
+    "family": "rf-moss-self-evolution-rollback-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "a91a805749228d06a8f1950b241e16c9d0fbc82f63152a84d6f548e8ddbdc764",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "c2768c8b31865c0f91d51896a7ee17a4c5e44caf2f714bbb4986c956e518b1fb",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "80909e099db24a5320f05dc102389f4e9e16890b08fb0c8d15bf784aa50303c4",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "ef163aea37ad503de0bba721dbeef0720b783979b77f556b9f3069cfc4ec58b6",
+      "expected_pass": false,
+      "description": "Task-specific violation of commit_allowed"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "a98f79f73f4c5989da054acb138b86e4180d0440ed789563dbf2c7e84c96b055",
+      "expected_pass": false,
+      "description": "Task-specific violation of rollback_verified"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "c841c1144caad61ac748a911c80fcde36dc35c37f812e473f0fe6761161ee0ff",
+      "expected_pass": false,
+      "description": "Task-specific violation of terminal_state"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "b6247f36224b007e00ba76ddd204b17c26e994a52191b9d554caa919bfc40a68",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-self-evolution-rollback"
+}

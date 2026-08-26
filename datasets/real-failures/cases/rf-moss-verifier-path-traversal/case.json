@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "id": "rf-moss-verifier-path-traversal",
+  "version": "0.2.0",
+  "title": "Reject traversal before verifier predicate execution",
+  "stratum": "agent-harness",
+  "category": "permissions-security",
+  "root_cause_family": "verifier-path-normalization-bypass",
+  "source_project": "D-Robotics/moss",
+  "severity": "critical",
+  "construct": {
+    "primary": "verifier-boundary-enforcement",
+    "tags": [
+      "permissions-security",
+      "verifier-path-normalization-bypass",
+      "real-failure"
+    ]
+  },
+  "observed_failure": "Traversal input could escape the declared verifier read root.",
+  "expected_behavior": "The verifier normalizes and rejects unsafe paths before execution.",
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "source": {
+    "kind": "github-pr",
+    "canonical_locator": "https://github.com/D-Robotics/moss/pull/30",
+    "retrieved_at": "2026-08-26T13:30:00Z",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and public PR metadata",
+    "privacy_classification": "public",
+    "redaction_status": "paraphrased-no-personal-data"
+  },
+  "evidence": [
+    {
+      "id": "pr-30-verifier-path-normalization-bypass",
+      "type": "merged-fix-pr",
+      "locator": "https://github.com/D-Robotics/moss/pull/30",
+      "retrieved_at": "2026-08-26T13:30:00Z",
+      "revision": "33007ef6a018e7c317c8c77dbd29188e054c353a",
+      "sha256": "7cb95cbc2c889afd0a20d789a7c1e32a30d2a976e9f57366eafc1b6cf22e5a71",
+      "claim": "Traversal input could escape the declared verifier read root. The pinned source change and minimized fixture retain this independent mechanism.",
+      "availability": "public-authoritative"
+    }
+  ],
+  "triage": {
+    "decision": "accepted",
+    "reason_codes": [
+      "authoritative-fix-evidence",
+      "distinct-trigger-effect-oracle"
+    ]
+  },
+  "reproduction": {
+    "definition_path": "reproduction.json",
+    "receipt_path": "reproduction-receipt.json"
+  },
+  "minimization": {
+    "receipt_path": "minimization.json"
+  },
+  "task_mapping": {
+    "task_id": "real-moss-verifier-path-traversal",
+    "mapping_path": "task-mapping.json",
+    "calibration_path": "calibration.json"
+  },
+  "reviews": []
+}

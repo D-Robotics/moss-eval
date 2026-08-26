@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { diagnoseRun, explainMetric, friendlyError, friendlyFailure, groupTrialsByTask, guardStep, inferApiProtocol, validateModelInputs, validateSourceSelection, workflowReadiness } from '../../app/renderer/workflow.mjs';
+import { diagnoseRun, explainMetric, friendlyError, friendlyFailure, groupTrialsByTask, guardStep, inferApiProtocol, releasePresentation, validateModelInputs, validateSourceSelection, workflowReadiness } from '../../app/renderer/workflow.mjs';
 
 test('guided workflow readiness follows canonical source and prepared target state', () => {
   assert.deepEqual(workflowReadiness({}), { source:true, configure:false, live:false });
@@ -38,6 +38,12 @@ test('failure causes and advanced metrics have plain Chinese explanations', () =
   assert.match(explainMetric('pass_at_k'),/至少一次成功/);
   assert.match(explainMetric('pass_pow_k'),/每次都成功/);
   assert.match(explainMetric('tool_precision'),/符合任务预期/);
+});
+
+test('release status distinguishes a passing run from a publishable claim', () => {
+  const missing=releasePresentation(null);assert.equal(missing.eligible,false);assert.match(missing.title,/开发评测/);
+  const blocked=releasePresentation({eligible:false,status:'development-only',blockers:['hidden_oracle-gate-not-passed','human_review-gate-not-passed']});
+  assert.equal(blocked.blockers.length,2);assert.match(blocked.blockers[0],/隐藏/);assert.match(blocked.description,/不等于/);
 });
 
 test('run diagnostics group repeated trials and identify an old MOSS approval block', () => {

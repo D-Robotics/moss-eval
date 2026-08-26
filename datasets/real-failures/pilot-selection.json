@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "catalog_digest": "fe8ae9b81029badd0bf77b9666ba420c2eaee9cc6cd5b751231a1bb66b1064b6",
+  "selected_case_ids": [
+    "rf-moss-compaction-history-drop",
+    "rf-moss-plan-completion-deadlock",
+    "rf-moss-provider-truncated-stream",
+    "rf-moss-verifier-path-traversal",
+    "rf-moss-tool-metadata-hook-gap",
+    "rf-moss-abort-listener-leak",
+    "rf-moss-tool-retry-stale-structured-content",
+    "rf-moss-sensitive-read-policy-gap",
+    "rf-moss-self-evolution-rollback",
+    "rf-moss-policy-hash-instability",
+    "rf-moss-verifier-failure-line-spoof",
+    "rf-moss-verifier-segmented-shell-bypass",
+    "rf-moss-trusted-rollback-recursive-delete",
+    "rf-moss-timeout-auth-misclassification",
+    "rf-moss-windows-npm-spawn",
+    "rf-moss-plan-device-mutation",
+    "rf-moss-tool-error-metadata-loss",
+    "rf-moss-windows-ssh-auth-race",
+    "rf-moss-mcp-stdin-error-crash",
+    "rf-moss-anthropic-tool-input-object",
+    "rf-moss-task-frame-caller-mutation"
+  ],
+  "selection_policy": "all accepted source-backed mechanisms in catalog v2"
+}

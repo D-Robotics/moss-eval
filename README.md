@@ -18,6 +18,8 @@
 - 基线对比和红/黄/绿发布门禁；
 - `agent_eval_service` JSON 导出和可配置 HTTP 发布；
 - 5 个确定性 smoke 任务和自动测试。
+- 21 个来自 MOSS 固定修复历史的真实失败机制、126 个任务特定校准控制和一套数据治理/审阅流水线；
+- 冻结协议、适配器资格检查、跨 Agent 可比性门禁、私有 Oracle 隔离执行和 fail-closed 发布决策。
 
 ## 快速验证
 
@@ -35,9 +37,17 @@ npm run env:browser:docker
 npm run env:device
 npm run smoke
 npm run calibrate
+npm run dataset:audit
+npm run dataset:calibrate
+npm run dataset:release-blocked
+npm run failure:check
+npm run hidden:contract
+npm run release:isolation
 ```
 
 `smoke` 使用受信任的本地模拟 Agent，因此显式传入了 `--allow-local`。正式 MOSS 任务默认使用 Docker，不会静默降级到宿主机执行。
+
+锁定源码镜像后的专业开发 Canary 使用 `npm run moss:professional-canary`。该命令要求通过环境变量提供 Source Config、模型 URL、模型名和临时 API Key；先重跑技术审计与任务特定校准，并确认公开种子仍不可发布，然后才执行一个真实模型 Trial。它只产生 Development Canary 证据，不产生 Professional Score。
 
 ## 运行 MOSS
 
@@ -80,8 +90,17 @@ moss-eval doctor    --config <file>
 moss-eval calibrate --config <file> [--concurrency 4]
 moss-eval run       --config <file> [--agent moss] [--task id1,id2]
 moss-eval aggregate --run <run-dir> [--k 3]
+moss-eval report    --run <run-dir>
 moss-eval compare   --baseline <summary.json> --candidate <summary.json>
 moss-eval export    --run <run-dir> [--publish --config <file>]
+moss-eval failure-audit --corpus datasets/real-failures
+moss-eval review-packet --corpus <dir> --dataset <dir> --calibration <file> --output <dir>
+moss-eval protocol-freeze --input <file>
+moss-eval adapter-qualify --input <file>
+moss-eval cross-agent-report --protocol <file> --qualifications <file> --runs <file>
+moss-eval hidden-manifest --bundle <private-dir> --salt-env <name>
+moss-eval hidden-run --bundle <private-dir> --salt-env <name> --trials <file>
+moss-eval release-status --evidence <file>
 ```
 
 `run` 默认在交互终端显示动态状态面板，在 CI 或重定向输出时自动切换为逐行日志。也可以显式选择：
@@ -112,6 +131,9 @@ src/runners/         Local、Docker、PTY 环境
 src/verifiers/       Outcome、Trace、Safety、Budget、Judge
 src/core/            Task、Trial、聚合、比较、指纹
 taskpacks/core/      50 项核心候选任务和 Oracle
+datasets/real-failures/       21 条真实失败案例的证据、复现、最小化和映射记录
+datasets/real-failure-pilot/  可直接运行的 21 条任务、Fixture、控制和公开开发 Oracle
+datasets/professional-seed/   专业数据集机制的早期种子包
 examples/            可离线运行的 smoke 闭环
 test/                单元和端到端测试
 docs/                Spec、任务编写和集成说明
@@ -119,8 +141,8 @@ docs/                Spec、任务编写和集成说明
 
 ## 重要边界
 
-50 项核心任务已经可被加载和调度，但其来源状态是 `candidate-needs-domain-review`。在进入正式 Regression Suite 前，每项仍必须由领域人员用参考解执行、检查合法替代路径，并校准 Grader 的误报/漏报。框架不会把“有 50 个 JSON”冒充成已经完成人工金标。
+50 项核心任务已经可被加载和调度，但它们只属于 integration/candidate pack，来源状态是 `candidate-needs-domain-review`。在进入正式 Regression Suite 前，每项仍必须由领域人员用参考解执行、检查合法替代路径，并校准 Grader 的误报/漏报。框架不会把“有 50 个 JSON”冒充成已经完成人工金标。
 
 自动校准已经覆盖全部 50 项任务：50 个确定性参考解必须通过，同时每项的“缺失结果、自引用证据、受保护文件被修改”三个反例必须失败。该门禁共 200 个控制样本，当前误报与漏报均为 0；它已经进入 CI，但不能替代领域人员审核。
 
-详见 [实施 Spec](docs/SPEC.md)、[MOSS 原生遥测](docs/NATIVE_TELEMETRY.md)、[Source Track](docs/SOURCE_TRACK.md)、[环境要求](docs/ENVIRONMENT.md)、[验证记录](docs/VALIDATION.md)、[任务编写指南](docs/TASK_AUTHORING.md) 和 [agent_eval_service 集成](docs/AGENT_EVAL_SERVICE.md)。
+详见 [真实失败案例集](docs/REAL_FAILURE_CORPUS.md)、[真实失败 Pilot 报告](docs/REAL_FAILURE_PILOT_REPORT.md)、[私有 Oracle 运维](docs/PRIVATE_ORACLE_OPERATIONS.md)、[专业数据集规范](docs/PROFESSIONAL_DATASET.md)、[实施 Spec](docs/SPEC.md)、[MOSS 原生遥测](docs/NATIVE_TELEMETRY.md)、[Source Track](docs/SOURCE_TRACK.md)、[环境要求](docs/ENVIRONMENT.md)、[验证记录](docs/VALIDATION.md)、[任务编写指南](docs/TASK_AUTHORING.md) 和 [agent_eval_service 集成](docs/AGENT_EVAL_SERVICE.md)。

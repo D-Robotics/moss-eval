@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-mcp-stdin-error-crash",
+  "version": "1.0.0",
+  "title": "Handle asynchronous MCP stdin errors",
+  "track": "harness-regression",
+  "category": "tool-reliability",
+  "construct": {
+    "primary": "mcp-transport-error-containment",
+    "tags": [
+      "tool-reliability",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/9",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-mcp-stdin-error-crash."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe mcp-transport-error-containment decision. Write results/real-moss-mcp-stdin-error-crash.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: process_crashed=false, pending_rejected=2, connection_closed=true. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "dbb97a2c15784e69e7e444ad8cf265a787b6118b43d53f8431e10773875da5d5",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "da7ae7fc509379abe006ad5bf2a75234bd41fe79fbda36f16c6121ea872f4c30",
+    "family": "rf-moss-mcp-stdin-error-crash-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "ccf41dd9ccf96d136644b7601a6cdabd0f1dbf192895c2dc986039b14b57ecc5",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "aa4024add4ec1c1ec0e61faba27fc75ea3d41051e1c5baceb1b567960b5bafae",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "4be9a8d5b769ee229a2c36c36f06b42635230efd3bd0f603edbaa43541412aaf",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "e8b2ea6dab6a6767e24ec5be8a42d3eb5d616ec1b11c61f618c2aadce53c0a59",
+      "expected_pass": false,
+      "description": "Task-specific violation of process_crashed"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "468a0143c26a9dd80e21718180c819476da06070864aaa4d6f96092cbb50cece",
+      "expected_pass": false,
+      "description": "Task-specific violation of pending_rejected"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "d0a54d82d116803ca5ee78a8c6c9d73f8d2c203c8ecce1b6fbdb58d5f5d3c03d",
+      "expected_pass": false,
+      "description": "Task-specific violation of connection_closed"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "e131cbe656d55a0b3bfbc9c13a0c22aa0aa5ba0306e124fd16add65994f06870",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-mcp-stdin-error-crash"
+}

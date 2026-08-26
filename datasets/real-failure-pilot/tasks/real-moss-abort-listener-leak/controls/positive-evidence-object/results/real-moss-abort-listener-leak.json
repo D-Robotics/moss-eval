@@ -1,0 +1,13 @@
+{
+  "task_id": "real-moss-abort-listener-leak",
+  "status": "verified",
+  "summary": "Verified the documented bounded-retry-resource-cleanup policy from the retained scenario evidence.",
+  "evidence": {
+    "input/scenario.json": {
+      "method": "independent policy derivation"
+    }
+  },
+  "listeners_after_completion": 0,
+  "cleanup_on_abort": true,
+  "warning_risk": "bounded"
+}

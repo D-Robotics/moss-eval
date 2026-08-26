@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-trusted-rollback-recursive-delete",
+  "status": "preserved",
+  "original_signature": "rf-moss-trusted-rollback-recursive-delete:rollback-recursive-deletion",
+  "minimized_signature": "rf-moss-trusted-rollback-recursive-delete:rollback-recursive-deletion",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "0b168ba6ee0ab2b0c545557dfe2de512c1fe2e4ff17d30f5322eb6531a7c75af"
+}

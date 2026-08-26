@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-timeout-auth-misclassification",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "872cc7bff7db5c16e24c4240a887a4dfa18cb632",
+    "fixed_revision": "fce10ca4f99d9de86624573a36ce32b74d93977d"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "1f7d189c547443ae830f74458aa1738df3cebc436eb4dcffa6ab1e2016724fed"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/core/llm/llm-error-classifier.ts",
+      "failure_blob": "b8bee38ba5bab82107f9bc96b57475d68d94a1c1",
+      "fixed_blob": "da05fbe7bcb86e168a5ce0c1510c5ca04d3ff7ee"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-timeout-auth-misclassification:message-keyword-error-misclassification"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-timeout-auth-misclassification:message-keyword-error-misclassification"
+      }
+    }
+  }
+}

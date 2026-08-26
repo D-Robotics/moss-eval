@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-npm-spawn",
+  "status": "preserved",
+  "original_signature": "rf-moss-windows-npm-spawn:windows-command-shim-resolution",
+  "minimized_signature": "rf-moss-windows-npm-spawn:windows-command-shim-resolution",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "3b92b422fa5a830d54bed67c957bb4242aa2812130f0444251f95094516c360d"
+}

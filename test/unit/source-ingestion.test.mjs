@@ -7,11 +7,13 @@ import path from 'node:path';
 import { runProcess } from '../../src/lib/process.mjs';
 import {
   SourceIngestionError,
+  gitSupportsPartialClone,
   ingestGitHubSource,
   ingestLocalSource,
   inspectLocalGit,
   normalizeGitHubUrl,
   planSourceRetention,
+  renameDirectoryWithRetry,
   resolveGitHubCommit,
 } from '../../src/core/source-ingestion.mjs';
 
@@ -91,6 +93,28 @@ test('source ingestion excludes junctions that could escape the selected root', 
   await assert.rejects(fsp.access(path.join(record.snapshot_path, 'escape/outside.txt')));
 });
 
+test('snapshot publication retries bounded transient Windows rename failures', async () => {
+  let attempts = 0;
+  const delays = [];
+  await renameDirectoryWithRetry('source', 'destination', {
+    rename: async () => {
+      attempts++;
+      if (attempts < 3) throw Object.assign(new Error('temporarily locked'), { code: 'EPERM' });
+    },
+    sleep: async (milliseconds) => { delays.push(milliseconds); },
+    delays: [10, 20, 40],
+  });
+  assert.equal(attempts, 3);
+  assert.deepEqual(delays, [10, 20]);
+  await assert.rejects(
+    renameDirectoryWithRetry('source', 'destination', {
+      rename: async () => { throw Object.assign(new Error('invalid path'), { code: 'EINVAL' }); },
+      sleep: async () => { throw new Error('must not sleep'); },
+    }),
+    (error) => error.code === 'EINVAL',
+  );
+});
+
 test('local Git provenance records revision and dirty state without mutating the worktree', async (t) => {
   const { source } = await temporaryRoots(t, 'moss-eval-git');
   const checked = async (args) => {
@@ -131,12 +155,27 @@ test('GitHub URLs and refs normalize to canonical immutable commits', async () =
   assert.equal(resolved, commit);
 });
 
+test('partial-clone capability follows the Git version and fails closed for legacy clients', async () => {
+  const probe = (version) => gitSupportsPartialClone({
+    processRunner: async () => ({
+      exitCode: 0, timedOut: false, startError: null, stdout: version, stderr: '',
+    }),
+  });
+  assert.equal(await probe('git version 2.9.3.windows.1\n'), false);
+  assert.equal(await probe('git version 2.19.0\n'), true);
+  assert.equal(await probe('git version 3.0.0\n'), true);
+  assert.equal(await probe('unexpected version output\n'), false);
+});
+
 test('GitHub ingestion snapshots the verified checkout and records clone bounds', async (t) => {
   const { storage } = await temporaryRoots(t, 'moss-eval-github');
   const commit = 'b'.repeat(40);
   const calls = [];
   const processRunner = async (spec) => {
     calls.push(spec);
+    if (spec.args[0] === '--version') {
+      return { exitCode: 0, timedOut: false, startError: null, stdout: 'git version 2.46.0\n', stderr: '' };
+    }
     if (spec.args[0] === 'ls-remote') {
       return { exitCode: 0, timedOut: false, startError: null, stdout: `${commit}\tHEAD\n`, stderr: '' };
     }
@@ -158,4 +197,34 @@ test('GitHub ingestion snapshots the verified checkout and records clone bounds'
   assert.equal(await fsp.readFile(path.join(record.snapshot_path, 'package.json'), 'utf8'), '{"name":"remote"}\n');
   assert.ok(calls.filter((call) => call.args[0] !== 'ls-remote').every((call) => call.timeoutMs === 1234));
   assert.ok(calls.some((call) => call.args.includes('--depth')));
+  assert.ok(calls.some((call) => call.args.includes('--filter=blob:none')));
+});
+
+test('GitHub ingestion omits partial-clone flags for the legacy Git used by the desktop client', async (t) => {
+  const { storage } = await temporaryRoots(t, 'moss-eval-github-legacy');
+  const commit = 'c'.repeat(40);
+  const calls = [];
+  const processRunner = async (spec) => {
+    calls.push(spec);
+    if (spec.args[0] === '--version') {
+      return { exitCode: 0, timedOut: false, startError: null, stdout: 'git version 2.9.3.windows.1\n', stderr: '' };
+    }
+    if (spec.args[0] === 'ls-remote') {
+      return { exitCode: 0, timedOut: false, startError: null, stdout: `${commit}\tHEAD\n`, stderr: '' };
+    }
+    if (spec.args[0] === 'init') await fsp.mkdir(spec.args[1], { recursive: true });
+    const checkoutIndex = spec.args.indexOf('-C');
+    const checkout = checkoutIndex >= 0 ? spec.args[checkoutIndex + 1] : null;
+    if (spec.args.includes('checkout')) await fsp.writeFile(path.join(checkout, 'package.json'), '{"name":"legacy-remote"}\n');
+    const stdout = spec.args.includes('rev-parse') ? `${commit}\n` : '';
+    return { exitCode: 0, timedOut: false, startError: null, stdout, stderr: '' };
+  };
+  const record = await ingestGitHubSource('https://github.com/acme/legacy-agent', {
+    sourcesRoot: storage,
+    processRunner,
+  });
+  assert.equal(record.revision, commit);
+  const fetch = calls.find((call) => call.args.includes('fetch'));
+  assert.ok(fetch.args.includes('--depth'));
+  assert.equal(fetch.args.includes('--filter=blob:none'), false);
 });

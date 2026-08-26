@@ -1,0 +1,7 @@
+{
+  "path": "/sys/firmware/secrets",
+  "surfaces": [
+    "predicate",
+    "readonly-executor"
+  ]
+}

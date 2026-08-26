@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-mcp-stdin-error-crash",
+  "status": "preserved",
+  "original_signature": "rf-moss-mcp-stdin-error-crash:unhandled-stdin-error-event",
+  "minimized_signature": "rf-moss-mcp-stdin-error-crash:unhandled-stdin-error-event",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "387c1bcb3312ee6ce2d0a5aae46a37e2b5daa60684edb9a1dcec139958eb4935"
+}

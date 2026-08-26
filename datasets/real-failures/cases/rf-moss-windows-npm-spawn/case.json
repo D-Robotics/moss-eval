@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "id": "rf-moss-windows-npm-spawn",
+  "version": "0.2.0",
+  "title": "Resolve npm command execution on Windows",
+  "stratum": "agent-harness",
+  "category": "platform-portability",
+  "root_cause_family": "windows-command-shim-resolution",
+  "source_project": "D-Robotics/moss",
+  "severity": "high",
+  "construct": {
+    "primary": "portable-process-launch",
+    "tags": [
+      "platform-portability",
+      "windows-command-shim-resolution",
+      "real-failure"
+    ]
+  },
+  "observed_failure": "Launching npm directly on Windows could fail with ENOENT instead of using the npm command shim.",
+  "expected_behavior": "The launcher selects npm.cmd on Windows and npm elsewhere.",
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "source": {
+    "kind": "github-pr",
+    "canonical_locator": "https://github.com/D-Robotics/moss/pull/41",
+    "retrieved_at": "2026-08-26T13:30:00Z",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and public PR metadata",
+    "privacy_classification": "public",
+    "redaction_status": "paraphrased-no-personal-data"
+  },
+  "evidence": [
+    {
+      "id": "pr-41-windows-command-shim-resolution",
+      "type": "merged-fix-pr",
+      "locator": "https://github.com/D-Robotics/moss/pull/41",
+      "retrieved_at": "2026-08-26T13:30:00Z",
+      "revision": "fce10ca4f99d9de86624573a36ce32b74d93977d",
+      "sha256": "da23c108e8cb23d0dc167f6054790d36059ca7a2f9c1682264619181282ae7cf",
+      "claim": "Launching npm directly on Windows could fail with ENOENT instead of using the npm command shim. The pinned source change and minimized fixture retain this independent mechanism.",
+      "availability": "public-authoritative"
+    }
+  ],
+  "triage": {
+    "decision": "accepted",
+    "reason_codes": [
+      "authoritative-fix-evidence",
+      "distinct-trigger-effect-oracle"
+    ]
+  },
+  "reproduction": {
+    "definition_path": "reproduction.json",
+    "receipt_path": "reproduction-receipt.json"
+  },
+  "minimization": {
+    "receipt_path": "minimization.json"
+  },
+  "task_mapping": {
+    "task_id": "real-moss-windows-npm-spawn",
+    "mapping_path": "task-mapping.json",
+    "calibration_path": "calibration.json"
+  },
+  "reviews": []
+}

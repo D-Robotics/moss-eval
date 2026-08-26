@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-provider-truncated-stream",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "76796b20deb0612617a8483c210bfb116037fb51",
+    "fixed_revision": "14ca171cb7ae6bbe25cfc5ffc4e1f06efd4e5b5b"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "b38170e179b459d45a0943e04255932c48adc8100682a1fdc6fb41483e054b56"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/provider/error-classify.ts",
+      "failure_blob": "aa5ace17c5ebc5e63370b2fb56b8f61b95dbea30",
+      "fixed_blob": "9eb5f4eaea7e04157b57de1887fd984e54be671c"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-provider-truncated-stream:premature-stream-termination"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-provider-truncated-stream:premature-stream-termination"
+      }
+    }
+  }
+}

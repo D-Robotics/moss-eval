@@ -1,0 +1,13 @@
+{
+  "task_id": "real-moss-verifier-path-traversal",
+  "status": "verified",
+  "summary": "Verified the documented verifier-boundary-enforcement policy from the retained scenario evidence.",
+  "evidence": {
+    "input/scenario.json": {
+      "method": "independent policy derivation"
+    }
+  },
+  "allowed": false,
+  "reason": "path-traversal",
+  "normalized_target": "/etc/passwd"
+}

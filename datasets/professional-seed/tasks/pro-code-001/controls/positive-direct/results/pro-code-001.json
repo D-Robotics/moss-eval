@@ -1,0 +1,6 @@
+{
+  "task_id": "pro-code-001",
+  "status": "verified",
+  "summary": "Direct numeric addition fixed the defect and preserved finite-number validation.",
+  "evidence": ["src/add.mjs"]
+}

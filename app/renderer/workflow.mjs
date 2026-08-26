@@ -46,6 +46,23 @@ export function explainMetric(metric) {
   return METRIC_PRESENTATION[String(metric||'')] || '这是高级评测指标；展开原始 summary 可查看数值、分母和置信区间。';
 }
 
+const RELEASE_BLOCKER_LABELS = Object.freeze({
+  'adapter_qualification-gate-not-passed': 'Agent 适配器资格检查未完成',
+  'cross_agent-gate-not-passed': '尚未完成三种独立 Agent 的可比试跑',
+  'hidden_oracle-gate-not-passed': '尚未运行私有隐藏验收规则',
+  'human_review-gate-not-passed': '尚缺独立数据审核人与发布负责人签署',
+  'telemetry-gate-not-passed': '过程轨迹完整性尚未通过',
+  'security-gate-not-passed': '密钥扫描或验收隔离尚未通过',
+  'regression-gate-not-passed': '回归门禁尚未通过',
+  'packaged_client-gate-not-passed': '安装版 Windows 客户端验证尚未通过',
+});
+
+export function releasePresentation(decision) {
+  if (!decision) return Object.freeze({ eligible:false, status:'development-only', title:'这是开发评测结果', description:'本次结果没有附带正式发布门禁证据，适合调试和回归，不应作为公开性能结论。', blockers:Object.freeze(['未附带发布门禁证据']), dataset_digest:null, protocol_digest:null });
+  const blockers=(decision.blockers||[]).map((value)=>RELEASE_BLOCKER_LABELS[value]||String(value));
+  return Object.freeze({ eligible:decision.eligible===true, status:decision.status||'development-only', title:decision.eligible?'正式发布门禁已通过':'这是开发评测结果', description:decision.eligible?'数据、隐藏验收、独立审核、安全和客户端验证均有完整证据。':`仍有 ${blockers.length} 项正式发布条件未满足；任务通过不等于评测体系已可对外发布。`, blockers:Object.freeze(blockers), dataset_digest:decision.dataset_digest||decision.gates?.corpus?.evidence||null, protocol_digest:decision.protocol_digest||null });
+}
+
 function receiptMissing(trial) {
   return (trial?.graders||[]).some((grader)=>grader.id==='deterministic-outcome' && /ENOENT[\s\S]*results[\\/]/i.test(String(grader.details?.stderr_tail||'')));
 }

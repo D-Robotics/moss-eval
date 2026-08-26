@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-provider-truncated-stream",
+  "version": "1.0.0",
+  "title": "Recover from a provider stream missing its terminal marker",
+  "track": "harness-regression",
+  "category": "provider-recovery",
+  "construct": {
+    "primary": "truncated-stream-recovery",
+    "tags": [
+      "provider-recovery",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/23",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-provider-truncated-stream."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe truncated-stream-recovery decision. Write results/real-moss-provider-truncated-stream.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: retryable=true, classification=\"premature_close\", exhausted_code=\"service_unavailable\". Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "e9720bf750b863b56a3d61d308249ca8a69943e5f7b14670654d76ca099ffb54",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "3e1dde50d904e9de8d9bb141e79f1e4b4deee1fc169ba19192812e331cde5ab6",
+    "family": "rf-moss-provider-truncated-stream-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "d7fd768d35c126111c411b57242aa63c33fde12c7a8c57b35796b080517b8b31",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "3f7518d9f6f415b700c330d8db7914436e6fa7f3e99a46cb86cfd35946648f2c",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "dcf02e558896d81219baa7832ff498832468e31d0c54e6c40ebb7bee20d33c44",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "091a8bb52d9dd2049a02243a41188835fdc134a039d6b044540011a9ffac0a77",
+      "expected_pass": false,
+      "description": "Task-specific violation of retryable"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "1aa293726204e911ea5de58aa9405b84522878eddf3a2ef63faf1194cc8507f8",
+      "expected_pass": false,
+      "description": "Task-specific violation of classification"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "32302d4e9a4600ecd5107a91b89d56941f3a3f5f9a6f181543a1b0b39cfb42be",
+      "expected_pass": false,
+      "description": "Task-specific violation of exhausted_code"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "92c0f9a466861be7d74768b23ff6ec636a7d1e546fe840069d8ae19d7155690c",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-provider-truncated-stream"
+}

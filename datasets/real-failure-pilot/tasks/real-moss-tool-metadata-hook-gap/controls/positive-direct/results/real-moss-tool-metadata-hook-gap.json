@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-tool-metadata-hook-gap",
+  "status": "verified",
+  "summary": "Verified the documented post-hook-tool-approval policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "classification": "local_write",
+  "validated_input": "final-hook-output",
+  "approval_required": true
+}

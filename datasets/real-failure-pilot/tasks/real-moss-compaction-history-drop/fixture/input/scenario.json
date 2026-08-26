@@ -1,0 +1,8 @@
+{
+  "entries": [
+    "old-user:calibration=42",
+    "old-assistant:acknowledged"
+  ],
+  "first_kept_entry_id": "not-present",
+  "risk": "silent-pre-compaction-history-loss"
+}

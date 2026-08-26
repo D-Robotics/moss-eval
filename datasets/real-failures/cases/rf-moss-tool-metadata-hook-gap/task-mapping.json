@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-metadata-hook-gap",
+  "task_id": "real-moss-tool-metadata-hook-gap",
+  "track": "harness-regression",
+  "source_evidence_digest": "07b3911654734f6f4412f68500517f106be4080042f8a786e9e08d1800d07b0b",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

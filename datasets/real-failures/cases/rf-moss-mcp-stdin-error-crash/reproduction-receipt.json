@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-mcp-stdin-error-crash",
+  "status": "reproduced",
+  "definition_sha256": "0ce6a46656f5f395ecc0b03fd230ec3cb3ba91d93ca6f00f2317d5012c25fd3b",
+  "fixture_sha256": "387c1bcb3312ee6ce2d0a5aae46a37e2b5daa60684edb9a1dcec139958eb4935",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787",
+    "fixed_revision": "3438a92f60da2f1bfe328c733575f03afcbdb7a0"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "9dddb3382dc84e5d7ba6ae56c618702f71782787",
+      "fixed": "3438a92f60da2f1bfe328c733575f03afcbdb7a0"
+    },
+    "assertions": [
+      {
+        "path": "packages/dmoss-agent/src/mcp/mcp-client.ts",
+        "failure_blob": "efa7011d073610e2d55cb913fbe86a0acdd17c95",
+        "fixed_blob": "83a328d0488f315d3eb185b03f4288cd3ee07a3a",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:20.544Z",
+  "duration_ms": 478,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 62,
+      "stdout_tail": "failure-reproduced:rf-moss-mcp-stdin-error-crash:unhandled-stdin-error-event\n",
+      "stderr_tail": "",
+      "workspace_digest": "387c1bcb3312ee6ce2d0a5aae46a37e2b5daa60684edb9a1dcec139958eb4935"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 68,
+      "stdout_tail": "fixed-behavior:rf-moss-mcp-stdin-error-crash:unhandled-stdin-error-event\n",
+      "stderr_tail": "",
+      "workspace_digest": "387c1bcb3312ee6ce2d0a5aae46a37e2b5daa60684edb9a1dcec139958eb4935"
+    }
+  }
+}

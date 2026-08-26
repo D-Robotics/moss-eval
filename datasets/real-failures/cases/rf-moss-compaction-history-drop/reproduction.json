@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-compaction-history-drop",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e",
+    "fixed_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "048622839e98f9dba44541a601b76d2127fd2dd0e85d6aaff8265a376869be16"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/dmoss-agent/src/core/session/session-manager.ts",
+      "failure_blob": "705ac93eae95e6b050b6d88d7474474cce2a40dc",
+      "fixed_blob": "97f65606c4c307551b2ec89edfeb600a9df818e2"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-compaction-history-drop:compaction-replay-history-loss"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-compaction-history-drop:compaction-replay-history-loss"
+      }
+    }
+  }
+}

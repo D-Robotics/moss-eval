@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-verifier-segmented-shell-bypass",
+  "status": "reproduced",
+  "definition_sha256": "096e9610ba95b55efe61a23de74b09b12c30a906b6dd0638a3b05d451c6af54b",
+  "fixture_sha256": "d31e50bbcdc9a52e8936ca478780e91db5069566662d3989ebdfb74307de7f17",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "778433c3ec0089fb459d549cade301f6d8effeaa",
+    "fixed_revision": "895ee316d4aed66a77de9f1cd751c7ceac6f25bb"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "778433c3ec0089fb459d549cade301f6d8effeaa",
+      "fixed": "895ee316d4aed66a77de9f1cd751c7ceac6f25bb"
+    },
+    "assertions": [
+      {
+        "path": "packages/moss-agent/src/acceptance/predicate-evaluator.ts",
+        "failure_blob": "b6d6e5e834f0147ff0c37d66ea1245c40d1685e8",
+        "fixed_blob": "faf08a91d42ffec777d99a439326303593a4b954",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:16.783Z",
+  "duration_ms": 558,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 76,
+      "stdout_tail": "failure-reproduced:rf-moss-verifier-segmented-shell-bypass:shell-segment-validation-bypass\n",
+      "stderr_tail": "",
+      "workspace_digest": "d31e50bbcdc9a52e8936ca478780e91db5069566662d3989ebdfb74307de7f17"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 74,
+      "stdout_tail": "fixed-behavior:rf-moss-verifier-segmented-shell-bypass:shell-segment-validation-bypass\n",
+      "stderr_tail": "",
+      "workspace_digest": "d31e50bbcdc9a52e8936ca478780e91db5069566662d3989ebdfb74307de7f17"
+    }
+  }
+}

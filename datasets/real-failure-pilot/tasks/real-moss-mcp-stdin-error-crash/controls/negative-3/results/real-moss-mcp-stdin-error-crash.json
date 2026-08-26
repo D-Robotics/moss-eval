@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-mcp-stdin-error-crash",
+  "status": "verified",
+  "summary": "Verified the documented mcp-transport-error-containment policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "process_crashed": false,
+  "pending_rejected": 2,
+  "connection_closed": false
+}

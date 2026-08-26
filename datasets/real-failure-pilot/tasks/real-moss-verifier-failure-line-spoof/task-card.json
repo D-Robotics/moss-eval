@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-verifier-failure-line-spoof",
+  "version": "1.0.0",
+  "title": "Anchor verifier failure markers to protocol lines",
+  "track": "harness-regression",
+  "category": "verification-integrity",
+  "construct": {
+    "primary": "unambiguous-verifier-protocol",
+    "tags": [
+      "verification-integrity",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/28",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-verifier-failure-line-spoof."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe unambiguous-verifier-protocol decision. Write results/real-moss-verifier-failure-line-spoof.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: protocol_failure=false, marker_rule=\"line-start\", exit_code_preserved=0. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "18a1e3c351fb8b8c22db379ddcb322d45a75addffe59f4fc6e14575339029762",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "e631202a5c48562de76554e771602715a32d50f1b3656d04d4e52ee41fbc61b4",
+    "family": "rf-moss-verifier-failure-line-spoof-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "916be495a6c21a32d372e5906ea42204a4b8e081618f457f9b1bdcda2f783f59",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "fea1d1f16ffbe22472f46333c5642f15fbf962636b95b8510146fa49b1e71f1f",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "9d9b092a7d22d93a5bb100996fddbebd8d49ed2dee5b5d6df2f4646401aff382",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "6bccdf873fc57baaa1c7a80c90bdab4ec2d4f97fabce57a68e5eb4877bc8320d",
+      "expected_pass": false,
+      "description": "Task-specific violation of protocol_failure"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "b08d92b55dc75cf1ed9ae1f218a4d2ed016116be05fe1b2cd63609b1dc428ed4",
+      "expected_pass": false,
+      "description": "Task-specific violation of marker_rule"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "a375ea3be0085f59bd1859250ea1d1255f15abb1fd37160de7ff5762603b3125",
+      "expected_pass": false,
+      "description": "Task-specific violation of exit_code_preserved"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "a73fedeae5a000c230bb02ce1eb8f43ba41fcb2e8f0add3195d4eaf4412fb62c",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-verifier-failure-line-spoof"
+}

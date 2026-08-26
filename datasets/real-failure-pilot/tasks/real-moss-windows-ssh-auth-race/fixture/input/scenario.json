@@ -1,0 +1,5 @@
+{
+  "platform": "win32",
+  "concurrent_auth_callbacks": 2,
+  "method": "password"
+}

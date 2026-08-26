@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-task-frame-caller-mutation",
+  "status": "reproduced",
+  "definition_sha256": "158372049146ea16fa8d0353de0cfd87fd49daf05795c6ad2e231bafa488c0e1",
+  "fixture_sha256": "ab92c7f99db53e4bcb9b89d78c3a4b13f5b41ed3f905994f7ebd5cee1179a8f5",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "3b33f18c7f127811caec85374f209fefeab350ab",
+    "fixed_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "3b33f18c7f127811caec85374f209fefeab350ab",
+      "fixed": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e"
+    },
+    "assertions": [
+      {
+        "path": "packages/dmoss-agent/src/core/goal/task-frame.ts",
+        "failure_blob": "dfc3f8fa47eca346a0f12902c1106b29d6665b37",
+        "fixed_blob": "2b83b88ee44bdb52714d08455208120218a89f76",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:21.604Z",
+  "duration_ms": 506,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 72,
+      "stdout_tail": "failure-reproduced:rf-moss-task-frame-caller-mutation:caller-owned-state-mutation\n",
+      "stderr_tail": "",
+      "workspace_digest": "ab92c7f99db53e4bcb9b89d78c3a4b13f5b41ed3f905994f7ebd5cee1179a8f5"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 72,
+      "stdout_tail": "fixed-behavior:rf-moss-task-frame-caller-mutation:caller-owned-state-mutation\n",
+      "stderr_tail": "",
+      "workspace_digest": "ab92c7f99db53e4bcb9b89d78c3a4b13f5b41ed3f905994f7ebd5cee1179a8f5"
+    }
+  }
+}

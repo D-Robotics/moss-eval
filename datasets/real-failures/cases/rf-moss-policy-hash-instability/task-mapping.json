@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-policy-hash-instability",
+  "task_id": "real-moss-policy-hash-instability",
+  "track": "harness-regression",
+  "source_evidence_digest": "5456d1caa1606900fa98cea1fdabe5ca0a20c854e5a26c81d5645d226ce305cd",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

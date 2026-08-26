@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-timeout-auth-misclassification",
+  "version": "1.0.0",
+  "title": "Do not classify timeout guidance as authentication failure",
+  "track": "harness-regression",
+  "category": "provider-recovery",
+  "construct": {
+    "primary": "causal-provider-error-classification",
+    "tags": [
+      "provider-recovery",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/41",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-timeout-auth-misclassification."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe causal-provider-error-classification decision. Write results/real-moss-timeout-auth-misclassification.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: classification=\"timeout\", authentication_error=false, retryable=true. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "ca23aaa5158dfcfc9277c1190916b05570699d128da0b76b8b9a738930e09792",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "bc324729fb5213b9f41686ef67a283e7b925d1e200c097650b83cb402cf444cd",
+    "family": "rf-moss-timeout-auth-misclassification-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "fbe0aec9638044b0413b164d21609b68eab3e3e1c4c87b876b86ed1bdee4fa6f",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "e3c0d1af7e812bbf28530b25d86a5200c2b2bd36a90b7219b2e8b6c9239b5200",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "a64b46787480a7a26c030cd2d79116df7f44e34e3a4846b150ce153ea23d7973",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "657e2d1a4b8d8c27fe0e8db31c8d5eee83866dc316fa0bcb65468d9907def54c",
+      "expected_pass": false,
+      "description": "Task-specific violation of classification"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "2a61570c3f5fa7ce08ebc04ed091fb001c499ad608a0673b74f679c0ba4820a0",
+      "expected_pass": false,
+      "description": "Task-specific violation of authentication_error"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "5aa9f5293607d56bcdd3eac6c9bb318d402d38cb35637a71f28757fb6ff38fdf",
+      "expected_pass": false,
+      "description": "Task-specific violation of retryable"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "d99d29b7640b3284b12448bd1412b1b72aa2565f43bcac7c98289467bb457267",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-timeout-auth-misclassification"
+}

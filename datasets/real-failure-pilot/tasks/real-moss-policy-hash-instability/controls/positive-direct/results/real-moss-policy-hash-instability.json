@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-policy-hash-instability",
+  "status": "verified",
+  "summary": "Verified the documented stable-policy-identity policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "digest_count": 1,
+  "ordering": "codepoint",
+  "algorithm": "sha256"
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "id": "rf-moss-windows-ssh-auth-race",
+  "version": "0.2.0",
+  "title": "Serialize Windows SSH authentication prompts",
+  "stratum": "agent-harness",
+  "category": "tool-reliability",
+  "root_cause_family": "concurrent-password-authentication-race",
+  "source_project": "D-Robotics/moss",
+  "severity": "high",
+  "construct": {
+    "primary": "serialized-authentication-handshake",
+    "tags": [
+      "tool-reliability",
+      "concurrent-password-authentication-race",
+      "real-failure"
+    ]
+  },
+  "observed_failure": "Concurrent SSH authentication callbacks on Windows could submit a password twice and race the handshake.",
+  "expected_behavior": "Only one password attempt is in flight and later callbacks observe its result.",
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "source": {
+    "kind": "github-pr",
+    "canonical_locator": "https://github.com/D-Robotics/moss/pull/51",
+    "retrieved_at": "2026-08-26T13:30:00Z",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and public PR metadata",
+    "privacy_classification": "public",
+    "redaction_status": "paraphrased-no-personal-data"
+  },
+  "evidence": [
+    {
+      "id": "pr-51-concurrent-password-authentication-race",
+      "type": "merged-fix-pr",
+      "locator": "https://github.com/D-Robotics/moss/pull/51",
+      "retrieved_at": "2026-08-26T13:30:00Z",
+      "revision": "a9301d9aeab273ae015e4a6644394222b467f81e",
+      "sha256": "ee086ec532625245f323683c941980aeff697bb613b17ab3e839ae344a5c06bc",
+      "claim": "Concurrent SSH authentication callbacks on Windows could submit a password twice and race the handshake. The pinned source change and minimized fixture retain this independent mechanism.",
+      "availability": "public-authoritative"
+    }
+  ],
+  "triage": {
+    "decision": "accepted",
+    "reason_codes": [
+      "authoritative-fix-evidence",
+      "distinct-trigger-effect-oracle"
+    ]
+  },
+  "reproduction": {
+    "definition_path": "reproduction.json",
+    "receipt_path": "reproduction-receipt.json"
+  },
+  "minimization": {
+    "receipt_path": "minimization.json"
+  },
+  "task_mapping": {
+    "task_id": "real-moss-windows-ssh-auth-race",
+    "mapping_path": "task-mapping.json",
+    "calibration_path": "calibration.json"
+  },
+  "reviews": []
+}

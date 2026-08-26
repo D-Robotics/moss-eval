@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-tool-retry-stale-structured-content",
+  "status": "verified",
+  "summary": "Verified the documented retry-result-state-reset policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "final_attempt": 2,
+  "stale_structured_content": true,
+  "result_text": "ok"
+}

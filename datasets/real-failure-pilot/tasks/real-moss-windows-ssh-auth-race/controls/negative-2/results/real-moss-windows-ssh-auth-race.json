@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-windows-ssh-auth-race",
+  "status": "verified",
+  "summary": "Verified the documented serialized-authentication-handshake policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "password_submissions": 1,
+  "serialized": false,
+  "handshake_race": false
+}

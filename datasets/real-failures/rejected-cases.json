@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "records": [
+    {
+      "candidate_id": "rf-moss-ci-portable-test-only",
+      "decision": "rejected",
+      "reason_codes": [
+        "test-infrastructure-not-agent-mechanism"
+      ]
+    },
+    {
+      "candidate_id": "rf-moss-documentation-navigation",
+      "decision": "rejected",
+      "reason_codes": [
+        "documentation-only-change"
+      ]
+    }
+  ]
+}

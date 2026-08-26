@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-completion-deadlock",
+  "status": "reproduced",
+  "definition_sha256": "d783bfd93ee0d83ed0f762ba14ddbac66b2864684eb81119858b589e08bc661c",
+  "fixture_sha256": "032140fb0e45f63b0c9bd40504c539bd3f04475ddbe84231976b7441b30c44d0",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "f70f06f38058846f75d9d06eef2674cd4fdf4026",
+    "fixed_revision": "b6b111a28b7ad5c77271a9570de16f71589a4bf0"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "f70f06f38058846f75d9d06eef2674cd4fdf4026",
+      "fixed": "b6b111a28b7ad5c77271a9570de16f71589a4bf0"
+    },
+    "assertions": [
+      {
+        "path": "packages/moss-agent/src/plan-execute/plan-completion-gate.ts",
+        "failure_blob": "b34ca4026c51734ec8f1e7643f0db8638cef6c85",
+        "fixed_blob": "bd503447cb4de065ad69a40ab1b3e19ebaeefccd",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:11.426Z",
+  "duration_ms": 495,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 70,
+      "stdout_tail": "failure-reproduced:rf-moss-plan-completion-deadlock:plan-state-machine-deadlock\n",
+      "stderr_tail": "",
+      "workspace_digest": "032140fb0e45f63b0c9bd40504c539bd3f04475ddbe84231976b7441b30c44d0"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 66,
+      "stdout_tail": "fixed-behavior:rf-moss-plan-completion-deadlock:plan-state-machine-deadlock\n",
+      "stderr_tail": "",
+      "workspace_digest": "032140fb0e45f63b0c9bd40504c539bd3f04475ddbe84231976b7441b30c44d0"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "operation": "publish-release-metadata",
+  "idempotent": false,
+  "events": [
+    { "attempt": 1, "kind": "timeout", "http_status": 503, "side_effect_committed": false },
+    { "attempt": 2, "kind": "provider-error", "http_status": 401, "code": "invalid_credentials", "side_effect_committed": false }
+  ],
+  "policy": {
+    "maximum_transient_retries": 2,
+    "permanent_errors_must_stop": true,
+    "duplicate_side_effects_allowed": false
+  }
+}

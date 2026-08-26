@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-policy-hash-instability",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "553ac5814a431eaa64fbdeaa0cc151fcf736f536",
+    "fixed_revision": "728f928e181db9fa0225ae0a1a9083b342f0ec5c"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "80660babd926e664ae370738fba312bee611e508d5d8aadcaa38d4ae57a6111e"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/skill-learning/skill-experiment-policy.ts",
+      "failure_blob": "b0dee102d9b5d5bab22bd65e86b2c34c0bbf8b23",
+      "fixed_blob": "c5739fd8ac3e4e0696e451f387eae0851fc38879"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-policy-hash-instability:locale-dependent-policy-hash"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-policy-hash-instability:locale-dependent-policy-hash"
+      }
+    }
+  }
+}

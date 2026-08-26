@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-self-evolution-rollback",
+  "status": "preserved",
+  "original_signature": "rf-moss-self-evolution-rollback:partial-rollback-boundary",
+  "minimized_signature": "rf-moss-self-evolution-rollback:partial-rollback-boundary",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "89831939c542ed3abf04a60f2e2ebe835d600336ef2a030e71ff6414028afed5"
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/D-Robotics/moss-eval/schemas/governance.schema.json",
+  "title": "MOSS Eval release governance artifacts",
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "catalog": {
+      "type": "object", "required": ["schema_version", "id", "version", "repository", "cases", "rejections"],
+      "properties": {"schema_version": {"const": "2.0"}, "cases": {"type": "array", "minItems": 20}, "rejections": {"type": "array"}}
+    },
+    "reproduction": {
+      "type": "object", "required": ["schema_version", "case_id", "target", "fixture", "source_assertions", "steps"]
+    },
+    "minimization": {
+      "type": "object", "required": ["schema_version", "case_id", "status", "original_signature", "minimized_signature", "fixture_sha256"]
+    },
+    "review_packet": {
+      "type": "object", "required": ["schema_version", "packet_id", "artifact_digest", "case_ids", "checklist", "packet_digest"]
+    },
+    "signoff": {
+      "type": "object", "required": ["schema_version", "reviewer_id", "role", "decision", "artifact_digest", "signed_at", "key_id", "algorithm", "signature"],
+      "properties": {"algorithm": {"const": "hmac-sha256"}, "decision": {"enum": ["approved", "rejected"]}}
+    },
+    "protocol": {
+      "type": "object", "required": ["schema_version", "dataset_digest", "tasks", "trials", "budgets", "network", "environment", "adapters", "protocol_digest"]
+    },
+    "hidden_bundle_manifest": {
+      "type": "object", "required": ["schema_version", "bundle_id", "salt_id", "case_entries", "bundle_digest"]
+    },
+    "release_decision": {
+      "type": "object", "required": ["schema_version", "eligible", "status", "gates", "blockers", "evidence_digest", "decision_digest"]
+    }
+  }
+}

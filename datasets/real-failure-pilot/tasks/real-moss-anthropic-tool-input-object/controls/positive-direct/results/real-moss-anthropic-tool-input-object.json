@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-anthropic-tool-input-object",
+  "status": "verified",
+  "summary": "Verified the documented provider-tool-payload-normalization policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "arguments_type": "object",
+  "path": "README.md",
+  "parse_error": false
+}

@@ -1,5 +1,7 @@
 # Task 编写指南
 
+> 本页前半部分描述历史通用 Task 格式。`taskpacks/core` 目前只属于 integration/candidate pack；专业任务还必须满足 [Professional Dataset Specification](PROFESSIONAL_DATASET.md) 的 Task Card、独立控制、人工复核、Pilot、私有 Oracle 与发布门禁。
+
 任务文件名使用 `*.task.json`。单个文件可以是一个 Task、Task 数组，或 `{ "defaults": ..., "tasks": [...] }`。`defaults.instruction_suffix` 会附加到每个任务指令，适合统一 Artifact 契约。
 
 ## 最低要求
@@ -34,4 +36,4 @@
 
 Candidate Task 必须依次完成参考解、Grader 正反例测试、至少一名领域人员审核、替代路径检查、污染风险标记，才能进入 Regression Suite。
 
-核心任务可运行 `npm run calibrate`。命令会执行确定性参考解，并验证缺失 Receipt、自引用 Evidence 和 Protected File Mutation 三类反例都无法通过 Oracle。任何误报或漏报都会使 CI 失败。
+核心候选任务可运行 `npm run calibrate`。该命令只验证历史通用控制，不能建立专业发布资格。专业数据集使用 `npm run dataset:audit` 和 `npm run dataset:calibrate`，每项任务必须拥有自己的正反控制；公开开发包还必须由 `npm run dataset:release-blocked` 证明无法被误发布。

@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-plan-completion-deadlock",
+  "status": "verified",
+  "summary": "Verified the documented deadlock-free-plan-lifecycle policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "approved_end_allowed": false,
+  "executing_incomplete_blocked": true,
+  "deadlock": false
+}

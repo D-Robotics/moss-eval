@@ -1,0 +1,11 @@
+{
+  "task_id": "pro-recovery-001",
+  "status": "verified",
+  "summary": "The policy incorrectly keeps retrying after the observed transition to a permanent error.",
+  "evidence": ["inputs/faults.json"],
+  "transitions": ["transient", "permanent"],
+  "retry_count": 3,
+  "stop_reason": "authentication",
+  "retry_after_permanent": false,
+  "duplicate_side_effects": 0
+}

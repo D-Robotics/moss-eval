@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "id": "moss-real-failure-pilot",
+  "version": "0.2.0-development",
+  "title": "MOSS evidence-backed real failure pilot",
+  "tasks": [
+    "tasks/real-moss-compaction-history-drop/task-card.json",
+    "tasks/real-moss-plan-completion-deadlock/task-card.json",
+    "tasks/real-moss-provider-truncated-stream/task-card.json",
+    "tasks/real-moss-verifier-path-traversal/task-card.json",
+    "tasks/real-moss-tool-metadata-hook-gap/task-card.json",
+    "tasks/real-moss-abort-listener-leak/task-card.json",
+    "tasks/real-moss-tool-retry-stale-structured-content/task-card.json",
+    "tasks/real-moss-sensitive-read-policy-gap/task-card.json",
+    "tasks/real-moss-self-evolution-rollback/task-card.json",
+    "tasks/real-moss-policy-hash-instability/task-card.json",
+    "tasks/real-moss-verifier-failure-line-spoof/task-card.json",
+    "tasks/real-moss-verifier-segmented-shell-bypass/task-card.json",
+    "tasks/real-moss-trusted-rollback-recursive-delete/task-card.json",
+    "tasks/real-moss-timeout-auth-misclassification/task-card.json",
+    "tasks/real-moss-windows-npm-spawn/task-card.json",
+    "tasks/real-moss-plan-device-mutation/task-card.json",
+    "tasks/real-moss-tool-error-metadata-loss/task-card.json",
+    "tasks/real-moss-windows-ssh-auth-race/task-card.json",
+    "tasks/real-moss-mcp-stdin-error-crash/task-card.json",
+    "tasks/real-moss-anthropic-tool-input-object/task-card.json",
+    "tasks/real-moss-task-frame-caller-mutation/task-card.json"
+  ],
+  "hidden_oracle_bundle_sha256": null,
+  "policy": {
+    "minimum_positive_controls": 2,
+    "minimum_negative_controls": 3,
+    "minimum_reviewers": 2,
+    "minimum_agent_families": 3,
+    "minimum_valid_observations_per_task": 9,
+    "minimum_attempts": 3,
+    "minimum_difficulty": 0.1,
+    "maximum_difficulty": 0.9,
+    "minimum_discrimination": 0.1,
+    "maximum_construct_concentration": 0.2,
+    "hidden_oracle_required": true
+  }
+}

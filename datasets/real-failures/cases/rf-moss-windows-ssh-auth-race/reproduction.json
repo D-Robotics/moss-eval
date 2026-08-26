@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-ssh-auth-race",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "f1e9eda0dccae60238907a31ef41d666b7853e7f",
+    "fixed_revision": "a9301d9aeab273ae015e4a6644394222b467f81e"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "430c1491da27fff0bc34a88018b07bc8a6947cf4354708b6c9b87b46014fdf12"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/tools/device-ssh-session.ts",
+      "failure_blob": "746f773a2972063a2b44bc2451f1dbc642c758d8",
+      "fixed_blob": "eec7363d4b7f210b8f63171f44ef9b30a4ee921b"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race"
+      }
+    }
+  }
+}

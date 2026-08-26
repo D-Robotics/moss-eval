@@ -1,0 +1,11 @@
+{
+  "task_id": "pro-recovery-001",
+  "status": "verified",
+  "summary": "The policy incorrectly retries the provider after a permanent authentication failure.",
+  "evidence": ["inputs/faults.json"],
+  "transitions": ["transient", "permanent"],
+  "retry_count": 1,
+  "stop_reason": "authentication",
+  "retry_after_permanent": true,
+  "duplicate_side_effects": 0
+}

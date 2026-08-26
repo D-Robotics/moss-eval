@@ -64,7 +64,7 @@ export function createSandboxPolicy(request = {}, authorization = null) {
 
 export function validateEvaluatorMounts(mounts) {
   for (const mount of mounts) {
-    if (!['workspace', 'task', 'trial', 'evaluator'].includes(mount.role)) {
+    if (!['workspace', 'task', 'trial', 'evaluator', 'oracle'].includes(mount.role)) {
       throw new SandboxPolicyError('UNTRUSTED_MOUNT_ROLE', `Unsupported mount role: ${mount.role}`);
     }
     if (!path.isAbsolute(mount.source)) {

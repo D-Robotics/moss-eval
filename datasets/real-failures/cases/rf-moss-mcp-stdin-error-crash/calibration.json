@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-mcp-stdin-error-crash",
+  "task_id": "real-moss-mcp-stdin-error-crash",
+  "dataset": {
+    "id": "moss-real-failure-pilot",
+    "version": "0.2.0-development"
+  },
+  "dataset_digest": "3640d069ee46175993206e5ad39a9ccbf57e4640d8f4431bbe7f718b599adb70",
+  "gate": "pass",
+  "control_count": 6,
+  "positive_false_negatives": 0,
+  "negative_false_positives": 0,
+  "execution_errors": 0,
+  "isolated_workspaces": true,
+  "controls": [
+    {
+      "control_id": "positive-direct",
+      "kind": "positive",
+      "expected_pass": true,
+      "actual_pass": true,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": []
+    },
+    {
+      "control_id": "positive-evidence-object",
+      "kind": "positive",
+      "expected_pass": true,
+      "actual_pass": true,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": []
+    },
+    {
+      "control_id": "negative-1",
+      "kind": "negative",
+      "expected_pass": false,
+      "actual_pass": false,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": [
+        "incorrect-process-crashed"
+      ]
+    },
+    {
+      "control_id": "negative-2",
+      "kind": "negative",
+      "expected_pass": false,
+      "actual_pass": false,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": [
+        "incorrect-pending-rejected"
+      ]
+    },
+    {
+      "control_id": "negative-3",
+      "kind": "negative",
+      "expected_pass": false,
+      "actual_pass": false,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": [
+        "incorrect-connection-closed"
+      ]
+    },
+    {
+      "control_id": "negative-nested-invariants",
+      "kind": "negative",
+      "expected_pass": false,
+      "actual_pass": false,
+      "correct": true,
+      "execution_status": "completed",
+      "oracle_mutated_workspace": false,
+      "reason_codes": [
+        "incorrect-connection-closed",
+        "incorrect-pending-rejected",
+        "incorrect-process-crashed"
+      ]
+    }
+  ]
+}

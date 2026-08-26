@@ -1,0 +1,12 @@
+{
+  "attempt_1": {
+    "status": "retryable-error",
+    "structured": {
+      "stale": true
+    }
+  },
+  "attempt_2": {
+    "status": "success",
+    "text": "ok"
+  }
+}

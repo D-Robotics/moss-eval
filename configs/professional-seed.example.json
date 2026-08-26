@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "output_root": "../.moss-eval/runs",
+  "task_roots": ["../datasets/professional-seed/tasks"],
+  "default_runner": "docker",
+  "execution": {
+    "concurrency": 1,
+    "trials": 1,
+    "k": 3,
+    "valid_trial_threshold": 0.95
+  },
+  "runners": {
+    "local": { "allow": false },
+    "docker": { "command": "docker" },
+    "pty": {}
+  },
+  "agents": {
+    "moss": {
+      "adapter": "moss",
+      "command": "moss",
+      "args": ["{instruction}"],
+      "mode_args": {
+        "stream-json": ["--output-format", "stream-json", "--verbose"]
+      },
+      "provider": "configured-by-moss",
+      "model": "configured-by-moss",
+      "secret_env": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
+    }
+  }
+}

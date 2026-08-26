@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-windows-npm-spawn",
+  "status": "verified",
+  "summary": "Verified the documented portable-process-launch policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "spawn_command": "npm.cmd",
+  "enoent": true,
+  "platform_branch": "win32"
+}

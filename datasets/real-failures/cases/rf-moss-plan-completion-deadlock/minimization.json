@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-completion-deadlock",
+  "status": "preserved",
+  "original_signature": "rf-moss-plan-completion-deadlock:plan-state-machine-deadlock",
+  "minimized_signature": "rf-moss-plan-completion-deadlock:plan-state-machine-deadlock",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "032140fb0e45f63b0c9bd40504c539bd3f04475ddbe84231976b7441b30c44d0"
+}

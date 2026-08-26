@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-task-frame-caller-mutation",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "3b33f18c7f127811caec85374f209fefeab350ab",
+    "fixed_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "ab92c7f99db53e4bcb9b89d78c3a4b13f5b41ed3f905994f7ebd5cee1179a8f5"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/dmoss-agent/src/core/goal/task-frame.ts",
+      "failure_blob": "dfc3f8fa47eca346a0f12902c1106b29d6665b37",
+      "fixed_blob": "2b83b88ee44bdb52714d08455208120218a89f76"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-task-frame-caller-mutation:caller-owned-state-mutation"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-task-frame-caller-mutation:caller-owned-state-mutation"
+      }
+    }
+  }
+}

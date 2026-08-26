@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-policy-hash-instability",
+  "status": "preserved",
+  "original_signature": "rf-moss-policy-hash-instability:locale-dependent-policy-hash",
+  "minimized_signature": "rf-moss-policy-hash-instability:locale-dependent-policy-hash",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "80660babd926e664ae370738fba312bee611e508d5d8aadcaa38d4ae57a6111e"
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-compaction-history-drop",
+  "status": "preserved",
+  "original_signature": "rf-moss-compaction-history-drop:compaction-replay-history-loss",
+  "minimized_signature": "rf-moss-compaction-history-drop:compaction-replay-history-loss",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "048622839e98f9dba44541a601b76d2127fd2dd0e85d6aaff8265a376869be16"
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "corpus_root": "datasets/real-failures",
+  "development_dataset_root": "datasets/real-failure-pilot",
+  "calibration_report": ".moss-eval/datasets/moss-real-failure-pilot-0.1.0-development/calibration/calibration.json",
+  "execution": {
+    "reproduction_requires_explicit_authorization": true,
+    "default_network": "disabled",
+    "mutate_source_checkout": false
+  },
+  "claims": {
+    "accepted_case_target_minimum": 20,
+    "accepted_case_target_maximum": 50,
+    "public_development_tasks_are_professional_scores": false,
+    "hidden_oracle_required_for_release": true,
+    "cross_agent_pilot_required_for_release": true
+  }
+}

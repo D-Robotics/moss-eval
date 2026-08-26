@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-plan-device-mutation",
+  "status": "verified",
+  "summary": "Verified the documented plan-mode-device-safety policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "allowed": true,
+  "decision": "deny",
+  "requires_execute_mode": true
+}

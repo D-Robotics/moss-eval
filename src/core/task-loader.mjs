@@ -46,7 +46,13 @@ function resolveTaskPaths(task, file) {
   copy.environment.fixture = resolveRelative(directory, copy.environment.fixture);
   copy.quality_tier = copy.quality_tier || 'experimental';
   copy.capability_requirements = normalizeTaskRequirements(copy);
-  copy._meta = { file, directory };
+  copy._meta = {
+    file,
+    directory,
+    oracleRoot: copy.professional_dataset?.oracle_bundle_path
+      ? resolveRelative(directory, copy.professional_dataset.oracle_bundle_path)
+      : null,
+  };
   return copy;
 }
 

@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "eligible": false,
+  "status": "development-only",
+  "blockers": ["hidden_oracle-gate-not-passed"]
+}

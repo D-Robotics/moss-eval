@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-sensitive-read-policy-gap",
+  "status": "preserved",
+  "original_signature": "rf-moss-sensitive-read-policy-gap:inconsistent-sensitive-path-policy",
+  "minimized_signature": "rf-moss-sensitive-read-policy-gap:inconsistent-sensitive-path-policy",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "ea3b53eb356fbdd8233b77c8a604968b8c2971115e29e394686ba79026c0f2c2"
+}

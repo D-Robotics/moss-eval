@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-ssh-auth-race",
+  "task_id": "real-moss-windows-ssh-auth-race",
+  "track": "harness-regression",
+  "source_evidence_digest": "8a6ca9be7fe9d56f8d311ae48f39df8d20c8f4f10b9ee70a4d0acda01d7ed720",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

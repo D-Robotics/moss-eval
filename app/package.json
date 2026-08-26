@@ -38,8 +38,10 @@
           "drivers/**",
           "src/**",
           "taskpacks/**",
+          "datasets/real-failure-pilot/**",
           "configs/**",
           "schemas/**",
+          "scripts/run-professional-oracle.mjs",
           "package.json"
         ]
       }

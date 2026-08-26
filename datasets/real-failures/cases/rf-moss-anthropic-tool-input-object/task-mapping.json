@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-anthropic-tool-input-object",
+  "task_id": "real-moss-anthropic-tool-input-object",
+  "track": "harness-regression",
+  "source_evidence_digest": "eba1f1cb6dc22de0fd71e3f33ab55cd9d55f76bd21d711beba841015db671291",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

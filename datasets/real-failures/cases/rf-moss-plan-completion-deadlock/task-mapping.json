@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-completion-deadlock",
+  "task_id": "real-moss-plan-completion-deadlock",
+  "track": "target-regression",
+  "source_evidence_digest": "398c72d09fb929aec3f5d942779eb946a80ae836fe76508c36e917ff2f3df090",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

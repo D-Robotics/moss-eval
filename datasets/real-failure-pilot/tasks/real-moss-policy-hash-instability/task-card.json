@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-policy-hash-instability",
+  "version": "1.0.0",
+  "title": "Produce locale-independent policy decision keys",
+  "track": "harness-regression",
+  "category": "determinism",
+  "construct": {
+    "primary": "stable-policy-identity",
+    "tags": [
+      "determinism",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/38",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-policy-hash-instability."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe stable-policy-identity decision. Write results/real-moss-policy-hash-instability.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: digest_count=1, ordering=\"codepoint\", algorithm=\"sha256\". Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "75d99743940c519959446033ef887fd9e3a3f2b900b48956b03b1ef6bff79ca7",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "c728d5a80c59326bd6e7ffadc46a08939e4b8de0c3f1dc729ee678d3f0df2e39",
+    "family": "rf-moss-policy-hash-instability-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "6e8cc4a0c1337020fa27f04c44babe8d234cc4bf005171677942d7c5f6b5bb87",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "24e6b3002a744ead8fa2b4bd4f6a13faff1740d7452fd8fcfd653910d53d50bf",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "f9351a2201340395bd88952990f2b7f45db85db5d6843c12fab89de9e47ce04b",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "54ecee569d1c2812160418837de16e2d0fcf5c168081d762c86ca6b5a17a013a",
+      "expected_pass": false,
+      "description": "Task-specific violation of digest_count"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "1726664e15180d317fa2173f869c20dc8041a759cfc736dd7ab491eb1d48d19f",
+      "expected_pass": false,
+      "description": "Task-specific violation of ordering"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "3f6e7fae877816fe7d396091cfe8bf682655f23a2cc49e070a0358cd1d50de93",
+      "expected_pass": false,
+      "description": "Task-specific violation of algorithm"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "0c50fc866f7f98cad73c43855e9e385c44e75880a57d53a2ff21a73fe2b60156",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-policy-hash-instability"
+}

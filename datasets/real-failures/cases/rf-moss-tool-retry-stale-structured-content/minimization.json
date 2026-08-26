@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-retry-stale-structured-content",
+  "status": "preserved",
+  "original_signature": "rf-moss-tool-retry-stale-structured-content:stale-retry-result-state",
+  "minimized_signature": "rf-moss-tool-retry-stale-structured-content:stale-retry-result-state",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "b6789135d83a730d14fbdbedb85e0dfb66b60c08e42645c74f3654b43cf136a2"
+}

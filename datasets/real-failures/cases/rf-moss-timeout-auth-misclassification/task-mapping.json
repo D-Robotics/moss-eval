@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-timeout-auth-misclassification",
+  "task_id": "real-moss-timeout-auth-misclassification",
+  "track": "harness-regression",
+  "source_evidence_digest": "840e327deb39460a9923e414ef2b4bc57d90d1be44fbcc5eeaf4c9d285030b65",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

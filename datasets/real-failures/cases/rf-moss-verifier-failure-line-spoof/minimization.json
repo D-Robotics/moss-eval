@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-verifier-failure-line-spoof",
+  "status": "preserved",
+  "original_signature": "rf-moss-verifier-failure-line-spoof:unanchored-device-failure-marker",
+  "minimized_signature": "rf-moss-verifier-failure-line-spoof:unanchored-device-failure-marker",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "d6b60205fe79748ab7e8717e25cd5efa947efb781bd693796eddac64b486df72"
+}

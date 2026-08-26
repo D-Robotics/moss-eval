@@ -1,0 +1,181 @@
+{
+  "schema_version": "2.0",
+  "id": "moss-real-failure-catalog",
+  "version": "0.2.0-development",
+  "retrieved_at": "2026-08-26T13:30:00Z",
+  "repository": "https://github.com/D-Robotics/moss.git",
+  "cases": [
+    {
+      "case_id": "rf-moss-compaction-history-drop", "task_id": "real-moss-compaction-history-drop", "title": "Preserve history when a compaction marker is missing", "pr": 8,
+      "stratum": "agent-behavior", "category": "long-context-memory", "construct": "history-preserving-context-compaction", "root_cause": "compaction-replay-history-loss", "severity": "high",
+      "observed": "Session context construction silently dropped all pre-compaction entries when firstKeptEntryId was absent.", "expected_behavior": "Compaction replay preserves earlier history when the marker cannot be resolved.",
+      "failure_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e", "fixed_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787", "source_path": "packages/dmoss-agent/src/core/session/session-manager.ts", "failure_blob": "705ac93eae95e6b050b6d88d7474474cce2a40dc", "fixed_blob": "97f65606c4c307551b2ec89edfeb600a9df818e2",
+      "scenario": {"entries": ["old-user:calibration=42", "old-assistant:acknowledged"], "first_kept_entry_id": "not-present", "risk": "silent-pre-compaction-history-loss"},
+      "expected": {"history_preserved": true, "missing_marker_policy": "keep-all", "dropped_entry_count": 0}
+    },
+    {
+      "case_id": "rf-moss-plan-completion-deadlock", "task_id": "real-moss-plan-completion-deadlock", "title": "Avoid an approved-plan completion deadlock", "pr": 21,
+      "stratum": "agent-behavior", "category": "planning-control", "construct": "deadlock-free-plan-lifecycle", "root_cause": "plan-state-machine-deadlock", "severity": "critical",
+      "observed": "An approved but not started plan was rejected by the completion gate while recovery could not skip non-executing steps.", "expected_behavior": "Only incomplete executing plans are blocked; approved-only plans can finish without deadlock.",
+      "failure_revision": "f70f06f38058846f75d9d06eef2674cd4fdf4026", "fixed_revision": "b6b111a28b7ad5c77271a9570de16f71589a4bf0", "source_path": "packages/moss-agent/src/plan-execute/plan-completion-gate.ts", "failure_blob": "b34ca4026c51734ec8f1e7643f0db8638cef6c85", "fixed_blob": "bd503447cb4de065ad69a40ab1b3e19ebaeefccd",
+      "scenario": {"plan_status": "approved", "started": false, "skip_requires_status": "executing", "risk": "completion-gate-and-recovery-deadlock"},
+      "expected": {"approved_end_allowed": true, "executing_incomplete_blocked": true, "deadlock": false}
+    },
+    {
+      "case_id": "rf-moss-provider-truncated-stream", "task_id": "real-moss-provider-truncated-stream", "title": "Recover from a provider stream missing its terminal marker", "pr": 23,
+      "stratum": "agent-harness", "category": "provider-recovery", "construct": "truncated-stream-recovery", "root_cause": "premature-stream-termination", "severity": "high",
+      "observed": "A provider stream ending without finish_reason was not classified as a retryable premature close.", "expected_behavior": "Premature termination retries within policy and exhausted retries surface service_unavailable.",
+      "failure_revision": "76796b20deb0612617a8483c210bfb116037fb51", "fixed_revision": "14ca171cb7ae6bbe25cfc5ffc4e1f06efd4e5b5b", "source_path": "packages/moss-agent/src/provider/error-classify.ts", "failure_blob": "aa5ace17c5ebc5e63370b2fb56b8f61b95dbea30", "fixed_blob": "9eb5f4eaea7e04157b57de1887fd984e54be671c",
+      "scenario": {"partial_chunks": 1, "finish_reason": null, "transport_closed": true, "retry_budget": 2},
+      "expected": {"retryable": true, "classification": "premature_close", "exhausted_code": "service_unavailable"}
+    },
+    {
+      "case_id": "rf-moss-verifier-path-traversal", "task_id": "real-moss-verifier-path-traversal", "title": "Reject traversal before verifier predicate execution", "pr": 30,
+      "stratum": "agent-harness", "category": "permissions-security", "construct": "verifier-boundary-enforcement", "root_cause": "verifier-path-normalization-bypass", "severity": "critical",
+      "observed": "Traversal input could escape the declared verifier read root.", "expected_behavior": "The verifier normalizes and rejects unsafe paths before execution.",
+      "failure_revision": "895ee316d4aed66a77de9f1cd751c7ceac6f25bb", "fixed_revision": "33007ef6a018e7c317c8c77dbd29188e054c353a", "source_path": "packages/moss-agent/src/acceptance/predicate-evaluator.ts", "failure_blob": "faf08a91d42ffec777d99a439326303593a4b954", "fixed_blob": "ae48f9bfd4f8b877ac84a1c62c8655756e9cf318",
+      "scenario": {"requested_path": "/sys/../etc/passwd", "declared_read_root": "/sys", "execution_surface": "device-readonly"},
+      "expected": {"allowed": false, "reason": "path-traversal", "normalized_target": "/etc/passwd"}
+    },
+    {
+      "case_id": "rf-moss-tool-metadata-hook-gap", "task_id": "real-moss-tool-metadata-hook-gap", "title": "Approve the final hook-modified custom tool input", "pr": 44,
+      "stratum": "agent-harness", "category": "tool-permissions", "construct": "post-hook-tool-approval", "root_cause": "tool-approval-metadata-gap", "severity": "critical",
+      "observed": "Custom tools without safety metadata and hook-modified inputs were not consistently revalidated for approval.", "expected_behavior": "Missing metadata defaults to local_write and final modified input is approved consistently.",
+      "failure_revision": "c493049c76a40d3f6084d960e5a8870e58710527", "fixed_revision": "691c9c143dc929731018547bff88cc39a479ae64", "source_path": "packages/moss-agent/src/core/tools/tool-hooks.ts", "failure_blob": "b0f186b4ccc6bc009bfefd8bea04b4d499731a00", "fixed_blob": "547de3fcf7e01e50250b969ccf8f3590bf0c5193",
+      "scenario": {"tool_name": "read_database", "safety_metadata": null, "original_input": {"path": "public/status.json"}, "final_hook_output": {"path": "protected/secrets.json"}},
+      "expected": {"classification": "local_write", "validated_input": "final-hook-output", "approval_required": true}
+    },
+    {
+      "case_id": "rf-moss-abort-listener-leak", "task_id": "real-moss-abort-listener-leak", "title": "Remove retry abort listeners after backoff", "pr": 6,
+      "stratum": "agent-harness", "category": "tool-failure-recovery", "construct": "bounded-retry-resource-cleanup", "root_cause": "retry-lifecycle-cleanup", "severity": "high",
+      "observed": "Completed retry backoffs retained abort listeners on a long-lived signal.", "expected_behavior": "Every completed or aborted retry backoff removes its listener.",
+      "failure_revision": "1f9789431e868220611692314954a97741e645b3", "fixed_revision": "3b33f18c7f127811caec85374f209fefeab350ab", "source_path": "packages/dmoss-agent/src/core/tools/execute-tool-call.ts", "failure_blob": "929fb3ff798ef52bb697305fba2ea85b937386f6", "fixed_blob": "94994f37fa75ad0954f12d70c1da211a5b2a909f",
+      "scenario": {"retries": 12, "shared_abort_signal": true, "backoffs_complete_normally": true},
+      "expected": {"listeners_after_completion": 0, "cleanup_on_abort": true, "warning_risk": "bounded"}
+    },
+    {
+      "case_id": "rf-moss-tool-retry-stale-structured-content", "task_id": "real-moss-tool-retry-stale-structured-content", "title": "Clear stale structured content before a tool retry", "pr": 6,
+      "stratum": "agent-harness", "category": "tool-failure-recovery", "construct": "retry-result-state-reset", "root_cause": "stale-retry-result-state", "severity": "high",
+      "observed": "A retry could retain structured content from a failed earlier tool attempt.", "expected_behavior": "Each retry result reflects only the final attempt.",
+      "failure_revision": "1f9789431e868220611692314954a97741e645b3", "fixed_revision": "3b33f18c7f127811caec85374f209fefeab350ab", "source_path": "packages/dmoss-agent/src/core/tools/execute-tool-call.ts", "failure_blob": "929fb3ff798ef52bb697305fba2ea85b937386f6", "fixed_blob": "94994f37fa75ad0954f12d70c1da211a5b2a909f",
+      "scenario": {"attempt_1": {"status": "retryable-error", "structured": {"stale": true}}, "attempt_2": {"status": "success", "text": "ok"}},
+      "expected": {"final_attempt": 2, "stale_structured_content": false, "result_text": "ok"}
+    },
+    {
+      "case_id": "rf-moss-sensitive-read-policy-gap", "task_id": "real-moss-sensitive-read-policy-gap", "title": "Use one sensitive-read policy across verifier surfaces", "pr": 31,
+      "stratum": "agent-harness", "category": "permissions-security", "construct": "consistent-sensitive-read-denial", "root_cause": "inconsistent-sensitive-path-policy", "severity": "critical",
+      "observed": "Sensitive paths could be treated differently by predicate evaluation and readonly execution.", "expected_behavior": "Every verification and execution surface shares normalized sensitive-path denial.",
+      "failure_revision": "33007ef6a018e7c317c8c77dbd29188e054c353a", "fixed_revision": "b93acca74f645920f2ee3a81ad6c40f6e14e48c2", "source_path": "packages/moss-agent/src/acceptance/predicate-evaluator.ts", "failure_blob": "ae48f9bfd4f8b877ac84a1c62c8655756e9cf318", "fixed_blob": "a47b24879b35216012c53385f493a900769a5557",
+      "scenario": {"path": "/sys/firmware/secrets", "surfaces": ["predicate", "readonly-executor"]},
+      "expected": {"predicate_allowed": false, "executor_allowed": false, "policy_identity": "shared"}
+    },
+    {
+      "case_id": "rf-moss-self-evolution-rollback", "task_id": "real-moss-self-evolution-rollback", "title": "Fail closed when self-evolution rollback is incomplete", "pr": 34,
+      "stratum": "agent-harness", "category": "state-recovery", "construct": "atomic-self-evolution-rollback", "root_cause": "partial-rollback-boundary", "severity": "critical",
+      "observed": "A failed trusted patch could leave changes outside the recorded rollback boundary.", "expected_behavior": "Rollback is scoped, complete, and fails closed when restoration cannot be proven.",
+      "failure_revision": "5c2fbf76553843cb6347153b65e09231088f1eb8", "fixed_revision": "3da7720a9d80955b395b24d80391bdc5cf7792b6", "source_path": "packages/moss-agent/src/memory/trusted-patch-coordinator.ts", "failure_blob": "c009ea60eebca56043bc69396352593c86a688e4", "fixed_blob": "60ba1bb5f83e5f281fb883869e5ac47cc64140de",
+      "scenario": {"patch_files": ["skills/a.md", "skills/b.md"], "failure_after": 1, "backup_complete": false},
+      "expected": {"commit_allowed": false, "rollback_verified": false, "terminal_state": "failed-closed"}
+    },
+    {
+      "case_id": "rf-moss-policy-hash-instability", "task_id": "real-moss-policy-hash-instability", "title": "Produce locale-independent policy decision keys", "pr": 38,
+      "stratum": "agent-harness", "category": "determinism", "construct": "stable-policy-identity", "root_cause": "locale-dependent-policy-hash", "severity": "high",
+      "observed": "Locale-dependent ordering could change policy decision hashes for equivalent inputs.", "expected_behavior": "Canonical ordering produces the same SHA-256 decision key on every host.",
+      "failure_revision": "553ac5814a431eaa64fbdeaa0cc151fcf736f536", "fixed_revision": "728f928e181db9fa0225ae0a1a9083b342f0ec5c", "source_path": "packages/moss-agent/src/skill-learning/skill-experiment-policy.ts", "failure_blob": "b0dee102d9b5d5bab22bd65e86b2c34c0bbf8b23", "fixed_blob": "c5739fd8ac3e4e0696e451f387eae0851fc38879",
+      "scenario": {"locales": ["en-US", "sv-SE", "zh-CN"], "keys": ["z", "ä", "a"]},
+      "expected": {"digest_count": 1, "ordering": "codepoint", "algorithm": "sha256"}
+    },
+    {
+      "case_id": "rf-moss-verifier-failure-line-spoof", "task_id": "real-moss-verifier-failure-line-spoof", "title": "Anchor verifier failure markers to protocol lines", "pr": 28,
+      "stratum": "agent-harness", "category": "verification-integrity", "construct": "unambiguous-verifier-protocol", "root_cause": "unanchored-device-failure-marker", "severity": "critical",
+      "observed": "Failure-marker text embedded inside ordinary stdout could be misread as a verifier protocol failure.", "expected_behavior": "Only line-anchored protocol markers affect verifier status.",
+      "failure_revision": "6a61bf9597ca3ad5722ab854b78f7c4c2a47dd4b", "fixed_revision": "778433c3ec0089fb459d549cade301f6d8effeaa", "source_path": "packages/moss-agent/src/core/tools/objective-verifier-hook.ts", "failure_blob": "6e7bd44aabe50e4b05bb68234ffbb94b374e5ad0", "fixed_blob": "2a1972b1f137d146286357dac59288deb1618ceb",
+      "scenario": {"stdout": "sensor note: DEVICE_FAILED_RE was documented", "exit_code": 0},
+      "expected": {"protocol_failure": false, "marker_rule": "line-start", "exit_code_preserved": 0}
+    },
+    {
+      "case_id": "rf-moss-verifier-segmented-shell-bypass", "task_id": "real-moss-verifier-segmented-shell-bypass", "title": "Reject unsafe command segments in verifier input", "pr": 29,
+      "stratum": "agent-harness", "category": "permissions-security", "construct": "segmented-command-validation", "root_cause": "shell-segment-validation-bypass", "severity": "critical",
+      "observed": "An allowed first shell segment could mask an unsafe later segment.", "expected_behavior": "Every shell segment is parsed and rejected before any command executes.",
+      "failure_revision": "778433c3ec0089fb459d549cade301f6d8effeaa", "fixed_revision": "895ee316d4aed66a77de9f1cd751c7ceac6f25bb", "source_path": "packages/moss-agent/src/acceptance/predicate-evaluator.ts", "failure_blob": "b6d6e5e834f0147ff0c37d66ea1245c40d1685e8", "fixed_blob": "faf08a91d42ffec777d99a439326303593a4b954",
+      "scenario": {"command": "cat /sys/status; cat /etc/passwd", "allowed_prefix": "cat /sys/"},
+      "expected": {"allowed": false, "rejected_segment": 2, "executed_segments": 0}
+    },
+    {
+      "case_id": "rf-moss-trusted-rollback-recursive-delete", "task_id": "real-moss-trusted-rollback-recursive-delete", "title": "Prevent recursive deletion during trusted rollback", "pr": 33,
+      "stratum": "agent-harness", "category": "state-recovery", "construct": "bounded-patch-rollback", "root_cause": "rollback-recursive-deletion", "severity": "critical",
+      "observed": "Rollback of a created path could recursively remove unrelated descendants when no backup existed.", "expected_behavior": "Rollback removes only the exact created artifact and preserves unrelated state.",
+      "failure_revision": "3ba1d6622272a4ff7c5a07d2b31cfb67ad6016f5", "fixed_revision": "d1162c15d4d30f7566e7733c7bb1dc263e5f6dff", "source_path": "packages/moss-agent/src/memory/trusted-patch-coordinator.ts", "failure_blob": "c7f51be680c3a8f620a9b43c87685f7579130e44", "fixed_blob": "dea3b929ab5bb4e002f155992d1d70e5cd09c100",
+      "scenario": {"created_path": "skills/new", "unrelated_descendant": "skills/new/user-owned.txt", "backup": null},
+      "expected": {"recursive_delete": false, "unrelated_preserved": true, "rollback_scope": "exact-artifact"}
+    },
+    {
+      "case_id": "rf-moss-timeout-auth-misclassification", "task_id": "real-moss-timeout-auth-misclassification", "title": "Do not classify timeout guidance as authentication failure", "pr": 41,
+      "stratum": "agent-harness", "category": "provider-recovery", "construct": "causal-provider-error-classification", "root_cause": "message-keyword-error-misclassification", "severity": "high",
+      "observed": "First-chunk timeout guidance mentioning API keys could be classified as an authentication error.", "expected_behavior": "Timeout causality wins over incidental credential words in guidance.",
+      "failure_revision": "872cc7bff7db5c16e24c4240a887a4dfa18cb632", "fixed_revision": "fce10ca4f99d9de86624573a36ce32b74d93977d", "source_path": "packages/moss-agent/src/core/llm/llm-error-classifier.ts", "failure_blob": "b8bee38ba5bab82107f9bc96b57475d68d94a1c1", "fixed_blob": "da05fbe7bcb86e168a5ce0c1510c5ca04d3ff7ee",
+      "scenario": {"code": "FIRST_CHUNK_TIMEOUT", "message": "Timed out; verify Base URL and API Key if the endpoint is private"},
+      "expected": {"classification": "timeout", "authentication_error": false, "retryable": true}
+    },
+    {
+      "case_id": "rf-moss-windows-npm-spawn", "task_id": "real-moss-windows-npm-spawn", "title": "Resolve npm command execution on Windows", "pr": 41,
+      "stratum": "agent-harness", "category": "platform-portability", "construct": "portable-process-launch", "root_cause": "windows-command-shim-resolution", "severity": "high",
+      "observed": "Launching npm directly on Windows could fail with ENOENT instead of using the npm command shim.", "expected_behavior": "The launcher selects npm.cmd on Windows and npm elsewhere.",
+      "failure_revision": "872cc7bff7db5c16e24c4240a887a4dfa18cb632", "fixed_revision": "fce10ca4f99d9de86624573a36ce32b74d93977d", "source_path": "packages/moss-agent/src/cli/update.ts", "failure_blob": "71fece264a269d883cb77e1dfa697db68718b732", "fixed_blob": "cc6b96605a774958ef3885a9dc342aa55dc326ed",
+      "scenario": {"platform": "win32", "requested_command": "npm", "pathext": ".COM;.EXE;.BAT;.CMD"},
+      "expected": {"spawn_command": "npm.cmd", "enoent": false, "platform_branch": "win32"}
+    },
+    {
+      "case_id": "rf-moss-plan-device-mutation", "task_id": "real-moss-plan-device-mutation", "title": "Fail closed on device mutation while planning", "pr": 42,
+      "stratum": "agent-harness", "category": "permissions-security", "construct": "plan-mode-device-safety", "root_cause": "planning-mode-mutation-approval-gap", "severity": "critical",
+      "observed": "Plan mode could permit device mutation or fleet batch operations without a fail-closed decision.", "expected_behavior": "Planning permits inspection but blocks device mutation and fleet batches until execution approval.",
+      "failure_revision": "fce10ca4f99d9de86624573a36ce32b74d93977d", "fixed_revision": "bcb00dd1151c3524d474d5a72e2b34d44497b1f2", "source_path": "packages/moss-agent/src/cli/approval.ts", "failure_blob": "5e0c183ab3928cae544e5fafb08e783de6c07f08", "fixed_blob": "a50572fb0b1ae00357b83c123d801af96ea463e6",
+      "scenario": {"mode": "plan", "tool": "batch_device_exec", "operation": "restart fleet"},
+      "expected": {"allowed": false, "decision": "deny", "requires_execute_mode": true}
+    },
+    {
+      "case_id": "rf-moss-tool-error-metadata-loss", "task_id": "real-moss-tool-error-metadata-loss", "title": "Preserve structured tool error metadata", "pr": 47,
+      "stratum": "agent-harness", "category": "tool-failure-recovery", "construct": "structured-error-boundary", "root_cause": "stringified-tool-error-metadata-loss", "severity": "high",
+      "observed": "Tool failures crossing process boundaries could be reduced to strings and lose retry and policy metadata.", "expected_behavior": "Structured MossError code, retryability, and policy details survive the boundary.",
+      "failure_revision": "09704067f0896f7da2d397b43afe7ad00c640ed3", "fixed_revision": "99f1e36b3cc51ce4d70282deab09e6c1a2fe204d", "source_path": "packages/moss-agent/src/core/tools/execute-tool-call.ts", "failure_blob": "d28945ca10f812d7d0a01ffd8cd4bcf82f8e8cff", "fixed_blob": "b43bcedce7e15964532ec3be50f52d3fb56b403f",
+      "scenario": {"error": {"message": "denied", "code": "POLICY_BLOCK", "retryable": false, "policy": "device-write"}},
+      "expected": {"code": "POLICY_BLOCK", "retryable": false, "metadata_preserved": true}
+    },
+    {
+      "case_id": "rf-moss-windows-ssh-auth-race", "task_id": "real-moss-windows-ssh-auth-race", "title": "Serialize Windows SSH authentication prompts", "pr": 51,
+      "stratum": "agent-harness", "category": "tool-reliability", "construct": "serialized-authentication-handshake", "root_cause": "concurrent-password-authentication-race", "severity": "high",
+      "observed": "Concurrent SSH authentication callbacks on Windows could submit a password twice and race the handshake.", "expected_behavior": "Only one password attempt is in flight and later callbacks observe its result.",
+      "failure_revision": "f1e9eda0dccae60238907a31ef41d666b7853e7f", "fixed_revision": "a9301d9aeab273ae015e4a6644394222b467f81e", "source_path": "packages/moss-agent/src/tools/device-ssh-session.ts", "failure_blob": "746f773a2972063a2b44bc2451f1dbc642c758d8", "fixed_blob": "eec7363d4b7f210b8f63171f44ef9b30a4ee921b",
+      "scenario": {"platform": "win32", "concurrent_auth_callbacks": 2, "method": "password"},
+      "expected": {"password_submissions": 1, "serialized": true, "handshake_race": false}
+    },
+    {
+      "case_id": "rf-moss-mcp-stdin-error-crash", "task_id": "real-moss-mcp-stdin-error-crash", "title": "Handle asynchronous MCP stdin errors", "pr": 9,
+      "stratum": "agent-harness", "category": "tool-reliability", "construct": "mcp-transport-error-containment", "root_cause": "unhandled-stdin-error-event", "severity": "critical",
+      "observed": "Writing to an exited MCP process could emit an unhandled asynchronous EPIPE and crash the Agent process.", "expected_behavior": "The transport handles stdin errors, rejects pending requests, and closes cleanly.",
+      "failure_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787", "fixed_revision": "3438a92f60da2f1bfe328c733575f03afcbdb7a0", "source_path": "packages/dmoss-agent/src/mcp/mcp-client.ts", "failure_blob": "efa7011d073610e2d55cb913fbe86a0acdd17c95", "fixed_blob": "83a328d0488f315d3eb185b03f4288cd3ee07a3a",
+      "scenario": {"child_state": "exited", "write_error": "EPIPE", "pending_requests": 2},
+      "expected": {"process_crashed": false, "pending_rejected": 2, "connection_closed": true}
+    },
+    {
+      "case_id": "rf-moss-anthropic-tool-input-object", "task_id": "real-moss-anthropic-tool-input-object", "title": "Preserve Anthropic tool input objects", "pr": 9,
+      "stratum": "agent-harness", "category": "provider-tool-calling", "construct": "provider-tool-payload-normalization", "root_cause": "anthropic-tool-input-object-coercion", "severity": "high",
+      "observed": "Anthropic tool_use input arriving as an object could be mishandled by a parser expecting serialized JSON.", "expected_behavior": "Object and serialized tool inputs normalize to one valid argument object.",
+      "failure_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787", "fixed_revision": "3438a92f60da2f1bfe328c733575f03afcbdb7a0", "source_path": "packages/dmoss-agent/src/provider/anthropic.ts", "failure_blob": "8e47ad6a819552db107b0a3af18a271c4ebd5bd0", "fixed_blob": "e69be0cfe040785f626a907e98b10501824e31b8",
+      "scenario": {"event": "tool_use", "input": {"path": "README.md", "line": 1}},
+      "expected": {"arguments_type": "object", "path": "README.md", "parse_error": false}
+    },
+    {
+      "case_id": "rf-moss-task-frame-caller-mutation", "task_id": "real-moss-task-frame-caller-mutation", "title": "Avoid mutating caller-owned task frames", "pr": 7,
+      "stratum": "agent-harness", "category": "state-management", "construct": "immutable-task-frame-boundary", "root_cause": "caller-owned-state-mutation", "severity": "high",
+      "observed": "Task-frame processing could mutate the caller's frame and corrupt later continuation decisions.", "expected_behavior": "State transitions return a new frame and preserve caller-owned input.",
+      "failure_revision": "3b33f18c7f127811caec85374f209fefeab350ab", "fixed_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e", "source_path": "packages/dmoss-agent/src/core/goal/task-frame.ts", "failure_blob": "dfc3f8fa47eca346a0f12902c1106b29d6665b37", "fixed_blob": "2b83b88ee44bdb52714d08455208120218a89f76",
+      "scenario": {"input_status": "running", "transition": "aborted", "shared_reference": true},
+      "expected": {"input_mutated": false, "output_status": "aborted", "referentially_distinct": true}
+    }
+  ],
+  "rejections": [
+    {"candidate_id": "rf-moss-ci-portable-test-only", "decision": "rejected", "reason_codes": ["test-infrastructure-not-agent-mechanism"]},
+    {"candidate_id": "rf-moss-documentation-navigation", "decision": "rejected", "reason_codes": ["documentation-only-change"]}
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-device-mutation",
+  "status": "reproduced",
+  "definition_sha256": "b8f824650758accca2c1583edb4821f5e4719d531409a467a5ac999a503c7f02",
+  "fixture_sha256": "79782f17604958f619ebc40e20bc8b6ae5b446fb13dd7807b0b9a6eb763f8d2c",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "fce10ca4f99d9de86624573a36ce32b74d93977d",
+    "fixed_revision": "bcb00dd1151c3524d474d5a72e2b34d44497b1f2"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "fce10ca4f99d9de86624573a36ce32b74d93977d",
+      "fixed": "bcb00dd1151c3524d474d5a72e2b34d44497b1f2"
+    },
+    "assertions": [
+      {
+        "path": "packages/moss-agent/src/cli/approval.ts",
+        "failure_blob": "5e0c183ab3928cae544e5fafb08e783de6c07f08",
+        "fixed_blob": "a50572fb0b1ae00357b83c123d801af96ea463e6",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:18.929Z",
+  "duration_ms": 463,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 63,
+      "stdout_tail": "failure-reproduced:rf-moss-plan-device-mutation:planning-mode-mutation-approval-gap\n",
+      "stderr_tail": "",
+      "workspace_digest": "79782f17604958f619ebc40e20bc8b6ae5b446fb13dd7807b0b9a6eb763f8d2c"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 62,
+      "stdout_tail": "fixed-behavior:rf-moss-plan-device-mutation:planning-mode-mutation-approval-gap\n",
+      "stderr_tail": "",
+      "workspace_digest": "79782f17604958f619ebc40e20bc8b6ae5b446fb13dd7807b0b9a6eb763f8d2c"
+    }
+  }
+}

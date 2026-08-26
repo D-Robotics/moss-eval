@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-task-frame-caller-mutation",
+  "version": "1.0.0",
+  "title": "Avoid mutating caller-owned task frames",
+  "track": "harness-regression",
+  "category": "state-management",
+  "construct": {
+    "primary": "immutable-task-frame-boundary",
+    "tags": [
+      "state-management",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/7",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-task-frame-caller-mutation."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe immutable-task-frame-boundary decision. Write results/real-moss-task-frame-caller-mutation.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: input_mutated=false, output_status=\"aborted\", referentially_distinct=true. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "dbe137293149f8cb5cca9012b9ab7a96d63d469c883a0f177ecff982c5792081",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "a031a27dfd35ff353df4395ef8630bab7bf3a7411f18e0eac9fa3803cc4516bf",
+    "family": "rf-moss-task-frame-caller-mutation-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "1ea3cf8f23e967c5dff91cfd32aea949156b7541428aacb0a9b2ddabd8e5ea3f",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "ced93c0e11c36b593d716febd8bcc138039f37e246d75327e79ad82cf0f0cc43",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "51eacb8c5b7fc6704da506011f1129b93f1fe30b1607d5a5c990fbb0a74e1211",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "a81d82fc1f39c654924c2aaf1dd2686bdf17258fb5299d63fa92e9aabd39e919",
+      "expected_pass": false,
+      "description": "Task-specific violation of input_mutated"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "19faad212c1aa3ed5c5ddf9951c7513fad704cd91b68dcfe246e3aaf3e0e04e4",
+      "expected_pass": false,
+      "description": "Task-specific violation of output_status"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "b9aae53bb05f0160e24069056289fecb0722f1c9a9b1dbf41461053d5f53f80e",
+      "expected_pass": false,
+      "description": "Task-specific violation of referentially_distinct"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "2263b93c403ba24e4d61095ff8dc8ad64d970a08b7d52aa851aac377ca02ac76",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-task-frame-caller-mutation"
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-windows-ssh-auth-race",
+  "status": "preserved",
+  "original_signature": "rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race",
+  "minimized_signature": "rf-moss-windows-ssh-auth-race:concurrent-password-authentication-race",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "430c1491da27fff0bc34a88018b07bc8a6947cf4354708b6c9b87b46014fdf12"
+}

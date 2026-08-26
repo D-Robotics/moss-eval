@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-anthropic-tool-input-object",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787",
+    "fixed_revision": "3438a92f60da2f1bfe328c733575f03afcbdb7a0"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "d05e620dbe43860baa4ace9a41842f8e7d62e484b78c7227c5165ca010a4db9b"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/dmoss-agent/src/provider/anthropic.ts",
+      "failure_blob": "8e47ad6a819552db107b0a3af18a271c4ebd5bd0",
+      "fixed_blob": "e69be0cfe040785f626a907e98b10501824e31b8"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-anthropic-tool-input-object:anthropic-tool-input-object-coercion"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-anthropic-tool-input-object:anthropic-tool-input-object-coercion"
+      }
+    }
+  }
+}

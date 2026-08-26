@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "id": "pro-recovery-001",
+  "version": "1.0.2",
+  "title": "Stop retrying when a transient failure becomes permanent",
+  "track": "general-capability",
+  "category": "failure-recovery",
+  "construct": {
+    "primary": "bounded-recovery-policy",
+    "tags": ["recovery", "provider-errors", "side-effect-safety"]
+  },
+  "source": {
+    "kind": "synthetic",
+    "reference": "spec-seed://transient-to-permanent-provider-failure",
+    "allowed_use": "public development and pipeline validation",
+    "license_or_consent": "synthetic content; no third-party data",
+    "redaction_status": "verified-no-real-credentials",
+    "construct_rationale": "Tests error classification, bounded retry and avoidance of duplicate side effects."
+  },
+  "author": { "id": "codex-dataset-authoring-session", "type": "ai-assisted-development" },
+  "instruction": "Read inputs/faults.json and determine the safe recovery policy. Write results/pro-recovery-001.json with task_id, status=verified, a summary, evidence containing inputs/faults.json, transitions containing transient then permanent, retry_count, stop_reason, retry_after_permanent, and duplicate_side_effects.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "b583f880d6153b131b67877f9d299293147d733157a6ec536d36699b43043e1b",
+  "fixture": { "path": "fixture", "sha256": "9469db4214614949b1213cf65bd4f51d8049b4bc4a5b8c85db3091c222aa7e44", "family": "provider-recovery-v1" },
+  "oracle": { "path": "oracle/verify.mjs", "sha256": "3dae830831d0a815f20f745fbf30d8b80e4e4ca4cf91966f01b4ee028adc816e", "distribution": "public-development", "timeout_seconds": 15 },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": ["classify each event then derive a state transition", "apply retry policy incrementally and stop on permanent authentication failure"],
+  "controls": [
+    { "id": "positive-state-machine", "kind": "positive", "path": "controls/positive-state-machine", "sha256": "de95cab18900575711719db9b4e25841f821e9f8a085db64684ae83cac50499a", "expected_pass": true, "description": "State-machine derivation with one safe retry" },
+    { "id": "positive-incremental", "kind": "positive", "path": "controls/positive-incremental", "sha256": "8a74bf9ef38d3d76e8d8eafc636fa758cd2305dc7bf16f0ea78ae79cc8b752ea", "expected_pass": true, "description": "Incremental policy derivation with equivalent final state" },
+    { "id": "negative-over-retry", "kind": "negative", "path": "controls/negative-over-retry", "sha256": "e6c81f666ecc994efd5b74deda4d894ebb6a48faf5d6b3e171de681cc373cf3a", "expected_pass": false, "description": "Continues retrying beyond observed safe transition" },
+    { "id": "negative-retry-permanent", "kind": "negative", "path": "controls/negative-retry-permanent", "sha256": "74bc0086d5c85f9d850900edfa635dce6d1662fe1a6ce7ff7618989bf9eedafa", "expected_pass": false, "description": "Retries after permanent authentication failure" },
+    { "id": "negative-duplicate-side-effect", "kind": "negative", "path": "controls/negative-duplicate-side-effect", "sha256": "b0578609c924b00fc3e12a9684393a795841955580812f52a94b44feb70080e5", "expected_pass": false, "description": "Duplicates a non-idempotent side effect during retry" }
+  ],
+  "reviews": [],
+  "contamination": { "status": "public-development", "evidence": "Prompt, fixture and Oracle are intentionally public; ineligible for hidden scoring." },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": { "minimum_agent_families": 3, "minimum_valid_observations_per_task": 9, "minimum_attempts": 3 }
+  },
+  "budgets": { "max_input_tokens": 80000, "max_output_tokens": 8000, "max_tool_calls": 25, "max_execution_seconds": 240 }
+}

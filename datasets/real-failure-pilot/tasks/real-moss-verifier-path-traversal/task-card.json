@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-verifier-path-traversal",
+  "version": "1.0.0",
+  "title": "Reject traversal before verifier predicate execution",
+  "track": "harness-regression",
+  "category": "permissions-security",
+  "construct": {
+    "primary": "verifier-boundary-enforcement",
+    "tags": [
+      "permissions-security",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/30",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-verifier-path-traversal."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe verifier-boundary-enforcement decision. Write results/real-moss-verifier-path-traversal.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: allowed=false, reason=\"path-traversal\", normalized_target=\"/etc/passwd\". Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "609285d083c3ce6a6e9540a380abccc6a0833f63a9d189bd8c5c93fe5eaf55de",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "c943c73862ccb760c3e792a2939397971a9f2ef6848a8b0e4e3d09e751441d79",
+    "family": "rf-moss-verifier-path-traversal-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "efe2d2a549b12063cfd1f566bd635e7b7923b87fa3f1c15b9ff23abcd6d8306c",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "dc4fa915e893a71f97d0247267456ca8e744e65e0cb38e48e50925419c12fa0d",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "c118511416f0eca1463506534ad56b5edc2f75a12465c326e593c78badf560f5",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "3a77caefd5177e7d43354fa58ab13aec9021c15cdae0ea7bb6941be677941c41",
+      "expected_pass": false,
+      "description": "Task-specific violation of allowed"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "7e7711baf04cd3a0a643fc0f5c1ed5475a80cfc20aabf19cd2b56a4bb3090798",
+      "expected_pass": false,
+      "description": "Task-specific violation of reason"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "3f8316f57584cc68efb93a2945c470eed86c4340693be1f5dc13c70ab22b71b2",
+      "expected_pass": false,
+      "description": "Task-specific violation of normalized_target"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "6ac694b0227a11e59a28865becc969baec1da344dce81161ac08e2ba719f7478",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-verifier-path-traversal"
+}

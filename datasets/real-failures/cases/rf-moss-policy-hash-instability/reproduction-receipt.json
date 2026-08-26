@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-policy-hash-instability",
+  "status": "reproduced",
+  "definition_sha256": "8004e3a25f0e98dab24b33306d27fd78aa703f5c906d4e6a7e3250b7a05dee1f",
+  "fixture_sha256": "80660babd926e664ae370738fba312bee611e508d5d8aadcaa38d4ae57a6111e",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "553ac5814a431eaa64fbdeaa0cc151fcf736f536",
+    "fixed_revision": "728f928e181db9fa0225ae0a1a9083b342f0ec5c"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "553ac5814a431eaa64fbdeaa0cc151fcf736f536",
+      "fixed": "728f928e181db9fa0225ae0a1a9083b342f0ec5c"
+    },
+    "assertions": [
+      {
+        "path": "packages/moss-agent/src/skill-learning/skill-experiment-policy.ts",
+        "failure_blob": "b0dee102d9b5d5bab22bd65e86b2c34c0bbf8b23",
+        "fixed_blob": "c5739fd8ac3e4e0696e451f387eae0851fc38879",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:15.635Z",
+  "duration_ms": 551,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 82,
+      "stdout_tail": "failure-reproduced:rf-moss-policy-hash-instability:locale-dependent-policy-hash\n",
+      "stderr_tail": "",
+      "workspace_digest": "80660babd926e664ae370738fba312bee611e508d5d8aadcaa38d4ae57a6111e"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 71,
+      "stdout_tail": "fixed-behavior:rf-moss-policy-hash-instability:locale-dependent-policy-hash\n",
+      "stderr_tail": "",
+      "workspace_digest": "80660babd926e664ae370738fba312bee611e508d5d8aadcaa38d4ae57a6111e"
+    }
+  }
+}

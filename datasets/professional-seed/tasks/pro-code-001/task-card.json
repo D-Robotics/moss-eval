@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "id": "pro-code-001",
+  "version": "1.0.2",
+  "title": "Repair numeric addition without weakening validation",
+  "track": "general-capability",
+  "category": "repository-repair",
+  "construct": {
+    "primary": "behavior-preserving-code-repair",
+    "tags": ["code-repair", "behavioral-verification", "scope-control"]
+  },
+  "source": {
+    "kind": "synthetic",
+    "reference": "spec-seed://behavior-preserving-numeric-repair",
+    "allowed_use": "public development and pipeline validation",
+    "license_or_consent": "synthetic content; no third-party data",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Exercises diagnosis, minimal mutation and behavioral verification with two equivalent implementations."
+  },
+  "author": { "id": "codex-dataset-authoring-session", "type": "ai-assisted-development" },
+  "instruction": "Repair src/add.mjs so add(2, 3) returns numeric 5 while preserving finite-number validation. Run a focused verification and write results/pro-code-001.json with task_id, status=verified, a summary, and evidence containing src/add.mjs.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "c6c16aa018cea47a7e071a8ce0ccaff58d76c9ece1b1b9c662812d243b62c659",
+  "fixture": { "path": "fixture", "sha256": "dc1d83a26a723ea99f44c5ac8721a46532b1436f98f46311ab26ae16168f1ecf", "family": "numeric-repair-v1" },
+  "oracle": { "path": "oracle/verify.mjs", "sha256": "bb19e0169907f6973dbc2e83ed47f3011d6f11066308b24ca7611f4e08b030a7", "distribution": "public-development", "timeout_seconds": 15 },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": ["direct numeric addition after existing guards", "explicit numeric conversion after existing guards"],
+  "controls": [
+    { "id": "positive-direct", "kind": "positive", "path": "controls/positive-direct", "sha256": "2b105e52ed59fc101b92d46cd6d3f20d83f708dbfbf8bc1e4f7eaebda79db9be", "expected_pass": true, "description": "Direct addition with validation preserved" },
+    { "id": "positive-conversion", "kind": "positive", "path": "controls/positive-conversion", "sha256": "fabf1b035c818a53853c0b504e9ff6893d9f729393a0318e1f97d293cad28d42", "expected_pass": true, "description": "Explicit number conversion with validation preserved and structured evidence" },
+    { "id": "negative-unchanged", "kind": "negative", "path": "controls/negative-unchanged", "sha256": "76f9e306ead3a94760caa7401c9db6406e6af20a8e0afbdc7a601ac0f5b7d1b1", "expected_pass": false, "description": "Receipt claims success but string concatenation remains" },
+    { "id": "negative-wrong-operation", "kind": "negative", "path": "controls/negative-wrong-operation", "sha256": "1b43843107104f2f4db25188800a3835ce897f66275c4631719e0bb29bd4e2db", "expected_pass": false, "description": "Validation remains but multiplication replaces addition" },
+    { "id": "negative-validation-removed", "kind": "negative", "path": "controls/negative-validation-removed", "sha256": "a3a414cf8359bc2f37675b3e96d24aa05d650c4d14f2cf154056b0f0c0bc0905", "expected_pass": false, "description": "Numeric example passes while invalid-input behavior regresses" }
+  ],
+  "reviews": [],
+  "contamination": { "status": "public-development", "evidence": "Prompt, fixture and Oracle are intentionally public; ineligible for hidden scoring." },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": { "minimum_agent_families": 3, "minimum_valid_observations_per_task": 9, "minimum_attempts": 3 }
+  },
+  "budgets": { "max_input_tokens": 100000, "max_output_tokens": 10000, "max_tool_calls": 40, "max_execution_seconds": 300 }
+}

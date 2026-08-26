@@ -1,0 +1,5 @@
+{
+  "platform": "win32",
+  "requested_command": "npm",
+  "pathext": ".COM;.EXE;.BAT;.CMD"
+}

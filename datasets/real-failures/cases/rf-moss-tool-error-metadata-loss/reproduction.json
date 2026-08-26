@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-error-metadata-loss",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "09704067f0896f7da2d397b43afe7ad00c640ed3",
+    "fixed_revision": "99f1e36b3cc51ce4d70282deab09e6c1a2fe204d"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "d0e9e5949247100bf30308b74d51330505dd1891274a4d8e5b0c4dc2f158ab71"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/core/tools/execute-tool-call.ts",
+      "failure_blob": "d28945ca10f812d7d0a01ffd8cd4bcf82f8e8cff",
+      "fixed_blob": "b43bcedce7e15964532ec3be50f52d3fb56b403f"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-tool-error-metadata-loss:stringified-tool-error-metadata-loss"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-tool-error-metadata-loss:stringified-tool-error-metadata-loss"
+      }
+    }
+  }
+}

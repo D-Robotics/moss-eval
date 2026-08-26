@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-verifier-path-traversal",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "895ee316d4aed66a77de9f1cd751c7ceac6f25bb",
+    "fixed_revision": "33007ef6a018e7c317c8c77dbd29188e054c353a"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "d7ba0e32b20b16c9746d3f5e01741e4eccd746e1b1bcef9a9426d0f742fbc90b"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/acceptance/predicate-evaluator.ts",
+      "failure_blob": "faf08a91d42ffec777d99a439326303593a4b954",
+      "fixed_blob": "ae48f9bfd4f8b877ac84a1c62c8655756e9cf318"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-verifier-path-traversal:verifier-path-normalization-bypass"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-verifier-path-traversal:verifier-path-normalization-bypass"
+      }
+    }
+  }
+}

@@ -21,8 +21,25 @@
     "env:device": "node scripts/device-sim.mjs check",
     "source:prepare": "node bin/moss-eval.mjs prepare-source --ref main",
     "calibrate": "node bin/moss-eval.mjs calibrate --config configs/moss.example.json",
+    "dataset:audit": "node bin/moss-eval.mjs dataset-audit --dataset datasets/professional-seed",
+    "dataset:calibrate": "node bin/moss-eval.mjs dataset-calibrate --dataset datasets/professional-seed",
+    "dataset:release-blocked": "node bin/moss-eval.mjs dataset-release --dataset datasets/professional-seed --calibration .moss-eval/datasets/moss-agent-professional-seed-0.1.0-development/calibration/calibration.json --expect-blocked",
+    "failure:audit": "node bin/moss-eval.mjs failure-audit --corpus datasets/real-failures",
+    "failure:reproduce": "node bin/moss-eval.mjs failure-reproduce --corpus datasets/real-failures",
+    "failure:build-pilot": "node scripts/build-real-failure-pilot.mjs",
+    "failure:calibrate": "node bin/moss-eval.mjs dataset-calibrate --dataset datasets/real-failure-pilot",
+    "failure:sync-calibration": "node scripts/sync-real-failure-calibration.mjs",
+    "failure:release-blocked": "node scripts/check-real-failure-release-blocked.mjs",
+    "failure:reproduce-all": "node scripts/build-real-failure-pilot.mjs --reproduce --source D:/moss-drobotics",
+    "failure:governance": "node scripts/prepare-release-governance.mjs",
+    "hidden:contract": "node scripts/test-hidden-release-path.mjs",
+    "release:isolation": "node scripts/audit-release-isolation.mjs",
+    "pilot:local-agent": "node scripts/run-local-cross-agent-pilot.mjs",
+    "failure:check": "npm run failure:build-pilot && node bin/moss-eval.mjs dataset-audit --dataset datasets/real-failure-pilot && npm run failure:calibrate && npm run failure:sync-calibration && npm run failure:audit && npm run failure:release-blocked",
+    "moss:professional-canary": "node scripts/run-professional-moss-canary.mjs",
+    "moss:real-failure-baseline": "node scripts/run-real-failure-moss-baseline.mjs",
     "smoke": "node bin/moss-eval.mjs run --config configs/mock.example.json --suite smoke --allow-local",
-    "release:check": "npm run check && npm test && npm run calibrate && npm run smoke && node --test test/unit/package-release.test.mjs"
+    "release:check": "npm run check && npm test && npm run calibrate && npm run dataset:audit && npm run dataset:calibrate && npm run dataset:release-blocked && npm run failure:check && npm run hidden:contract && npm run release:isolation && npm run smoke && node --test test/unit/package-release.test.mjs"
   },
   "engines": {
     "node": ">=22.16.0"

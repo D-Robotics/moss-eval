@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-provider-truncated-stream",
+  "status": "verified",
+  "summary": "Verified the documented truncated-stream-recovery policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "retryable": true,
+  "classification": "premature_close",
+  "exhausted_code": "incorrect-service_unavailable"
+}

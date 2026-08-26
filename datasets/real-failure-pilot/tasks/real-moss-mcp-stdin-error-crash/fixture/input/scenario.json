@@ -1,0 +1,5 @@
+{
+  "child_state": "exited",
+  "write_error": "EPIPE",
+  "pending_requests": 2
+}

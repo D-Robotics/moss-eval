@@ -1,0 +1,6 @@
+{
+  "task_id": "pro-code-001",
+  "status": "verified",
+  "summary": "The numeric example passes but the existing invalid-input contract was removed.",
+  "evidence": ["src/add.mjs"]
+}

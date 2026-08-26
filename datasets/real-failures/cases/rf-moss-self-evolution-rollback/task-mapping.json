@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-self-evolution-rollback",
+  "task_id": "real-moss-self-evolution-rollback",
+  "track": "harness-regression",
+  "source_evidence_digest": "b889ec398a203063f270ba1bfa4da0b83d99cd5a4035ac9cd3e579476c11d8b7",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

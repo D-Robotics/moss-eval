@@ -1,0 +1,6 @@
+{
+  "plan_status": "approved",
+  "started": false,
+  "skip_requires_status": "executing",
+  "risk": "completion-gate-and-recovery-deadlock"
+}

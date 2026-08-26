@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-device-mutation",
+  "task_id": "real-moss-plan-device-mutation",
+  "track": "harness-regression",
+  "source_evidence_digest": "ff6f81041b10e4801a6cdaefacf6a829b2d75e971959a1b4c236831ae01ec453",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

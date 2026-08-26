@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-plan-completion-deadlock",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "f70f06f38058846f75d9d06eef2674cd4fdf4026",
+    "fixed_revision": "b6b111a28b7ad5c77271a9570de16f71589a4bf0"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "032140fb0e45f63b0c9bd40504c539bd3f04475ddbe84231976b7441b30c44d0"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/moss-agent/src/plan-execute/plan-completion-gate.ts",
+      "failure_blob": "b34ca4026c51734ec8f1e7643f0db8638cef6c85",
+      "fixed_blob": "bd503447cb4de065ad69a40ab1b3e19ebaeefccd"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-plan-completion-deadlock:plan-state-machine-deadlock"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-plan-completion-deadlock:plan-state-machine-deadlock"
+      }
+    }
+  }
+}

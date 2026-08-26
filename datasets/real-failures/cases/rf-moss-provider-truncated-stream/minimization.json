@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-provider-truncated-stream",
+  "status": "preserved",
+  "original_signature": "rf-moss-provider-truncated-stream:premature-stream-termination",
+  "minimized_signature": "rf-moss-provider-truncated-stream:premature-stream-termination",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "b38170e179b459d45a0943e04255932c48adc8100682a1fdc6fb41483e054b56"
+}

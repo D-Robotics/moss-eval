@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-tool-retry-stale-structured-content",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "1f9789431e868220611692314954a97741e645b3",
+    "fixed_revision": "3b33f18c7f127811caec85374f209fefeab350ab"
+  },
+  "environment": {
+    "runner": "node",
+    "network": "disabled",
+    "timeout_seconds": 30,
+    "output_limit_bytes": 1048576
+  },
+  "fixture": {
+    "path": "fixture",
+    "sha256": "b6789135d83a730d14fbdbedb85e0dfb66b60c08e42645c74f3654b43cf136a2"
+  },
+  "source_assertions": [
+    {
+      "path": "packages/dmoss-agent/src/core/tools/execute-tool-call.ts",
+      "failure_blob": "929fb3ff798ef52bb697305fba2ea85b937386f6",
+      "fixed_blob": "94994f37fa75ad0954f12d70c1da211a5b2a909f"
+    }
+  ],
+  "steps": {
+    "failure": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "failure-reproduced:rf-moss-tool-retry-stale-structured-content:stale-retry-result-state"
+      }
+    },
+    "fixed": {
+      "command": [
+        "node",
+        "verify.mjs",
+        "{phase}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "fixed-behavior:rf-moss-tool-retry-stale-structured-content:stale-retry-result-state"
+      }
+    }
+  }
+}

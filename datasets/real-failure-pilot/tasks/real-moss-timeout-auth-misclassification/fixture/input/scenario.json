@@ -1,0 +1,4 @@
+{
+  "code": "FIRST_CHUNK_TIMEOUT",
+  "message": "Timed out; verify Base URL and API Key if the endpoint is private"
+}

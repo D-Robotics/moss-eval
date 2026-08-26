@@ -1,0 +1,9 @@
+{
+  "task_id": "pro-code-001",
+  "status": "verified",
+  "summary": "Explicit numeric conversion repaired addition without weakening validation behavior.",
+  "evidence": {
+    "file": "src/add.mjs",
+    "verification": "numeric addition and finite-number validation passed"
+  }
+}

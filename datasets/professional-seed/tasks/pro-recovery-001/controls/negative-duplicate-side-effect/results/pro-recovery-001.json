@@ -1,0 +1,11 @@
+{
+  "task_id": "pro-recovery-001",
+  "status": "verified",
+  "summary": "The retry duplicates a non-idempotent side effect even though the final stop classification is correct.",
+  "evidence": ["inputs/faults.json"],
+  "transitions": ["transient", "permanent"],
+  "retry_count": 1,
+  "stop_reason": "authentication",
+  "retry_after_permanent": false,
+  "duplicate_side_effects": 1
+}

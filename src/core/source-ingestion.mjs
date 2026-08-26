@@ -42,6 +42,22 @@ export class SourceIngestionError extends Error {
   }
 }
 
+export async function renameDirectoryWithRetry(source, destination, options = {}) {
+  const rename = options.rename || fsp.rename;
+  const sleep = options.sleep || ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
+  const delays = options.delays || [25, 50, 100, 200, 400];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rename(source, destination);
+      return;
+    } catch (error) {
+      const retryable = ['EPERM', 'EACCES', 'EBUSY'].includes(error.code);
+      if (!retryable || attempt >= delays.length) throw error;
+      await sleep(delays[attempt]);
+    }
+  }
+}
+
 function wildcardPattern(pattern) {
   const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
   return new RegExp(`^${escaped.replaceAll('**', '\u0000').replaceAll('*', '[^/]*').replaceAll('\u0000', '.*').replaceAll('?', '.')} $`.replace(' $', '$'), 'i');
@@ -281,7 +297,7 @@ export async function ingestLocalSource(sourceDirectory, options = {}) {
       await writeJson(path.join(stagingRoot, 'snapshot-manifest.json'), manifest);
       await fsp.mkdir(path.dirname(finalRoot), { recursive: true });
       try {
-        await fsp.rename(stagingRoot, finalRoot);
+        await renameDirectoryWithRetry(stagingRoot, finalRoot);
       } catch (renameError) {
         if (renameError.code !== 'EEXIST' && renameError.code !== 'ENOTEMPTY') throw renameError;
         reused = true;
@@ -379,6 +395,20 @@ async function runGitChecked(args, options) {
   });
 }
 
+export async function gitSupportsPartialClone(options = {}) {
+  const limits = { ...DEFAULT_SOURCE_LIMITS, ...(options.limits || {}) };
+  const output = await gitOutput(['--version'], {
+    ...options,
+    timeoutMs: limits.cloneTimeoutMs,
+    outputLimit: limits.cloneOutputLimit,
+  });
+  const match = output.match(/git version (\d+)\.(\d+)/i);
+  if (!match) return false;
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  return major > 2 || (major === 2 && minor >= 19);
+}
+
 export async function ingestGitHubSource(input, options = {}) {
   if (!options.sourcesRoot) throw new Error('sourcesRoot is required');
   const normalized = normalizeGitHubUrl(input);
@@ -393,9 +423,10 @@ export async function ingestGitHubSource(input, options = {}) {
   try {
     await runGitChecked(['init', checkout], { ...options, ...merged });
     await runGitChecked(['-C', checkout, 'remote', 'add', 'origin', normalized.canonicalUrl], { ...options, ...merged });
-    await runGitChecked([
-      '-C', checkout, '-c', 'protocol.file.allow=never', 'fetch', '--depth', '1', '--filter=blob:none', 'origin', commit,
-    ], { ...options, ...merged });
+    const fetchArgs = ['-C', checkout, '-c', 'protocol.file.allow=never', 'fetch', '--depth', '1'];
+    if (await gitSupportsPartialClone({ ...options, ...merged })) fetchArgs.push('--filter=blob:none');
+    fetchArgs.push('origin', commit);
+    await runGitChecked(fetchArgs, { ...options, ...merged });
     await runGitChecked(['-C', checkout, 'checkout', '--detach', 'FETCH_HEAD'], { ...options, ...merged });
     const actual = await runGitChecked(['-C', checkout, 'rev-parse', 'HEAD'], { ...options, ...merged });
     if (actual.toLowerCase() !== commit) {

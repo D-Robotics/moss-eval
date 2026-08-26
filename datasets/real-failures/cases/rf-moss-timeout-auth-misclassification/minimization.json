@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-timeout-auth-misclassification",
+  "status": "preserved",
+  "original_signature": "rf-moss-timeout-auth-misclassification:message-keyword-error-misclassification",
+  "minimized_signature": "rf-moss-timeout-auth-misclassification:message-keyword-error-misclassification",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "1f7d189c547443ae830f74458aa1738df3cebc436eb4dcffa6ab1e2016724fed"
+}

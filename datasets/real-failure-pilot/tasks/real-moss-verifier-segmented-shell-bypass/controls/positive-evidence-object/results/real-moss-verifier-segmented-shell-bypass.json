@@ -1,0 +1,13 @@
+{
+  "task_id": "real-moss-verifier-segmented-shell-bypass",
+  "status": "verified",
+  "summary": "Verified the documented segmented-command-validation policy from the retained scenario evidence.",
+  "evidence": {
+    "input/scenario.json": {
+      "method": "independent policy derivation"
+    }
+  },
+  "allowed": false,
+  "rejected_segment": 2,
+  "executed_segments": 0
+}

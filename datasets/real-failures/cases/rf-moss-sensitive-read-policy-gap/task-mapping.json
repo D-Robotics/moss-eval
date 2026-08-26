@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-sensitive-read-policy-gap",
+  "task_id": "real-moss-sensitive-read-policy-gap",
+  "track": "harness-regression",
+  "source_evidence_digest": "594798cf86033382618c6736c73fee5985ef8f5d8e917c6342aa18b642868dac",
+  "public_development": true,
+  "hidden_oracle_digest": null
+}

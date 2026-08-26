@@ -4,6 +4,7 @@ const RUNNERS = new Set(['local', 'docker', 'pty']);
 const GRADERS = new Set(['command', 'file', 'trace', 'llm_rubric']);
 const OUTCOME_GRADERS = new Set(['command', 'file']);
 const TELEMETRY_LEVELS = new Set(['L0', 'L1', 'L2', 'L3']);
+const PROFESSIONAL_TRACKS = new Set(['adapter-conformance', 'general-capability', 'target-regression', 'harness-regression', 'private-business']);
 
 function present(value) {
   return value !== null && value !== undefined && value !== '';
@@ -95,6 +96,20 @@ function validateCapabilityRequirements(requirements, errors) {
   if (!TELEMETRY_LEVELS.has(requirements.min_telemetry_level)) {
     errors.push('capability_requirements.min_telemetry_level must be L0, L1, L2, or L3');
   }
+}
+
+function validateProfessionalDataset(task, errors) {
+  if (task.professional_dataset === undefined) return;
+  const contract = task.professional_dataset;
+  if (!contract || typeof contract !== 'object' || Array.isArray(contract)) {
+    errors.push('professional_dataset must be an object');
+    return;
+  }
+  if (contract.schema_version !== '1.0') errors.push('professional_dataset.schema_version must be 1.0');
+  if (typeof contract.dataset_id !== 'string' || !contract.dataset_id) errors.push('professional_dataset.dataset_id is required');
+  if (typeof contract.dataset_version !== 'string' || !contract.dataset_version) errors.push('professional_dataset.dataset_version is required');
+  if (!PROFESSIONAL_TRACKS.has(contract.track)) errors.push('professional_dataset.track is unsupported');
+  if (task.oracle_isolation !== 'evaluator-only') errors.push('professional tasks require oracle_isolation=evaluator-only');
 }
 
 export class TaskValidationError extends Error {
@@ -198,6 +213,7 @@ export function validateTask(task, file = '<memory>') {
   if (!Array.isArray(task.artifacts)) errors.push('artifacts must be an array');
   validateToolExpectations(task.tool_expectations, errors);
   validateCapabilityRequirements(task.capability_requirements, errors);
+  validateProfessionalDataset(task, errors);
   if (task.quality_tier !== undefined && !['gated', 'experimental'].includes(task.quality_tier)) {
     errors.push('quality_tier must be gated or experimental');
   }

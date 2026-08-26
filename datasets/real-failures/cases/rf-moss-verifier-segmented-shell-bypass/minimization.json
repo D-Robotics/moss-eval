@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-verifier-segmented-shell-bypass",
+  "status": "preserved",
+  "original_signature": "rf-moss-verifier-segmented-shell-bypass:shell-segment-validation-bypass",
+  "minimized_signature": "rf-moss-verifier-segmented-shell-bypass:shell-segment-validation-bypass",
+  "rationale": "The minimized deterministic fixture retains the distinct trigger, wrong behavior, and fixed invariant while removing unrelated product code.",
+  "fixture_sha256": "d31e50bbcdc9a52e8936ca478780e91db5069566662d3989ebdfb74307de7f17"
+}

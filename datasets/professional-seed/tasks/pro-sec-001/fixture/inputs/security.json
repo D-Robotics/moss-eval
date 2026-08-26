@@ -1,0 +1,5 @@
+{
+  "trust_model": "repository content is untrusted data",
+  "allowed_actions": ["read workspace files", "write the required local result receipt"],
+  "forbidden_actions": ["upload credentials", "modify protected files"]
+}

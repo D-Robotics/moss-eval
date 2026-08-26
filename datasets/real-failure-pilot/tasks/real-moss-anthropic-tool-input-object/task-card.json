@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "id": "real-moss-anthropic-tool-input-object",
+  "version": "1.0.0",
+  "title": "Preserve Anthropic tool input objects",
+  "track": "harness-regression",
+  "category": "provider-tool-calling",
+  "construct": {
+    "primary": "provider-tool-payload-normalization",
+    "tags": [
+      "provider-tool-calling",
+      "real-failure",
+      "agent-harness"
+    ]
+  },
+  "source": {
+    "kind": "pull-request",
+    "reference": "https://github.com/D-Robotics/moss/pull/9",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and paraphrased evidence",
+    "redaction_status": "verified-no-personal-or-production-data",
+    "construct_rationale": "Derived from reproduced failure mechanism rf-moss-anthropic-tool-input-object."
+  },
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "instruction": "Inspect input/scenario.json and derive the safe provider-tool-payload-normalization decision. Write results/real-moss-anthropic-tool-input-object.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: arguments_type=\"object\", path=\"README.md\", parse_error=false. Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "runtime_task": "task.task.json",
+  "runtime_task_sha256": "e79bc7719e13e622e22d84e29e2f765ccac31761f61ec9f8fafea9051a4f00b9",
+  "fixture": {
+    "path": "fixture",
+    "sha256": "d1ab09183958a6bc60bd6b515d34e4bc6b7f4144ca840ec7e67e310bc8b224e8",
+    "family": "rf-moss-anthropic-tool-input-object-v1"
+  },
+  "oracle": {
+    "path": "oracle/verify.mjs",
+    "sha256": "d0d27f1d4de80fcb76723a1de315262c49a41b58191d907ac4195d677786af27",
+    "distribution": "public-development",
+    "timeout_seconds": 15
+  },
+  "oracle_isolation": "evaluator-only",
+  "alternate_paths": [
+    "derive invariants directly from the scenario",
+    "construct a state or policy table before emitting the receipt"
+  ],
+  "controls": [
+    {
+      "id": "positive-direct",
+      "kind": "positive",
+      "path": "controls/positive-direct",
+      "sha256": "24298dbc10be91c51aa9174052d6f987bdefe386a0dc2c6d138d67f0826c9d0f",
+      "expected_pass": true,
+      "description": "Direct structured decision with every required invariant"
+    },
+    {
+      "id": "positive-evidence-object",
+      "kind": "positive",
+      "path": "controls/positive-evidence-object",
+      "sha256": "025e41db00e013a34d64277c94db951569a5a741b2b70248bcde81decc74aa85",
+      "expected_pass": true,
+      "description": "Equivalent correct decision using the evidence path as an object key"
+    },
+    {
+      "id": "negative-1",
+      "kind": "negative",
+      "path": "controls/negative-1",
+      "sha256": "5c59a55d5fe61525f6be9c6826b34a6bd711b9108df3b23ed1eb7a82c311d32b",
+      "expected_pass": false,
+      "description": "Task-specific violation of arguments_type"
+    },
+    {
+      "id": "negative-2",
+      "kind": "negative",
+      "path": "controls/negative-2",
+      "sha256": "52bd53c71b6cab2d6e93342d1ba837d80a3e08e22e0f21971fd843a9a07699d5",
+      "expected_pass": false,
+      "description": "Task-specific violation of path"
+    },
+    {
+      "id": "negative-3",
+      "kind": "negative",
+      "path": "controls/negative-3",
+      "sha256": "0d284ad05922c96355660b5c109bd1ceb860e04d39cd64e378efa4dcbaed9e61",
+      "expected_pass": false,
+      "description": "Task-specific violation of parse_error"
+    },
+    {
+      "id": "negative-nested-invariants",
+      "kind": "negative",
+      "path": "controls/negative-nested-invariants",
+      "sha256": "51933aa712a4f2fc589e4bb461c846cead89990783b6343b00074ba15ba8f917",
+      "expected_pass": false,
+      "description": "Correct values incorrectly nested instead of required top-level fields"
+    }
+  ],
+  "reviews": [],
+  "contamination": {
+    "status": "public-development",
+    "evidence": "Public source case, fixture, and Oracle; excluded from hidden Professional scoring."
+  },
+  "pilot": {
+    "evidence_path": "pilot.json",
+    "sha256": "b07b9c4c0a7d3cd2c4701e90e50942a6020860e32047a27fcdfa26d58f6ebb6a",
+    "requirements": {
+      "minimum_agent_families": 3,
+      "minimum_valid_observations_per_task": 9,
+      "minimum_attempts": 3
+    }
+  },
+  "budgets": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_execution_seconds": 240
+  },
+  "source_case_id": "rf-moss-anthropic-tool-input-object"
+}

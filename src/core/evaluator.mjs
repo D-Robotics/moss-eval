@@ -63,6 +63,7 @@ function processSnapshot(processResult) {
     image_digest: processResult.imageDigest || null,
     configured_image: processResult.configuredImage || null,
     sandbox_policy: processResult.sandboxPolicy || null,
+    mount_policy: processResult.mountPolicy || null,
   };
 }
 
@@ -125,6 +126,7 @@ export async function runTrial(options) {
     runDir,
     trialDir,
     evalRoot: config._meta.evaluationRoot,
+    oracleRoot: task._meta.oracleRoot || null,
     signal,
   };
   const paths = runner.paths(runnerContext);

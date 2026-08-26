@@ -1,0 +1,7 @@
+{
+  "event": "tool_use",
+  "input": {
+    "path": "README.md",
+    "line": 1
+  }
+}

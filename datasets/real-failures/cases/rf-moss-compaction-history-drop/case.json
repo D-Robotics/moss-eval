@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "id": "rf-moss-compaction-history-drop",
+  "version": "0.2.0",
+  "title": "Preserve history when a compaction marker is missing",
+  "stratum": "agent-behavior",
+  "category": "long-context-memory",
+  "root_cause_family": "compaction-replay-history-loss",
+  "source_project": "D-Robotics/moss",
+  "severity": "high",
+  "construct": {
+    "primary": "history-preserving-context-compaction",
+    "tags": [
+      "long-context-memory",
+      "compaction-replay-history-loss",
+      "real-failure"
+    ]
+  },
+  "observed_failure": "Session context construction silently dropped all pre-compaction entries when firstKeptEntryId was absent.",
+  "expected_behavior": "Compaction replay preserves earlier history when the marker cannot be resolved.",
+  "author": {
+    "id": "moss-eval-real-failure-production-20260826",
+    "type": "ai-assisted-development"
+  },
+  "source": {
+    "kind": "github-pr",
+    "canonical_locator": "https://github.com/D-Robotics/moss/pull/8",
+    "retrieved_at": "2026-08-26T13:30:00Z",
+    "allowed_use": "public development and target regression",
+    "license_or_consent": "public MIT-licensed upstream repository and public PR metadata",
+    "privacy_classification": "public",
+    "redaction_status": "paraphrased-no-personal-data"
+  },
+  "evidence": [
+    {
+      "id": "pr-8-compaction-replay-history-loss",
+      "type": "merged-fix-pr",
+      "locator": "https://github.com/D-Robotics/moss/pull/8",
+      "retrieved_at": "2026-08-26T13:30:00Z",
+      "revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787",
+      "sha256": "5506b49502fe7b1c63efaf50c95682c3f4b48c19814e4767026738e4c5a9a3a3",
+      "claim": "Session context construction silently dropped all pre-compaction entries when firstKeptEntryId was absent. The pinned source change and minimized fixture retain this independent mechanism.",
+      "availability": "public-authoritative"
+    }
+  ],
+  "triage": {
+    "decision": "accepted",
+    "reason_codes": [
+      "authoritative-fix-evidence",
+      "distinct-trigger-effect-oracle"
+    ]
+  },
+  "reproduction": {
+    "definition_path": "reproduction.json",
+    "receipt_path": "reproduction-receipt.json"
+  },
+  "minimization": {
+    "receipt_path": "minimization.json"
+  },
+  "task_mapping": {
+    "task_id": "real-moss-compaction-history-drop",
+    "mapping_path": "task-mapping.json",
+    "calibration_path": "calibration.json"
+  },
+  "reviews": []
+}

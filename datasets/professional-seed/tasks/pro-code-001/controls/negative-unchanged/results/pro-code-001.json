@@ -1,0 +1,6 @@
+{
+  "task_id": "pro-code-001",
+  "status": "verified",
+  "summary": "The implementation was incorrectly claimed to be repaired without changing it.",
+  "evidence": ["src/add.mjs"]
+}

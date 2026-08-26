@@ -1,0 +1,12 @@
+{
+  "task_id": "pro-recovery-001",
+  "status": "verified",
+  "summary": "Incremental classification permits one transient retry and terminates on permanent credentials failure.",
+  "evidence": ["inputs/faults.json"],
+  "transitions": ["transient", "permanent"],
+  "retry_count": 1,
+  "stop_reason": "authentication",
+  "retry_after_permanent": false,
+  "duplicate_side_effects": 0,
+  "derivation": "incremental-policy"
+}

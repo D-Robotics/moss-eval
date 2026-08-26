@@ -1,0 +1,8 @@
+{
+  "patch_files": [
+    "skills/a.md",
+    "skills/b.md"
+  ],
+  "failure_after": 1,
+  "backup_complete": false
+}

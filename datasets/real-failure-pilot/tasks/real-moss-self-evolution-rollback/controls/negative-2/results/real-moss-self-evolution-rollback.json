@@ -1,0 +1,11 @@
+{
+  "task_id": "real-moss-self-evolution-rollback",
+  "status": "verified",
+  "summary": "Verified the documented atomic-self-evolution-rollback policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "commit_allowed": false,
+  "rollback_verified": true,
+  "terminal_state": "failed-closed"
+}

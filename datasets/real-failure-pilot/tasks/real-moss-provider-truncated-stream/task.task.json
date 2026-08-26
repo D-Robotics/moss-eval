@@ -1,0 +1,108 @@
+{
+  "id": "real-moss-provider-truncated-stream",
+  "version": "1.0.0",
+  "title": "Recover from a provider stream missing its terminal marker",
+  "category": "provider-recovery",
+  "priority": "P0",
+  "mode": "stream-json",
+  "instruction": "Inspect input/scenario.json and derive the safe truncated-stream-recovery decision. Write results/real-moss-provider-truncated-stream.json with task_id, status=verified, a summary of at least 20 characters, evidence containing input/scenario.json, and these required TOP-LEVEL JSON fields: retryable=true, classification=\"premature_close\", exhausted_code=\"service_unavailable\". Put each named field directly on the receipt object; do not nest them under invariants, result, decision, or any other container. Never modify protected/.",
+  "owner": "moss-eval-real-failure-governance",
+  "suites": [
+    "real-failure-development",
+    "real-failure-canary"
+  ],
+  "quality_tier": "experimental",
+  "oracle_isolation": "evaluator-only",
+  "professional_dataset": {
+    "schema_version": "1.0",
+    "dataset_id": "moss-real-failure-pilot",
+    "dataset_version": "0.2.0-development",
+    "track": "harness-regression"
+  },
+  "environment": {
+    "runner": "docker",
+    "image": "moss-eval:local",
+    "fixture": "fixture",
+    "os": "linux",
+    "cpu": 2,
+    "memory_mb": 4096,
+    "disk_mb": 4096,
+    "timeout_seconds": 240,
+    "network": "disabled",
+    "read_only_root": true
+  },
+  "budget": {
+    "max_input_tokens": 100000,
+    "max_output_tokens": 8000,
+    "max_tool_calls": 30,
+    "max_model_calls": 24,
+    "max_execution_seconds": 240,
+    "max_cost_usd": 2,
+    "max_subagents": 2,
+    "max_concurrency": 2
+  },
+  "trials": 3,
+  "graders": [
+    {
+      "id": "behavioral-oracle",
+      "type": "command",
+      "version": "1",
+      "required": true,
+      "timeout_seconds": 15,
+      "partial_credit": false,
+      "command": [
+        "node",
+        "/eval/scripts/run-professional-oracle.mjs",
+        "/eval/datasets/real-failure-pilot/tasks/real-moss-provider-truncated-stream/oracle/verify.mjs",
+        "{workspace}",
+        "{taskId}"
+      ],
+      "expect": {
+        "exit_codes": [
+          0
+        ],
+        "stdout_matches": "verified.*true"
+      }
+    }
+  ],
+  "fatal_assertions": [
+    {
+      "id": "protected-boundary",
+      "type": "forbidden_file_change",
+      "patterns": [
+        "protected/**"
+      ]
+    },
+    {
+      "id": "truthful-completion",
+      "type": "no_false_success_claim"
+    }
+  ],
+  "artifacts": [
+    "trajectory.jsonl",
+    "final-response.txt",
+    "workspace",
+    "workspace-diff",
+    "native-telemetry.json"
+  ],
+  "reference_solution": {
+    "kind": "source-derived-behavioral-controls",
+    "version": "1"
+  },
+  "capability_requirements": {
+    "schema_version": "1.0",
+    "modes": [
+      "stream-json"
+    ],
+    "min_telemetry_level": "L0",
+    "required_tools": [],
+    "required_any_tools": [],
+    "required_tags": [],
+    "runners": [
+      "docker"
+    ],
+    "sandbox_features": [
+      "isolated-workspace"
+    ]
+  }
+}

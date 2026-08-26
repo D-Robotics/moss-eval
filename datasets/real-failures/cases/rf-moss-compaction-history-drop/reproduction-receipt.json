@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "case_id": "rf-moss-compaction-history-drop",
+  "status": "reproduced",
+  "definition_sha256": "41ab9913c37e3b75ba881f4904e3d0ed39eb9986bb1b399fd7c13b74abe92efb",
+  "fixture_sha256": "048622839e98f9dba44541a601b76d2127fd2dd0e85d6aaff8265a376869be16",
+  "environment_fingerprint": "60feeccaa46158a42807e0fab4339fe601189896c52612570d1c5b7c5f437d90",
+  "target": {
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "failure_revision": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e",
+    "fixed_revision": "9dddb3382dc84e5d7ba6ae56c618702f71782787"
+  },
+  "reproduction_scope": "source-derived-minimized-fixture",
+  "source_validation": {
+    "status": "verified",
+    "repository": "https://github.com/D-Robotics/moss.git",
+    "checkout": "D:\\moss-drobotics",
+    "source_checkout_unchanged": true,
+    "revisions": {
+      "failure": "09f18a6d54ce367f7f515ce76e5c2715ffd5343e",
+      "fixed": "9dddb3382dc84e5d7ba6ae56c618702f71782787"
+    },
+    "assertions": [
+      {
+        "path": "packages/dmoss-agent/src/core/session/session-manager.ts",
+        "failure_blob": "705ac93eae95e6b050b6d88d7474474cce2a40dc",
+        "fixed_blob": "97f65606c4c307551b2ec89edfeb600a9df818e2",
+        "matched": true
+      }
+    ]
+  },
+  "executed_at": "2026-08-26T16:40:10.899Z",
+  "duration_ms": 463,
+  "source_fixture_unchanged": true,
+  "phases": {
+    "failure": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 61,
+      "stdout_tail": "failure-reproduced:rf-moss-compaction-history-drop:compaction-replay-history-loss\n",
+      "stderr_tail": "",
+      "workspace_digest": "048622839e98f9dba44541a601b76d2127fd2dd0e85d6aaff8265a376869be16"
+    },
+    "fixed": {
+      "matched": true,
+      "exit_code": 0,
+      "timed_out": false,
+      "output_truncated": false,
+      "start_error": null,
+      "duration_ms": 63,
+      "stdout_tail": "fixed-behavior:rf-moss-compaction-history-drop:compaction-replay-history-loss\n",
+      "stderr_tail": "",
+      "workspace_digest": "048622839e98f9dba44541a601b76d2127fd2dd0e85d6aaff8265a376869be16"
+    }
+  }
+}

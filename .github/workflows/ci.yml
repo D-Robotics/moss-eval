@@ -16,6 +16,12 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run calibrate
+      - run: npm run dataset:audit
+      - run: npm run dataset:calibrate
+      - run: npm run dataset:release-blocked
+      - run: npm run failure:check
+      - run: npm run hidden:contract
+      - run: npm run release:isolation
       - run: npm run doctor
       - run: npm run smoke
       - run: node --test test/unit/evaluation-quality.test.mjs test/unit/desktop-security.test.mjs test/e2e/desktop-workflow.test.mjs

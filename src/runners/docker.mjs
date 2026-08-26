@@ -22,6 +22,25 @@ function volumePath(value, style) {
   return resolved;
 }
 
+export function dockerMountPlan(context) {
+  const evaluatorOnly = context.task.oracle_isolation === 'evaluator-only';
+  const graderPhase = context.phase === 'grader';
+  const mounts = [
+    { role: 'workspace', source: path.resolve(context.workspace), target: '/workspace', readOnly: false },
+    { role: 'trial', source: path.resolve(context.trialDir), target: '/run', readOnly: false },
+  ];
+  if (!evaluatorOnly || graderPhase) {
+    mounts.push(
+      { role: 'task', source: path.resolve(context.taskDir), target: '/task', readOnly: true },
+      { role: 'evaluator', source: path.resolve(context.evalRoot), target: '/eval', readOnly: true },
+    );
+  }
+  if (graderPhase && context.oracleRoot) {
+    mounts.push({ role: 'oracle', source: path.resolve(context.oracleRoot), target: '/oracle', readOnly: true });
+  }
+  return validateEvaluatorMounts(mounts);
+}
+
 function safeSecretPath(trialDirectory, relativePath) {
   const normalized = String(relativePath || '').replaceAll('\\', '/');
   if (!normalized || normalized.startsWith('/') || normalized.split('/').includes('..') || /[\0\r\n]/.test(normalized)) throw new Error('Secret file path is invalid');
@@ -107,12 +126,7 @@ export class DockerRunner {
     const name = sanitizeId('moss-eval-' + context.task.id + '-' + context.replicate + '-' + Date.now());
     const configuredImage = environment.image_digest || environment.image;
     let imageDigest = await this.resolveImage(configuredImage, context.trialDir);
-    const mounts = validateEvaluatorMounts([
-      { role: 'workspace', source: path.resolve(context.workspace), target: '/workspace', readOnly: false },
-      { role: 'task', source: path.resolve(context.taskDir), target: '/task', readOnly: true },
-      { role: 'trial', source: path.resolve(context.trialDir), target: '/run', readOnly: false },
-      { role: 'evaluator', source: path.resolve(context.evalRoot), target: '/eval', readOnly: true },
-    ]);
+    const mounts = dockerMountPlan(context);
     const owner = sanitizeId(path.basename(context.runDir));
     const args = [
       ...this.prefixArgs,
@@ -164,6 +178,11 @@ export class DockerRunner {
     result.imageDigest = imageDigest;
     result.configuredImage = configuredImage;
     result.sandboxPolicy = policy;
+    result.mountPolicy = {
+      phase: context.phase || 'agent',
+      oracle_isolation: context.task.oracle_isolation || 'legacy-shared',
+      mounts: mounts.map((mount) => ({ role: mount.role, target: mount.target, read_only: mount.readOnly })),
+    };
     if (result.timedOut) {
       result.budgetBreach = {
         type: 'wall_time',

@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "id": "moss-agent-professional-seed",
+  "version": "0.1.0-development",
+  "title": "Professional Agent Dataset Pipeline Development Seed",
+  "tasks": [
+    "tasks/pro-code-001/task-card.json",
+    "tasks/pro-recovery-001/task-card.json",
+    "tasks/pro-sec-001/task-card.json"
+  ],
+  "hidden_oracle_bundle_sha256": null,
+  "policy": {
+    "minimum_positive_controls": 2,
+    "minimum_negative_controls": 3,
+    "minimum_reviewers": 2,
+    "minimum_agent_families": 3,
+    "minimum_valid_observations_per_task": 9,
+    "minimum_attempts": 3,
+    "minimum_difficulty": 0.1,
+    "maximum_difficulty": 0.9,
+    "minimum_discrimination": 0.1,
+    "maximum_construct_concentration": 0.5,
+    "hidden_oracle_required": true
+  }
+}

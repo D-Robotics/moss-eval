@@ -1,0 +1,5 @@
+{
+  "requested_path": "/sys/../etc/passwd",
+  "declared_read_root": "/sys",
+  "execution_surface": "device-readonly"
+}

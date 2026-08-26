@@ -1,0 +1,13 @@
+{
+  "task_id": "real-moss-verifier-failure-line-spoof",
+  "status": "verified",
+  "summary": "Verified the documented unambiguous-verifier-protocol policy from the retained scenario evidence.",
+  "evidence": [
+    "input/scenario.json"
+  ],
+  "invariants": {
+    "protocol_failure": false,
+    "marker_rule": "line-start",
+    "exit_code_preserved": 0
+  }
+}

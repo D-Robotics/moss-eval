@@ -66,6 +66,9 @@ function toConversation(events) {
 
 export async function buildAgentEvalExport(runDirectory) {
   const trials = await loadRunTrials(runDirectory);
+  const runMetadata = await loadJson(path.join(runDirectory, 'run.json'));
+  const summary = await loadJson(path.join(runDirectory, 'summary.json'));
+  const releaseDecision = await loadJson(path.join(runDirectory, 'release-decision.json'));
   const cases = [];
   for (const trial of trials) {
     const events = await loadTrajectory(trial.artifacts.trajectory);
@@ -100,10 +103,51 @@ export async function buildAgentEvalExport(runDirectory) {
       },
     });
   }
+  const sourceRevisions = [...new Set(trials.map((trial) => trial.fingerprint?.source?.commit || trial.fingerprint?.moss_commit).filter(Boolean))];
+  const adapters = [...new Map(trials.map((trial) => [
+    `${trial.agent}:${trial.fingerprint?.adapter || 'unknown'}`,
+    { agent: trial.agent, adapter_id: trial.fingerprint?.adapter || null, adapter_version: trial.fingerprint?.moss_version || null },
+  ])).values()];
+  const environments = [...new Map(trials.map((trial) => {
+    const value = {
+      runner: trial.fingerprint?.runner || null,
+      image_digest: trial.fingerprint?.image_digest || null,
+      node: trial.fingerprint?.node || null,
+      platform: trial.fingerprint?.platform || null,
+      architecture: trial.fingerprint?.architecture || null,
+      resources: trial.fingerprint?.resources || null,
+    };
+    return [JSON.stringify(value), value];
+  })).values()];
+  const provenance = {
+    source_revisions: sourceRevisions,
+    dataset_digest: releaseDecision?.dataset_digest || null,
+    protocol_digest: releaseDecision?.protocol_digest || null,
+    adapters,
+    environments,
+    run_id: runMetadata?.run_id || null,
+    run_artifact: path.resolve(runDirectory),
+    release_decision_digest: releaseDecision?.decision_digest || null,
+    summary_schema_version: summary?.schema_version || null,
+  };
+  const missing = Object.entries({
+    source_revision: sourceRevisions.length === 1,
+    dataset_digest: Boolean(provenance.dataset_digest),
+    protocol_digest: Boolean(provenance.protocol_digest),
+    adapter_identity: adapters.length > 0 && adapters.every((item) => item.adapter_id),
+    environment_identity: environments.length > 0 && environments.every((item) => item.runner),
+    run_identity: Boolean(provenance.run_id && provenance.run_artifact),
+    release_decision: Boolean(provenance.release_decision_digest),
+  }).filter(([, present]) => !present).map(([name]) => name);
   return {
     schema_version: 'moss-eval.agent-eval-service.v1',
     generated_at: new Date().toISOString(),
     source_run: path.resolve(runDirectory),
+    claim_status: missing.length ? 'incomplete-provenance' : releaseDecision?.eligible ? 'release-eligible' : 'development-only',
+    provenance_complete: missing.length === 0,
+    provenance_missing: missing,
+    provenance,
+    release_decision: releaseDecision,
     cases,
   };
 }
