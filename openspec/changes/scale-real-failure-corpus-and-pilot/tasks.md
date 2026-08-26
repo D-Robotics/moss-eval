@@ -59,5 +59,5 @@
 
 - [x] 8.1 Run strict OpenSpec validation, syntax checks, unit/integration tests, dataset audits, and all calibration controls
 - [x] 8.2 Run secret scans and verify source worktree preservation across reproduction
-- [ ] 8.3 Run packaged Windows client smoke tests and the clean-environment release checklist
-- [ ] 8.4 Review the complete diff, commit the implementation, push it, and confirm remote CI status
+- [x] 8.3 Run packaged Windows client smoke tests and the clean-environment release checklist
+- [x] 8.4 Review the complete diff, commit the implementation, push it, and confirm remote CI status
