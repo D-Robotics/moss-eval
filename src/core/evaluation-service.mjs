@@ -191,6 +191,12 @@ export class EvaluationService {
       const targetId = identifier(request.target_fingerprint, 'target fingerprint');
       preparedTarget = await loadPreparedTarget(path.join(this.paths.targets, targetId, 'prepared-target.json'));
       if (preparedTarget.target_fingerprint !== targetId) throw new Error('Prepared target identity mismatch');
+      if (preparedTarget.adapter.id === 'moss' && request.approve_agent_workspace_actions !== true) {
+        throw Object.assign(
+          new Error('MOSS evaluation requires explicit authorization to modify the isolated workspace and run tests'),
+          { code: 'AGENT_ACTIONS_NOT_AUTHORIZED' },
+        );
+      }
       config.execution.environment_overrides = {
         ...(config.execution.environment_overrides || {}),
         runner: 'docker',
@@ -215,6 +221,10 @@ export class EvaluationService {
         agent.prepared_target_fingerprint = preparedTarget.target_fingerprint;
         agent.prepared_target_adapter = preparedTarget.adapter;
         agent.prepared_target_policy = preparedTarget.sandbox_policy;
+        if (preparedTarget.adapter.id === 'moss') {
+          Object.defineProperty(agent, '_moss_auto_approve', { value: true, enumerable: false, configurable: false });
+          agent.isolated_workspace_actions_authorized = true;
+        }
         if (modelConfiguration) {
           Object.defineProperty(agent, '_model_configuration', { value: modelConfiguration, enumerable: false, configurable: false });
           agent.provider = modelConfiguration.provider;

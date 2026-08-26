@@ -1,4 +1,4 @@
-import { PRIMARY_STEPS, SECONDARY_DESTINATIONS, friendlyError, guardStep, inferApiProtocol, validateModelInputs, validateSourceSelection, workflowReadiness } from './workflow.mjs';
+import { PRIMARY_STEPS, SECONDARY_DESTINATIONS, diagnoseRun, explainMetric, friendlyError, friendlyFailure, groupTrialsByTask, guardStep, inferApiProtocol, validateModelInputs, validateSourceSelection, workflowReadiness } from './workflow.mjs';
 
 const api = window.mossEval;
 const tabs = [...PRIMARY_STEPS, ...SECONDARY_DESTINATIONS];
@@ -242,13 +242,14 @@ function renderConfigure(){
   const manifestConfig=node('textarea',{id:'manifest-config'});manifestConfig.value=draft.manifest_config||JSON.stringify(defaultManifest,null,2);
   const baseImage=node('input',{id:'base-image',type:'text'});baseImage.value=draft.base_image||'node:22-bookworm';
   const buildNetwork=node('input',{id:'build-network',type:'checkbox',checked:Boolean(draft.approve_network)});
-  const trials=node('input',{id:'trials',type:'number',min:1,max:20});trials.value=String(draft.trials||3);
+  const trials=node('input',{id:'trials',type:'number',min:1,max:20});trials.value=String(draft.trials??1);
   const concurrency=node('input',{id:'concurrency',type:'number',min:1,max:8});concurrency.value=String(draft.concurrency||1);
   const suite=node('select',{id:'suite'});for(const s of ['release','capability','nightly'])suite.append(node('option',{value:s,text:s}));suite.value=draft.suite||'release';
   const telemetry=node('select',{id:'telemetry'});for(const l of ['L0','L1','L2','L3'])telemetry.append(node('option',{value:l,text:l}));telemetry.value=draft.telemetry||'L3';
   const runtimeSecrets=node('input',{id:'runtime-secrets',type:'text'});runtimeSecrets.value=draft.runtime_secrets??'ANTHROPIC_API_KEY,OPENAI_API_KEY';
   const approveSecrets=node('input',{id:'approve-runtime-secrets',type:'checkbox',checked:Boolean(draft.approve_runtime_secrets)});
   const approveRuntimeNetwork=node('input',{id:'approve-runtime-network',type:'checkbox',checked:Boolean(draft.approve_runtime_network)});
+  const approveAgentActions=node('input',{id:'approve-agent-actions',type:'checkbox',checked:Boolean(draft.approve_agent_workspace_actions)});
   const modelBaseUrl=node('input',{id:'model-base-url',type:'url',autocomplete:'off',placeholder:'https://api.example.com/v1'});modelBaseUrl.value=draft.model_base_url??'';
   const modelApiKey=node('input',{id:'model-api-key',type:'password',autocomplete:'new-password',placeholder:'仅本次运行使用，不保存'});
   const modelName=node('input',{id:'model-name',type:'text',autocomplete:'off',placeholder:'例如 deepseek-v4-flash'});modelName.value=draft.model_name??'';
@@ -271,9 +272,10 @@ function renderConfigure(){
   modelBaseUrl.addEventListener('input',()=>{clearFieldError('model-base-url');updateProtocolStatus();setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
   modelApiKey.addEventListener('input',()=>{clearFieldError('model-api-key');setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
   approveRuntimeNetwork.addEventListener('change',()=>clearFieldError('approve-runtime-network'));
+  approveAgentActions.addEventListener('change',()=>clearFieldError('approve-agent-actions'));
   updateProtocolStatus();
 
-  const captureDraft=()=>({adapter_id:adapter.value,manifest_config:manifestConfig.value,base_image:baseImage.value,approve_network:buildNetwork.checked,confirmed:review.checked,trials:Number(trials.value),concurrency:Number(concurrency.value),suite:suite.value,telemetry:telemetry.value,runtime_secrets:runtimeSecrets.value,approve_runtime_secrets:approveSecrets.checked,approve_runtime_network:approveRuntimeNetwork.checked,model_protocol:modelProtocol.value,model_name:modelName.value,model_base_url:modelBaseUrl.value,randomize:random.checked});
+  const captureDraft=()=>({adapter_id:adapter.value,manifest_config:manifestConfig.value,base_image:baseImage.value,approve_network:buildNetwork.checked,confirmed:review.checked,trials:Number(trials.value),concurrency:Number(concurrency.value),suite:suite.value,telemetry:telemetry.value,runtime_secrets:runtimeSecrets.value,approve_runtime_secrets:approveSecrets.checked,approve_runtime_network:approveRuntimeNetwork.checked,approve_agent_workspace_actions:approveAgentActions.checked,model_protocol:modelProtocol.value,model_name:modelName.value,model_base_url:modelBaseUrl.value,randomize:random.checked});
   const currentModelConfiguration=()=>{
     if(adapter.value!=='moss')return null;
     const validation=validateModelInputs({model:modelName.value,baseUrl:modelBaseUrl.value,apiKey:modelApiKey.value,networkApproved:approveRuntimeNetwork.checked});
@@ -297,8 +299,9 @@ function renderConfigure(){
   const startRun=async()=>{
     if(!state.prepared?.target){showFieldError('prepare-target','请先准备评测环境');setActionStatus(configurationStatus,'failure','请先准备评测环境，再开始评测');return;}
     await runAction({control:startButton,busyLabel:'正在启动…',status:configurationStatus,busyText:'正在启动评测并打开实时状态…',successText:'评测已经启动',work:async()=>{
+      if(adapter.value==='moss'&&!approveAgentActions.checked){const message='请允许 Agent 在隔离评测副本中修改文件并运行测试；原项目不会被修改';showFieldError('approve-agent-actions',message);throw Object.assign(new Error(message),{code:'AGENT_ACTIONS_NOT_AUTHORIZED'});}
       state.configureDraft=captureDraft();const approved_secret_names=approveSecrets.checked?runtimeSecrets.value.split(',').map(v=>v.trim()).filter(Boolean):[];const model_configuration=currentModelConfiguration();
-      const started=await api.startRun({config_id:'moss.example.json',target_fingerprint:state.prepared.target.target_fingerprint,approved_secret_names,approve_runtime_network:approveRuntimeNetwork.checked,model_configuration,suite:suite.value,trials:Number(trials.value),concurrency:Number(concurrency.value),k:Number(trials.value),randomize:random.checked,minimum_telemetry_level:telemetry.value});
+      const started=await api.startRun({config_id:'moss.example.json',target_fingerprint:state.prepared.target.target_fingerprint,approved_secret_names,approve_runtime_network:approveRuntimeNetwork.checked,approve_agent_workspace_actions:approveAgentActions.checked,model_configuration,suite:suite.value,trials:Number(trials.value),concurrency:Number(concurrency.value),k:Number(trials.value),randomize:random.checked,minimum_telemetry_level:telemetry.value});
       modelApiKey.value='';state.activeRun=started.run_id;state.events=[];renderLive();updateNavigationState();show('live');return started;
     }});
   };
@@ -321,7 +324,8 @@ function renderConfigure(){
     node('p',{class:'hint',text:'API Key 只在本次评测中使用，不会保存到客户端设置、日志或报告。评测结束后，临时配置会自动删除。'}),
   ]);
   const genericSecretsPanel=node('div',{id:'generic-runtime-secrets',class:'stack'},[field('声明的运行时 secret 名称（不填写值）',runtimeSecrets),node('label',{class:'check'},[approveSecrets,text('本次 Run 授权注入上述已配置环境变量')])]);
-  const updateAdapterConfiguration=()=>{const moss=adapter.value==='moss';modelConfigurationPanel.hidden=!moss;genericSecretsPanel.hidden=moss;};
+  const agentActionsAuthorization=node('div',{id:'agent-actions-authorization',class:'authorization-box'},[node('label',{class:'check'},[approveAgentActions,text('允许 Agent 修改评测副本并运行测试')]),node('p',{class:'hint',text:'只影响 Docker 中的一次性副本，不会修改你选择的原项目。MOSS 需要这项授权才能真正完成编码任务。'}),node('span',{id:'approve-agent-actions-error',class:'field-error',role:'alert'})]);
+  const updateAdapterConfiguration=()=>{const moss=adapter.value==='moss';modelConfigurationPanel.hidden=!moss;agentActionsAuthorization.hidden=!moss;genericSecretsPanel.hidden=moss;};
   adapter.addEventListener('change',updateAdapterConfiguration);updateAdapterConfiguration();
 
   const detectedAdapter=state.inspection?.candidates?.[0]?.adapter||adapter.value;
@@ -337,7 +341,7 @@ function renderConfigure(){
         node('span',{id:'prepare-target-error',class:'field-error',role:'alert'}),configurationStatus,
         node('details',{class:'technical-details'},[node('summary',{text:'评测环境技术详情'}),field('Adapter',adapter),field('Manifest 配置',manifestConfig),field('基础镜像',baseImage),json({runtime_network:'disabled by default',secrets:'named authorization only',cpu:2,memory_mb:4096,pids:256,disk_mb:4096,wall_seconds:600})])
       ])]),
-      node('article',{class:'card'},[node('h2',{text:'评测设置'}),node('div',{class:'stack'},[field('任务集',suite),field('重复次数',trials),field('并发任务数',concurrency),field('需要的轨迹详细度',telemetry),modelConfigurationPanel,genericSecretsPanel,node('label',{class:'check network-approval'},[approveRuntimeNetwork,text('允许本次评测访问模型公网')]),node('span',{id:'approve-runtime-network-error',class:'field-error',role:'alert'}),node('label',{class:'check'},[random,text('随机排列任务顺序')]),node('p',{class:'muted',text:'release 是经过校验的正式任务集；能力不匹配的任务会标记为“不适用”，不会算作失败。'}),startButton])])
+      node('article',{class:'card'},[node('h2',{text:'评测设置'}),node('div',{class:'stack'},[field('任务集',suite),field('每条任务尝试次数',trials),node('p',{class:'hint',text:'1 次就是完整跑一轮；提高次数可测稳定性，但会增加时间和模型费用。'}),field('并发任务数',concurrency),field('需要的轨迹详细度',telemetry),modelConfigurationPanel,genericSecretsPanel,node('label',{class:'check network-approval'},[approveRuntimeNetwork,text('允许本次评测访问模型公网')]),node('span',{id:'approve-runtime-network-error',class:'field-error',role:'alert'}),agentActionsAuthorization,node('label',{class:'check'},[random,text('随机排列任务顺序')]),node('p',{class:'muted',text:'release 是经过校验的正式任务集；能力不匹配的任务会标记为“不适用”，不会算作失败。'}),startButton])])
     ])
   ]));
   renderPrerequisites();
@@ -352,12 +356,12 @@ function renderLive(){
   if(!state.activeRun){
     clear(byId('live'),node('div',{class:'guided-page'},[node('section',{class:'hero'},[node('span',{class:'eyebrow',text:'第 3 步，共 3 步'}),node('h2',{text:'运行与结果'}),node('p',{text:'评测启动后，这里会显示实时进度、通过数量和最终报告入口。'})]),node('article',{class:'card full empty-state'},[node('h3',{text:'还没有开始评测'}),node('p',{class:'muted',text:state.prepared?.target?'评测环境已经准备好，返回配置页检查模型后即可开始。':'请先完成项目分析和评测环境准备。'}),button(state.prepared?.target?'返回配置并开始':'返回上一步',()=>show(state.prepared?.target?'configure':'source'),'primary')]) ]));return;
   }
-  const recent=completed.slice(-8).reverse();
+  const recent=groupTrialsByTask(completed.map(event=>event.data?.trial).filter(Boolean)).slice(-8).reverse();
   clear(byId('live'),node('div',{class:'guided-page'},[
     node('section',{class:'hero'},[node('span',{class:'eyebrow',text:'第 3 步，共 3 步'}),node('h2',{text:terminal?(terminal.type==='run_completed'?'评测已完成':'评测未能完成'):'评测正在运行'}),node('p',{text:terminal?'你可以查看任务结果和详细报告。':'可以留在此页面查看进度；关闭窗口后仍可从历史记录恢复结果。'})]),
     node('div',{class:'grid'},[
-      ...[['评测编号',state.activeRun],['已完成',completed.length],['通过',passed],['正在运行',Math.max(0,active)]].map(([k,v])=>node('article',{class:'card third'},[node('div',{class:'muted',text:k}),node('div',{class:k==='评测编号'?'run-id':'metric',text:v})])),
-      node('article',{class:'card full'},[node('div',{class:'row between'},[node('h2',{text:'最近结果'}),terminal?button('查看完整报告',safely(async()=>{state.selectedRun=await api.getRun(state.activeRun);show('report');renderReport();}),'primary'):button('停止评测',safely(async()=>{await api.cancelRun(state.activeRun);toast('已请求停止评测');}),'danger')]),recent.length?node('div',{class:'result-list'},recent.map(event=>{const trial=event.data?.trial||{};return node('div',{class:`result-row ${trial.success?'pass':'fail'}`},[node('strong',{text:trial.success?'通过':'未通过'}),node('span',{text:trial.task?.id||event.data?.task_id||'任务'}),node('span',{class:'muted',text:trial.failure_category||''})]);})):node('p',{class:'empty-state',text:'评测已经启动，正在等待第一条任务结果…'})]),
+      ...[['评测编号',state.activeRun],['已完成执行',completed.length],['通过执行',passed],['正在运行',Math.max(0,active)]].map(([k,v])=>node('article',{class:'card third'},[node('div',{class:'muted',text:k}),node('div',{class:k==='评测编号'?'run-id':'metric',text:v})])),
+      node('article',{class:'card full'},[node('div',{class:'row between'},[node('h2',{text:'最近任务'}),terminal?button('查看完整报告',safely(async()=>{state.selectedRun=await api.getRun(state.activeRun);show('report');renderReport();}),'primary'):button('停止评测',safely(async()=>{await api.cancelRun(state.activeRun);toast('已请求停止评测');}),'danger')]),recent.length?node('div',{class:'result-list'},recent.map(task=>{const failure=friendlyFailure(task.main_failure);const stateClass=task.passed?'pass':task.outcomes?'partial':'fail';return node('div',{class:`result-row ${stateClass}`},[node('strong',{text:task.outcomes?`结果通过 ${task.outcomes}/${task.attempts}`:`结果未通过 0/${task.attempts}`}),node('span',{text:`${task.id} · ${task.title}`}),node('span',{class:'muted',text:task.passed?'全部约束通过':task.outcomes?`结果已完成 · ${failure.title}`:failure.title})]);})):node('p',{class:'empty-state',text:'评测已经启动，正在等待第一条任务结果…'})]),
       node('article',{class:'card full'},[node('details',{class:'technical-details'},[node('summary',{text:'查看实时技术轨迹'}),node('p',{class:'muted',text:'用于排查问题的原始事件、时间戳和运行字段。'}),node('div',{},related.slice(-100).reverse().map(e=>node('div',{class:`event ${e.data?.trial?.success?'pass':e.type==='run_failed'?'fail':''}`},[node('strong',{text:e.type}),node('span',{class:'muted',text:` ${e.timestamp||''}`}),node('pre',{text:JSON.stringify(e.data,null,2)})])))])])
     ])
   ]));
@@ -365,8 +369,9 @@ function renderLive(){
 
 async function loadHistory(){ state.runs=await api.listRuns(); renderHistory(); }
 function renderHistory(){
-  const rows=state.runs.map(run=>node('tr',{},[node('td',{text:run.id}),node('td',{},[node('span',{class:`status ${run.status==='completed'?'ok':run.status==='corrupt'?'bad':'warn'}`,text:run.status})]),node('td',{text:run.metadata?.trial_count??'N/A'}),node('td',{},[button('查看',safely(async()=>{state.selectedRun=await api.getRun(run.id);show('report');renderReport();}))]) ]));
-  clear(byId('history'),node('article',{class:'card full'},[node('h2',{text:'运行历史'}),node('p',{class:'muted',text:'从规范 artifacts 重建；会区分 completed、interrupted、cancelled、corrupt 和不支持的 schema。'}),node('table',{class:'table'},[node('thead',{},[node('tr',{},['Run ID','状态','Trials','操作'].map(v=>node('th',{text:v})))]),node('tbody',{},rows)])]));
+  const labels={completed:'已完成',interrupted:'已中断',cancelled:'已取消',corrupt:'数据损坏',running:'运行中'};
+  const rows=state.runs.map(run=>node('tr',{},[node('td',{text:run.id}),node('td',{},[node('span',{class:`status ${run.status==='completed'?'ok':run.status==='corrupt'?'bad':'warn'}`,text:labels[run.status]||run.status})]),node('td',{text:run.metadata?.trial_count??'—'}),node('td',{},[button('查看结果',safely(async()=>{state.selectedRun=await api.getRun(run.id);show('report');renderReport();}))]) ]));
+  clear(byId('history'),node('article',{class:'card full'},[node('h2',{text:'运行历史'}),node('p',{class:'muted',text:'每次评测都保留脱敏的任务结果和诊断证据，可以随时回来查看。'}),node('table',{class:'table'},[node('thead',{},[node('tr',{},['评测编号','状态','执行次数','操作'].map(v=>node('th',{text:v})))]),node('tbody',{},rows)])]));
 }
 
 function runTaskMap(run){return new Map((run?.trials||[]).map(t=>[`${t.task.id}/${t.agent}/${t.replicate}`,t]));}
@@ -374,10 +379,33 @@ async function compareSelected(){const a=byId('baseline').value,b=byId('candidat
 function renderReport(){
   const run=state.selectedRun; const ids=state.runs.map(r=>r.id); const baseline=node('select',{id:'baseline'}),candidate=node('select',{id:'candidate'}); for(const id of ids){baseline.append(node('option',{value:id,text:id}));candidate.append(node('option',{value:id,text:id}));}
   if(ids[1])baseline.value=ids[1];if(ids[0])candidate.value=ids[0];
-  const trials=run?.trials||[];
-  const rows=trials.map(t=>node('tr',{},[node('td',{text:t.task.id}),node('td',{text:t.task.quality_tier||'experimental'}),node('td',{text:t.status}),node('td',{text:t.failure_category||'—'}),node('td',{text:t.metrics?.telemetry_level||'L0'}),node('td',{text:t.metrics?.duration_ms??'N/A'})]));
+  const diagnosis=diagnoseRun(run);const agentSummary=run?.summary?.agents?.[0]||{};
+  const percent=(value)=>Number.isFinite(value)?`${(value*100).toFixed(1)}%`:'暂无';
+  const rateLine=(key,label)=>{const metric=agentSummary[key];if(!metric)return null;const fraction=Number.isFinite(metric.successes)&&Number.isFinite(metric.total)?`${metric.successes}/${metric.total}`:'分母暂无';return node('div',{class:'metric-explanation'},[node('div',{class:'row between'},[node('strong',{text:label}),node('span',{class:'metric-value',text:percent(metric.value)})]),node('p',{text:`${fraction} · ${explainMetric(key)}`})]);};
+  const taskRows=diagnosis.tasks.map(task=>{const failure=friendlyFailure(task.main_failure);const label=task.passed?'全部约束通过':task.outcomes?'结果通过，约束未全过':'结果未通过';const statusClass=task.passed?'ok':task.outcomes?'warn':'bad';return node('tr',{},[node('td',{},[node('strong',{text:task.id}),node('div',{class:'muted',text:task.title})]),node('td',{text:`${task.outcomes}/${task.attempts}`}),node('td',{},[node('span',{class:`status ${statusClass}`,text:label})]),node('td',{},[node('strong',{text:task.passed?'—':failure.title}),task.passed?text(''):node('div',{class:'muted',text:failure.description})]),node('td',{},[node('details',{class:'inline-details'},[node('summary',{text:'查看证据'}),json(task.trials.map(trial=>({replicate:trial.replicate,status:trial.status,outcome_passed:trial.outcome_passed,safety_passed:trial.safety_passed,failure_category:trial.failure_category,graders:trial.graders,metrics:trial.metrics,workspace_diff:trial.workspace_diff})))])])]);});
+  const failureGroups=Object.entries(diagnosis.failure_counts).sort((a,b)=>b[1]-a[1]).map(([category,count])=>{const failure=friendlyFailure(category);return node('div',{class:'failure-group'},[node('div',{class:'failure-count',text:count}),node('div',{},[node('strong',{text:failure.title}),node('p',{text:failure.description}),node('p',{class:'hint',text:`建议：${failure.action}`})])]);});
+  const toolQuality=agentSummary.tools?.quality;
+  const toolMetrics=toolQuality
+    ? [['tool_precision','工具精确率',toolQuality.macro_precision],['tool_recall','工具召回率',toolQuality.macro_recall],['tool_f1','工具 F1',toolQuality.macro_f1]].map(([key,label,value])=>
+      node('div',{class:'metric-explanation'},[
+        node('div',{class:'row between'},[node('strong',{text:label}),node('span',{class:'metric-value',text:percent(value)})]),
+        node('p',{text:`${toolQuality.eligible_trials??'—'} 条可评执行 · ${explainMetric(key)}`}),
+      ]))
+    : [];
+  const advancedMetrics=[
+    rateLine('valid_trial_rate','有效执行率'),rateLine('outcome_pass_rate','结果通过率'),rateLine('trial_success_rate','完整通过率'),rateLine('pass_at_1','Pass@1'),rateLine('pass_at_k','Pass@k'),rateLine('pass_pow_k','Pass^k'),rateLine('safety_violation_rate','安全违规率'),rateLine('recovery_success_rate','异常恢复成功率'),
+    ...toolMetrics,
+  ].filter(Boolean);
   clear(byId('report'),node('div',{class:'grid'},[
-    node('article',{class:'card full'},[node('div',{class:'row'},[node('h2',{text:'Run 报告'}),run?button('导出脱敏 JSON',safely(()=>api.exportRun(run.metadata?.run_id||run.id,'json'))):text(''),run?button('导出可读报告',safely(()=>api.exportRun(run.metadata?.run_id||run.id,'markdown'))):text('')]),run?node('div',{class:'stack'},[json({metadata:run.metadata,summary:run.summary}),node('table',{class:'table'},[node('thead',{},[node('tr',{},['任务','质量层','结果','失败归因','遥测','耗时'].map(v=>node('th',{text:v})))]),node('tbody',{},rows)]),node('details',{},[node('summary',{text:'完整规范 artifacts（含 grader、分母、provenance）'}),json(run)])]):node('p',{class:'muted',text:'从历史中选择一个 Run 查看。'})]),
+    node('article',{class:'card full'},[node('div',{class:'row between'},[node('h2',{text:'评测结果'}),node('div',{class:'row'},[run?button('导出脱敏 JSON',safely(()=>api.exportRun(run.metadata?.run_id||run.id,'json'))):text(''),run?button('导出可读报告',safely(()=>api.exportRun(run.metadata?.run_id||run.id,'markdown'))):text('')])]),run?node('div',{class:'stack'},[
+      node('section',{class:`diagnosis-card ${diagnosis.validity}`},[node('span',{class:'eyebrow',text:diagnosis.validity==='valid'?'结论有效性：可用':diagnosis.validity==='inconclusive'?'结论有效性：不可用':'结论有效性：不完整'}),node('h3',{text:diagnosis.title}),node('p',{text:diagnosis.description}),node('p',{class:'diagnosis-action',text:`下一步：${diagnosis.action}`})]),
+      node('p',{class:'run-summary-sentence',text:diagnosis.sentence}),
+      node('div',{class:'summary-metrics'},[['任务数',diagnosis.task_count],['每条最多尝试',diagnosis.repetitions],['任务结果通过',`${diagnosis.outcome_passed_tasks}/${diagnosis.task_count}`],['安全检查通过',`${diagnosis.safety_passed_executions}/${diagnosis.total_executions}`],['全部约束通过',`${diagnosis.passed_executions}/${diagnosis.total_executions}`]].map(([label,value])=>node('div',{class:'summary-metric'},[node('span',{text:label}),node('strong',{text:value})]))),
+      node('section',{class:'report-section'},[node('h3',{text:'主要原因'}),failureGroups.length?node('div',{class:'failure-groups'},failureGroups):node('p',{class:'muted',text:'没有失败记录。'})]),
+      node('section',{class:'report-section'},[node('h3',{text:'逐条任务结果'}),node('p',{class:'muted',text:'“任务结果通过”表示目标已完成；“全部约束通过”还要求安全、预算等硬规则全部满足。重复尝试已合并。'}),node('div',{class:'table-scroll'},[node('table',{class:'table task-table'},[node('thead',{},[node('tr',{},['任务','结果通过/尝试','综合状态','主要原因','详情'].map(v=>node('th',{text:v})))]),node('tbody',{},taskRows)])])]),
+      node('details',{class:'technical-details'},[node('summary',{text:'高级指标是什么意思？'}),node('p',{class:'muted',text:'这些指标用于研究稳定性、工具使用和安全性；日常判断请先看上面的结论和任务结果。'}),node('div',{class:'metric-explanations'},advancedMetrics)]),
+      node('details',{class:'technical-details'},[node('summary',{text:'完整技术数据与原始 artifacts'}),node('p',{class:'muted',text:'包含原始 summary、grader、分母、置信区间、provenance 和脱敏轨迹引用。'}),json(run)])
+    ]):node('p',{class:'muted',text:'从历史记录中选择一次评测查看。'})]),
     node('article',{class:'card full'},[node('h2',{text:'覆盖感知对比'}),node('div',{class:'row'},[field('基线',baseline),field('候选',candidate),button('比较共同 eligible 交集',safely(compareSelected),'primary')]),node('div',{id:'comparison',class:'muted',text:'对比不会把 NOT_APPLICABLE 当失败，并单列覆盖率变化。'})])
   ]));
 }

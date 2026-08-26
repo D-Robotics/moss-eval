@@ -4,9 +4,15 @@ import { mossConfigFile, publicModelConfiguration } from '../core/model-configur
 
 export class MossAdapter extends CommandAdapter {
   build(task, context) {
-    const command = super.build(task, context);
+    const receiptPath = `results/${task.id}.json`;
+    const instruction = `${task.instruction}\n\nEvaluation contract: the exact task ID is ${task.id}. You MUST write the required receipt to ${receiptPath}; do not try to infer the task ID from the environment.`;
+    const command = super.build({ ...task, instruction }, context);
     command.env.MOSS_EVAL_RUNTIME_MODE = task.mode;
     command.metadata.runtimeMode = task.mode;
+    if (this.configuration._moss_auto_approve === true) {
+      command.env.MOSS_CLI_AUTO_APPROVE = '1';
+      command.metadata.isolated_workspace_actions_authorized = true;
+    }
     const modelConfiguration = this.configuration._model_configuration;
     if (modelConfiguration) {
       const configPath = '.secrets/moss-model.json';

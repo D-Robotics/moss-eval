@@ -497,6 +497,9 @@ details[open] summary {
 .result-row.pass {
   border-color: var(--accent);
 }
+.result-row.partial {
+  border-color: var(--warn);
+}
 .result-row.fail {
   border-color: var(--danger);
 }
@@ -504,6 +507,131 @@ details[open] summary {
   margin-top: 8px;
   overflow-wrap: anywhere;
   font-size: 13px;
+}
+.authorization-box {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid #2c655b;
+  border-radius: 9px;
+  background: #0d2927;
+}
+.diagnosis-card {
+  display: grid;
+  gap: 9px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 10px;
+  background: #0b1f28;
+}
+.diagnosis-card h3 {
+  margin: 0;
+  font-size: 21px;
+}
+.diagnosis-card p {
+  line-height: 1.6;
+}
+.diagnosis-card.inconclusive {
+  border-color: #8d6823;
+  border-left-color: var(--warn);
+  background: #2a210e;
+}
+.diagnosis-card.incomplete {
+  border-left-color: var(--muted);
+}
+.diagnosis-action {
+  color: #e9d08e;
+  font-weight: 650;
+}
+.run-summary-sentence {
+  color: #c8d8ec;
+  font-size: 15px;
+}
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.summary-metric {
+  display: grid;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #0b1625;
+}
+.summary-metric span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.summary-metric strong {
+  font-size: 22px;
+}
+.report-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+.failure-groups,
+.metric-explanations {
+  display: grid;
+  gap: 9px;
+}
+.failure-group {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #0b1625;
+}
+.failure-group p,
+.metric-explanation p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.failure-count {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  border-radius: 8px;
+  color: #251800;
+  background: var(--warn);
+  font-size: 19px;
+  font-weight: 800;
+}
+.metric-explanation {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #0b1625;
+}
+.metric-value {
+  color: var(--accent);
+  font-weight: 750;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.task-table {
+  min-width: 940px;
+}
+.task-table td:nth-child(1) {
+  min-width: 210px;
+}
+.task-table td:nth-child(4) {
+  min-width: 280px;
+}
+.inline-details {
+  min-width: 92px;
+}
+.inline-details pre {
+  min-width: 520px;
 }
 @media (max-width: 1100px) {
   .card,
@@ -520,5 +648,8 @@ details[open] summary {
   .step-tab {
     min-width: 0;
     flex: 1;
+  }
+  .summary-metrics {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
   }
 }

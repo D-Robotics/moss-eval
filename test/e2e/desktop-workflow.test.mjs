@@ -37,7 +37,8 @@ test('desktop service inspects pinned public-style and local snapshots without m
 
     const prepared = await service.prepare({ confirmed:true, source_record:sourceRecord, adapter_id:'moss', configuration:{}, sandbox_policy:{network:'disabled'}, runtime:{kind:'docker'}, image_digest:'sha256:'+'b'.repeat(64), allow_prebuilt:true });
     assert.equal(prepared.target.source.fingerprint,sourceRecord.snapshot_fingerprint);
-    const started = await service.start({ config_id:'mock.example.json', target_fingerprint:prepared.target.target_fingerprint, suite:'smoke', trials:1 });
+    await assert.rejects(() => service.start({ config_id:'mock.example.json', target_fingerprint:prepared.target.target_fingerprint, suite:'smoke', trials:1 }), /explicit authorization/);
+    const started = await service.start({ config_id:'mock.example.json', target_fingerprint:prepared.target.target_fingerprint, suite:'smoke', trials:1, approve_agent_workspace_actions:true });
     assert.equal(started.run_id,'desktop-fixture-run');
     await completion;
     assert.equal(evaluatedOptions.config.execution.environment_overrides.image,prepared.target.image_digest);
@@ -70,11 +71,12 @@ test('desktop MOSS run keeps user model credentials non-enumerable and requires 
   const service=new EvaluationService({paths,evaluateFn:async(options)=>{evaluatedOptions=options;const runId='model-fixture-run';const runDir=path.join(paths.runs,runId);await fsp.cp(path.join(projectRoot,'test/fixtures/artifacts/run-v1'),runDir,{recursive:true});options.onRunStart({run_id:runId,run_directory:runDir});return {runId,runDir,trials:[]};},eventSink:(event)=>{if(event.type==='run_completed')completed(event);}});
   const prepared=await service.prepare({confirmed:true,source_record:sourceRecord,adapter_id:'moss',configuration:{},sandbox_policy:{network:'disabled'},runtime:{kind:'docker'},image_digest:`sha256:${'e'.repeat(64)}`,allow_prebuilt:true});
   const model_configuration={provider:'openai',model:'gpt-4o-mini',base_url:'https://api.openai.com',api_key:'never-persist-this-key'};
-  await assert.rejects(()=>service.start({config_id:'mock.example.json',target_fingerprint:prepared.target.target_fingerprint,suite:'smoke',trials:1,model_configuration,approve_runtime_network:false}),/explicit approval/);
-  await service.start({config_id:'mock.example.json',target_fingerprint:prepared.target.target_fingerprint,suite:'smoke',trials:1,model_configuration,approve_runtime_network:true});
+  await assert.rejects(()=>service.start({config_id:'mock.example.json',target_fingerprint:prepared.target.target_fingerprint,suite:'smoke',trials:1,model_configuration,approve_runtime_network:false,approve_agent_workspace_actions:true}),/explicit approval/);
+  await service.start({config_id:'mock.example.json',target_fingerprint:prepared.target.target_fingerprint,suite:'smoke',trials:1,model_configuration,approve_runtime_network:true,approve_agent_workspace_actions:true});
   const agent=evaluatedOptions.config.agents.mock;
   assert.equal(agent.provider,'openai');assert.equal(agent.model,'gpt-4o-mini');assert.equal(agent._model_configuration.apiKey,'never-persist-this-key');
   assert.equal(Object.keys(agent).includes('_model_configuration'),false);
+  assert.equal(agent._moss_auto_approve,true);assert.equal(Object.keys(agent).includes('_moss_auto_approve'),false);
   assert.equal(evaluatedOptions.config.execution.environment_overrides.network,'public');
   assert.doesNotMatch(JSON.stringify(evaluatedOptions),/never-persist-this-key/);
   await completion;

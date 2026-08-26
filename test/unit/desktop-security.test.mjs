@@ -27,6 +27,8 @@ test('narrow IPC rejects arbitrary process, PID, path and setting operations', (
   assert.throws(()=>validateIpcRequest('model:testConnection',{...modelRequest,model_configuration:{...modelRequest.model_configuration,base_url:'http://localhost:11434'}}),/HTTPS/);
   assert.throws(()=>validateIpcRequest('model:testConnection',{...modelRequest,model_configuration:{...modelRequest.model_configuration,command:'calc.exe'}}),/Unknown model configuration/);
   assert.throws(()=>validateIpcRequest('model:testConnection',{...minimalModelRequest,model_configuration:{...minimalModelRequest.model_configuration,protocol:'vendor-name'}}),/protocol/);
+  assert.equal(validateIpcRequest('run:start',{config_id:'moss.example.json',approve_agent_workspace_actions:true}).approve_agent_workspace_actions,true);
+  assert.throws(()=>validateIpcRequest('run:start',{config_id:'moss.example.json',approve_agent_workspace_actions:'yes'}),/boolean/);
 });
 
 test('preload and BrowserWindow configuration expose no arbitrary process or filesystem bridge', async () => {
@@ -57,6 +59,9 @@ test('preload and BrowserWindow configuration expose no arbitrary process or fil
   assert.doesNotMatch(renderer, /id:'model-provider'/);
   assert.match(renderer, /id:'model-protocol'/);
   assert.match(renderer, /genericSecretsPanel\.hidden=moss/);
+  assert.match(renderer, /id:'approve-agent-actions'/);
+  assert.match(renderer, /approve_agent_workspace_actions:approveAgentActions\.checked/);
+  assert.match(renderer, /draft\.trials\?\?1/);
   assert.match(renderer, /aria-busy/);
   assert.match(workflow, /请先选择并分析要评测的 Agent/);
   assert.match(workflow, /请先选择电脑上的 Agent 项目文件夹/);

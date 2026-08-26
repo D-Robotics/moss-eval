@@ -33,9 +33,14 @@ test('provider-generated partial API key masks are removed from persisted text',
 test('MOSS adapter passes only a temporary config path and public model provenance', () => {
   const adapter = createAdapter('moss', { adapter: 'moss', command: 'moss', args: ['{instruction}'] });
   Object.defineProperty(adapter.configuration, '_model_configuration', { value: validateModelConfiguration({ provider: 'anthropic', model: 'claude', base_url: 'https://api.anthropic.com', api_key: 'never-log-me' }), enumerable: false });
+  Object.defineProperty(adapter.configuration, '_moss_auto_approve', { value: true, enumerable: false });
   const command = adapter.build({ id: 'task', instruction: 'work', mode: 'stream-json', environment: { env: {} } }, { paths: { workspace:'/workspace', task:'/task', run:'/run', trial:'/run', eval:'/eval' }, replicate:1, faultEnvironment:{} });
   assert.deepEqual(command.args.slice(0, 2), ['--config-file', '/run/.secrets/moss-model.json']);
   assert.equal(command.metadata.model_configuration.api_key_configured, true);
+  assert.equal(command.env.MOSS_CLI_AUTO_APPROVE, '1');
+  assert.equal(command.metadata.isolated_workspace_actions_authorized, true);
+  assert.match(command.args.join(' '), /exact task ID is task/);
+  assert.match(command.args.join(' '), /results\/task\.json/);
   assert.doesNotMatch(JSON.stringify({ args:command.args, env:command.env, metadata:command.metadata }), /never-log-me/);
   assert.match(command.secret_files[0].content, /never-log-me/);
 });

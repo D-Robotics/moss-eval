@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { friendlyError, guardStep, inferApiProtocol, validateModelInputs, validateSourceSelection, workflowReadiness } from '../../app/renderer/workflow.mjs';
+import { diagnoseRun, explainMetric, friendlyError, friendlyFailure, groupTrialsByTask, guardStep, inferApiProtocol, validateModelInputs, validateSourceSelection, workflowReadiness } from '../../app/renderer/workflow.mjs';
 
 test('guided workflow readiness follows canonical source and prepared target state', () => {
   assert.deepEqual(workflowReadiness({}), { source:true, configure:false, live:false });
@@ -29,4 +29,34 @@ test('API protocol is inferred without asking for a vendor', () => {
   assert.equal(inferApiProtocol('https://ai-api.d-robotics.cc/v1'),'openai-compatible');
   assert.equal(inferApiProtocol('https://api.anthropic.com'),'anthropic');
   assert.equal(inferApiProtocol('https://custom.example.com','anthropic'),'anthropic');
+});
+
+test('failure causes and advanced metrics have plain Chinese explanations', () => {
+  assert.equal(friendlyFailure('budget_exceeded').title,'超出资源上限');
+  assert.match(friendlyFailure('safety_violation').description,/安全规则/);
+  assert.match(friendlyFailure('unknown_reason').description,/unknown_reason/);
+  assert.match(explainMetric('pass_at_k'),/至少一次成功/);
+  assert.match(explainMetric('pass_pow_k'),/每次都成功/);
+  assert.match(explainMetric('tool_precision'),/符合任务预期/);
+});
+
+test('run diagnostics group repeated trials and identify an old MOSS approval block', () => {
+  const blockedTrial=(taskId,replicate)=>({
+    task:{id:taskId,title:`Task ${taskId}`,category:'coding-repository'},agent:'moss',replicate,status:'failed',valid:true,success:false,failure_category:'budget_exceeded',
+    process:{args:['docker','run','MOSS_EVAL_TASK_ID='+taskId]},fingerprint:{adapter:'moss'},
+    graders:[{id:'deterministic-outcome',details:{stderr_tail:`Error: ENOENT, open '/workspace/results/${taskId}.json'`}}],
+  });
+  const trials=[blockedTrial('code-001',1),blockedTrial('code-001',2),blockedTrial('code-002',1),blockedTrial('code-002',2)];
+  const groups=groupTrialsByTask(trials);
+  assert.equal(groups.length,2);assert.equal(groups[0].attempts,2);assert.equal(groups[0].outcomes,0);assert.equal(groups[0].main_failure,'budget_exceeded');
+  const diagnosis=diagnoseRun({trials});
+  assert.equal(diagnosis.validity,'inconclusive');assert.equal(diagnosis.systematic_approval_block,true);
+  assert.equal(diagnosis.sentence,'2 条任务，每条最多 2 次，共 4 次执行');
+  assert.match(diagnosis.title,/不能用于判断 Agent 能力/);
+});
+
+test('authorized MOSS failures remain capability evidence', () => {
+  const trial={task:{id:'code-001',title:'Task'},agent:'moss',replicate:1,status:'failed',valid:true,success:false,outcome_passed:true,safety_passed:true,failure_category:'budget_exceeded',process:{args:['--env','MOSS_CLI_AUTO_APPROVE=1']},graders:[{id:'deterministic-outcome',status:'passed',details:{}}]};
+  const diagnosis=diagnoseRun({trials:[trial]});
+  assert.equal(diagnosis.validity,'valid');assert.equal(diagnosis.outcome_passed_tasks,1);assert.equal(diagnosis.passed_executions,0);
 });

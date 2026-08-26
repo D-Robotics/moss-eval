@@ -30,6 +30,7 @@ export function validateIpcRequest(operation, payload = {}) {
     if (value.trials !== undefined && (!Number.isInteger(value.trials) || value.trials < 1 || value.trials > 20)) throw new Error('trials must be between 1 and 20');
     if (value.concurrency !== undefined && (!Number.isInteger(value.concurrency) || value.concurrency < 1 || value.concurrency > 8)) throw new Error('concurrency must be between 1 and 8');
     if (value.model_configuration !== undefined) modelConfiguration(value.model_configuration);
+    if (value.approve_agent_workspace_actions !== undefined && typeof value.approve_agent_workspace_actions !== 'boolean') throw new Error('approve_agent_workspace_actions must be a boolean');
   }
   if (operation === 'model:testConnection') {
     id(value.target_fingerprint, 'target_fingerprint');

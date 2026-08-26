@@ -129,10 +129,12 @@ async function createWindow() {
         model_api_key_type: key?.type || null,
         model_base_url_editable: document.querySelector('#model-base-url')?.readOnly === false,
         generic_secrets_hidden: document.querySelector('#generic-runtime-secrets')?.hidden === true && getComputedStyle(document.querySelector('#generic-runtime-secrets')).display === 'none',
+        agent_actions_authorization_visible: document.querySelector('#agent-actions-authorization')?.hidden === false,
+        default_trials: document.querySelector('#trials')?.value || null,
         api_key_persisted: JSON.stringify({ ...localStorage }).includes('packaged-secret-must-not-persist')
       };
     })()`);
-    if (result.api !== 'object' || result.tab_count !== 5 || result.primary_step_count !== 3 || result.source_heading !== '你想评测哪个 Agent？' || result.guarded_message !== '请先选择并分析要评测的 Agent' || !result.stayed_on_source || result.missing_local_message !== '请先选择电脑上的 Agent 项目文件夹' || !result.prerequisite_panel || result.pending_storage_key !== null || result.model_provider_present || result.model_protocol_count !== 3 || !result.model_protocol_is_advanced || result.model_api_key_type !== 'password' || !result.model_base_url_editable || !result.generic_secrets_hidden || result.api_key_persisted) {
+    if (result.api !== 'object' || result.tab_count !== 5 || result.primary_step_count !== 3 || result.source_heading !== '你想评测哪个 Agent？' || result.guarded_message !== '请先选择并分析要评测的 Agent' || !result.stayed_on_source || result.missing_local_message !== '请先选择电脑上的 Agent 项目文件夹' || !result.prerequisite_panel || result.pending_storage_key !== null || result.model_provider_present || result.model_protocol_count !== 3 || !result.model_protocol_is_advanced || result.model_api_key_type !== 'password' || !result.model_base_url_editable || !result.generic_secrets_hidden || !result.agent_actions_authorization_visible || result.default_trials !== '1' || result.api_key_persisted) {
       throw new Error(`Packaged renderer smoke failed: ${JSON.stringify(result)}`);
     }
     if (process.env.MOSS_EVAL_SMOKE_MARKER) {

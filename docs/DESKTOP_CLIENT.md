@@ -49,7 +49,8 @@
 2. 客户端从 URL 自动识别 API 协议：Anthropic 官方地址使用 Anthropic Messages，其余已知和自定义网关默认使用 OpenAI Compatible。
 3. 仅当自定义网关使用 Anthropic Messages 语义时，展开高级设置并手动切换 API 协议；常规网关不需要选择服务商。
 4. 勾选“允许评测时访问模型公网”。评测环境准备完成后可点击“测试连接”。该操作在受限 Docker 沙箱中发起一次最多 1 token 的请求，显示 HTTP 状态和耗时，不创建任务 Trial。
-5. 连接成功后开始评测。Model、Base URL 和非敏感协议设置可随草稿恢复；API Key 不保存，页面重载后必须重新填写。
+5. 勾选“允许 Agent 修改评测副本并运行测试”。这会让 MOSS 在无人值守评测中批准写文件和执行测试，但权限只作用于 Docker 中的一次性工作副本，原项目、宿主机其他目录、网络和 secret 边界仍由沙箱控制。
+6. 连接成功后开始评测。Model、Base URL 和非敏感协议设置可随草稿恢复；API Key 不保存，页面重载后必须重新填写。新评测默认每条任务尝试 1 次；提高尝试次数可评估稳定性，但会增加时间和模型费用。
 
 API Key 只通过 schema 校验后的 IPC 进入评测 Worker 内存。Worker 在连接测试或 Trial 开始前创建 `/run/.secrets/moss-model.json`，Docker 参数只包含该路径；进程结束、失败、超时或取消时均删除临时文件。密钥不会写入 `localStorage`、环境变量投影、Fingerprint、事件、Trace、报告或导出文件。
 
@@ -70,7 +71,7 @@ API Key 只通过 schema 校验后的 IPC 进入评测 Worker 内存。Worker �
 
 流程为：选择 Agent → 自动分析 → 配置评测与模型 → 准备评测环境 → 运行与结果。主界面显示阶段、活动任务、完成/通过数量和结果入口；原始事件位于“实时技术轨迹”。关闭或刷新窗口后可从追加事件与规范 artifacts 恢复。
 
-报告包含 Outcome、失败归因、grader、分母、遥测覆盖、成本/耗时、来源 commit 和镜像 digest。支持脱敏 JSON 与 Markdown 导出；版本对比只使用共同 eligible 任务交集，并单列覆盖率变化。
+报告先判断本轮是否适合用于评价 Agent 能力。如果 MOSS 因无人值守审批未授权而系统性无法写入结果，报告会明确标记“本轮不能用于判断 Agent 能力”，不会把 0% 误写成能力结论。主视图按任务合并重复尝试，显示任务数、尝试次数、通过任务、通过执行、中文失败原因和建议；Outcome、pass@k、pass^k、工具指标、grader、分母、遥测覆盖、成本/耗时、来源 commit 和镜像 digest 收在可展开的技术详情中。支持脱敏 JSON 与 Markdown 导出；版本对比只使用共同 eligible 任务交集，并单列覆盖率变化。
 
 ## 限制与排障
 
@@ -82,4 +83,5 @@ API Key 只通过 schema 校验后的 IPC 进入评测 Worker 内存。Worker �
 - `interrupted` 表示存在 run 元数据但没有正常完成；可查看已落盘 Trial，不会把缺失 Trial 当失败样本。
 - `MODEL_CONFIGURATION_INVALID` 表示 Model、HTTPS Base URL、API Key 或高级 API 协议设置缺失/不合法。
 - `RUNTIME_NETWORK_NOT_AUTHORIZED` 表示模型连接需要公网，但用户尚未勾选本次 Run 的网络授权。
+- `AGENT_ACTIONS_NOT_AUTHORIZED` 表示 MOSS 尚未被允许在隔离评测副本中写文件和运行测试；勾选对应授权后重试，原项目不会被修改。
 - `MODEL_CONNECTION_FAILED`、HTTP 401/403 通常表示 API Key 或账号权限问题；HTTP 404 通常表示 Base URL 或 Model 不匹配；连接测试超时需同时检查 Docker 网络、代理和模型服务可用性。

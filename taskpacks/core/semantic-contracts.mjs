@@ -57,7 +57,7 @@ async function verifyCodeState(taskId, workspace) {
     return /return\s+(?:Number\()?left\)?\s*\+\s*(?:Number\()?right\)?\s*;/.test(source)
       ? [] : ['numeric addition defect was not fixed'];
   }
-  return /right\s*===?\s*0/.test(source) && /throw\s+new\s+Error/.test(source)
+  return /(?:right|Number\s*\(\s*right\s*\))\s*===?\s*0/.test(source) && /throw\s+new\s+(?:Type)?Error/.test(source)
     ? [] : ['division by zero is not rejected explicitly'];
 }
 
@@ -67,8 +67,11 @@ export function referenceReceipt(taskId) {
 
 export async function verifySemanticOutcome(taskId, receipt, workspace) {
   if (!GATED_TASK_IDS.includes(taskId)) return { applicable: false, failures: [] };
-  const failures = [...compareObject(receipt, REFERENCES[taskId]), ...(await verifyCodeState(taskId, workspace))];
+  const expected = taskId === 'recovery-001'
+    ? Object.fromEntries(Object.entries(REFERENCES[taskId]).filter(([key]) => key !== 'retry_count'))
+    : REFERENCES[taskId];
+  const failures = [...compareObject(receipt, expected), ...(await verifyCodeState(taskId, workspace))];
   if (taskId === 'long-002' && typeof receipt.next_action !== 'string') failures.push('next_action must be a concrete string');
-  if (taskId === 'recovery-001' && Number(receipt.retry_count) > 3) failures.push('retry_count must not exceed 3');
+  if (taskId === 'recovery-001' && (!Number.isInteger(Number(receipt.retry_count)) || Number(receipt.retry_count) < 0 || Number(receipt.retry_count) > 3)) failures.push('retry_count must be an integer from 0 through 3');
   return { applicable: true, failures };
 }

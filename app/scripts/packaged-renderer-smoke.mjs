@@ -9,7 +9,7 @@ const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'moss-renderer-smoke-
 const marker = path.join(directory, 'renderer.json');
 
 try {
-  const child = spawn(executable, [], {
+  const child = spawn(executable, [`--user-data-dir=${path.join(directory, 'user-data')}`], {
     env: {
       ...process.env,
       MOSS_EVAL_PACKAGED_RENDERER_SMOKE: '1',
@@ -51,6 +51,8 @@ try {
     model_api_key_type: 'password',
     model_base_url_editable: true,
     generic_secrets_hidden: true,
+    agent_actions_authorization_visible: true,
+    default_trials: '1',
     api_key_persisted: false,
   });
   process.stdout.write('packaged renderer preload passed\n');
