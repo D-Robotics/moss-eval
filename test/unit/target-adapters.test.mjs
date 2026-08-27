@@ -136,6 +136,23 @@ test('MOSS adapter marks a missing prepared CLI as an invalid environment', () =
   });
 });
 
+test('MOSS model config follows the prepared Node CLI path and is nested into ACP server args', () => {
+  const configuration = {
+    adapter: 'moss', command: 'node', args: ['/target/packages/moss-agent/dist/cli.js', '{instruction}'],
+    mode_commands: { acp: 'node' },
+    mode_base_args: { acp: ['driver.mjs', '--server', 'node', '--server-args', '["/target/packages/moss-agent/dist/cli.js","agent","stdio"]', '--prompt', '{instruction}'] },
+  };
+  Object.defineProperty(configuration, '_model_configuration', { value: { protocol:'openai-compatible',provider:'openai-compatible',model:'fixture',baseUrl:'https://api.example.com/v1',apiKey:'secret' } });
+  const adapter = createAdapter('moss', configuration);
+  const context = { paths:{workspace:'/workspace',task:'/task',run:'/run',trial:'/trial',eval:'/eval'},replicate:1,faultEnvironment:{} };
+  const standard = adapter.build({ id:'standard', instruction:'do work', mode:'stream-json', environment:{env:{}} }, context);
+  assert.deepEqual(standard.args.slice(0,3), ['/target/packages/moss-agent/dist/cli.js','--config-file','/run/.secrets/moss-model.json']);
+  assert.match(standard.args[3], /^do work/);
+  const acp = adapter.build({ id:'acp', instruction:'do work', mode:'acp', environment:{env:{}} }, context);
+  const serverArgs = JSON.parse(acp.args[acp.args.indexOf('--server-args') + 1]);
+  assert.deepEqual(serverArgs, ['/target/packages/moss-agent/dist/cli.js','--config-file','/run/.secrets/moss-model.json','agent','stdio']);
+});
+
 test('prepared targets use deterministic fingerprints, immutable digests, cache reuse, and invalidation', async (t) => {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'moss-eval-targets-'));
   t.after(() => fsp.rm(root, { recursive: true, force: true }));

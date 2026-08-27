@@ -16,7 +16,20 @@ export class MossAdapter extends CommandAdapter {
     const modelConfiguration = this.configuration._model_configuration;
     if (modelConfiguration) {
       const configPath = '.secrets/moss-model.json';
-      command.args.unshift('--config-file', `/run/${configPath}`);
+      const mountedConfigPath = `/run/${configPath}`;
+      if (task.mode === 'acp') {
+        const serverArgsIndex = command.args.indexOf('--server-args');
+        if (serverArgsIndex < 0 || serverArgsIndex + 1 >= command.args.length) {
+          throw new Error('ACP launch is missing --server-args');
+        }
+        const serverArgs = JSON.parse(command.args[serverArgsIndex + 1]);
+        const cliOffset = command.args[command.args.indexOf('--server') + 1] === 'node' ? 1 : 0;
+        serverArgs.splice(cliOffset, 0, '--config-file', mountedConfigPath);
+        command.args[serverArgsIndex + 1] = JSON.stringify(serverArgs);
+      } else {
+        const cliOffset = command.command === 'node' && /(?:^|\/)cli\.js$/i.test(String(command.args[0] || '')) ? 1 : 0;
+        command.args.splice(cliOffset, 0, '--config-file', mountedConfigPath);
+      }
       command.secret_files = [{ path: configPath, content: mossConfigFile(modelConfiguration) }];
       command.metadata.model_configuration = publicModelConfiguration(modelConfiguration);
     }
