@@ -44,6 +44,11 @@ test('desktop service inspects pinned public-style and local snapshots without m
     assert.equal(evaluatedOptions.config.execution.environment_overrides.image,prepared.target.image_digest);
     assert.equal(evaluatedOptions.targetCapabilitiesByAgent.mock.telemetry_level,'L3');
     assert.equal(evaluatedOptions.config.agents.mock.prepared_target_fingerprint,prepared.target.target_fingerprint);
+    assert.equal(evaluatedOptions.config.agents.mock.adapter,'moss');
+    assert.equal(evaluatedOptions.config.agents.mock.command,'node');
+    assert.deepEqual(evaluatedOptions.config.agents.mock.args,['/target/packages/moss-agent/dist/cli.js','{instruction}']);
+    assert.equal(evaluatedOptions.config.agents.mock.mode_base_args.acp[2],'node');
+    assert.equal(evaluatedOptions.config.agents.mock.mode_base_args.acp[4],'["/target/packages/moss-agent/dist/cli.js","agent","stdio"]');
     const manifest={schema_version:'1.0',adapter:{id:'manifest-command',api_version:'1.0'},runtime:'node',preparation:{working_directory:'.',steps:[]},launch:{command:'bin/agent.mjs',args:['--json'],protocol:'stream-json'},capabilities:{modes:['stream-json'],telemetry_level:'L1',tools:[],tags:[]},environment:{required:[],optional:[],secrets:[]},network:{preparation_required:false,runtime_required:false,allowed_hosts:[]},sandbox:{privileged:false,docker_socket:false,host_mounts:[]}};
     const manifestTarget=await service.prepare({confirmed:true,source_record:sourceRecord,adapter_id:'manifest-command',configuration:manifest,sandbox_policy:{network:'disabled'},runtime:{kind:'docker'},image_digest:'sha256:'+'d'.repeat(64),allow_prebuilt:true});
     const manifestCompletion=new Promise((resolve)=>{completed=resolve;});

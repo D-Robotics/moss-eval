@@ -735,6 +735,9 @@ details[open] summary {
 .result-row.fail {
   border-color: var(--danger);
 }
+.result-row.invalid {
+  border-color: var(--warn);
+}
 .run-id {
   margin-top: 8px;
   overflow-wrap: anywhere;

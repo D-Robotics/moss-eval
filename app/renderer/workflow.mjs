@@ -14,6 +14,7 @@ const FAILURE_PRESENTATION = Object.freeze({
   safety_violation: Object.freeze({ title: '安全或真实性检查未通过', description: '输出、文件修改或工具行为触发了任务的硬性安全规则。', action: '查看安全断言详情，区分真实风险与表述误判后再处理。' }),
   outcome_failed: Object.freeze({ title: '任务结果未通过', description: 'Agent 完成了执行，但最终文件、答案或环境状态没有满足确定性验收条件。', action: '查看验收失败详情和期望结果。' }),
   configuration_error: Object.freeze({ title: '运行配置有问题', description: 'Agent 尚未获得有效模型、运行环境或必要授权。', action: '返回配置页修正提示项后重新运行。' }),
+  environment_error: Object.freeze({ title: '评测环境无效', description: 'Agent 没有成功启动，通常是镜像、启动入口或运行依赖存在问题；这不代表 Agent 能力未通过。', action: '重新准备评测环境；如果仍然出现，请查看启动错误并修复 Adapter。' }),
   provider_error: Object.freeze({ title: '模型服务调用失败', description: '模型网关返回错误或连接中断。', action: '检查 Base URL、API Key、模型名和网络授权。' }),
   tool_error: Object.freeze({ title: '工具执行失败', description: 'Agent 调用的工具格式错误、参数错误或执行失败。', action: '查看工具轨迹以定位具体调用。' }),
   invalid_output: Object.freeze({ title: '输出格式无效', description: 'Agent 输出无法被评测器解析或缺少必填字段。', action: '查看任务契约与原始输出。' }),
@@ -97,6 +98,7 @@ export function diagnoseRun(run = {}) {
   const safetyPassedExecutions=trials.filter((trial)=>trial?.safety_passed!==false).length;
   const passedTasks=tasks.filter((task)=>task.passed>0).length;
   const outcomePassedTasks=tasks.filter((task)=>task.outcomes>0).length;
+  const invalidExecutions=trials.filter((trial)=>trial?.valid===false).length;
   const failureCounts={};
   for(const trial of trials)if(!trial?.success){const category=trial?.failure_category||'outcome_failed';failureCounts[category]=(failureCounts[category]||0)+1;}
   const missingWithoutApproval=trials.filter((trial)=>isMossTrial(trial)&&receiptMissing(trial)&&!hasAutoApproval(trial)).length;
@@ -105,9 +107,10 @@ export function diagnoseRun(run = {}) {
   let validity='valid',title='本轮可以用于判断 Agent 能力',description='评测环境和验收链路没有发现系统性阻断，可以结合任务结果分析能力。',action='优先查看未通过任务的主要原因和验收详情。';
   if(!trials.length){validity='incomplete';title='本轮没有可分析的执行结果';description='评测可能尚未开始、被中断，或 artifacts 不完整。';action='返回运行页确认状态，必要时重新开始。';}
   else if(systematicApprovalBlock){validity='inconclusive';title='本轮不能用于判断 Agent 能力';description=`${missingWithoutApproval}/${trials.length} 次执行缺少结果文件，而且 MOSS 没有获得隔离副本内的写入与命令授权。这是评测接入问题，不代表 Agent 的真实通过率。`;action='返回配置页勾选“允许 Agent 修改评测副本并运行测试”，然后重新运行。';}
+  else if(invalidExecutions>=Math.ceil(trials.length*0.6)){validity='inconclusive';title='本轮不能用于判断 Agent 能力';description=`${invalidExecutions}/${trials.length} 次执行因环境或配置问题无效，Agent 没有获得可评分的运行机会。`;action='先修复主要环境错误并重新准备评测环境，再重新运行。';}
   return Object.freeze({
     validity,title,description,action,systematic_approval_block:systematicApprovalBlock,
-    task_count:tasks.length,repetitions,total_executions:trials.length,outcome_passed_executions:outcomePassedExecutions,outcome_passed_tasks:outcomePassedTasks,safety_passed_executions:safetyPassedExecutions,passed_executions:passedExecutions,passed_tasks:passedTasks,
+    task_count:tasks.length,repetitions,total_executions:trials.length,invalid_executions:invalidExecutions,outcome_passed_executions:outcomePassedExecutions,outcome_passed_tasks:outcomePassedTasks,safety_passed_executions:safetyPassedExecutions,passed_executions:passedExecutions,passed_tasks:passedTasks,
     tasks:Object.freeze(tasks),failure_counts:Object.freeze(failureCounts),
     sentence:`${tasks.length} 条任务，每条最多 ${repetitions} 次，共 ${trials.length} 次执行`,
   });

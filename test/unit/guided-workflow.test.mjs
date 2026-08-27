@@ -40,6 +40,18 @@ test('failure causes and advanced metrics have plain Chinese explanations', () =
   assert.match(explainMetric('tool_precision'),/符合任务预期/);
 });
 
+test('systematic invalid executions are presented as an inconclusive harness failure', () => {
+  const invalid = [1, 2, 3].map((replicate) => ({
+    task:{id:`code-00${replicate}`,title:'Task',category:'coding-repository'},agent:'moss',replicate,
+    status:'invalid',valid:false,success:false,outcome_passed:false,safety_passed:true,failure_category:'environment_error',
+  }));
+  const diagnosis=diagnoseRun({trials:invalid});
+  assert.equal(diagnosis.validity,'inconclusive');
+  assert.equal(diagnosis.invalid_executions,3);
+  assert.match(diagnosis.description,/环境或配置问题无效/);
+  assert.equal(friendlyFailure('environment_error').title,'评测环境无效');
+});
+
 test('release status distinguishes a passing run from a publishable claim', () => {
   const missing=releasePresentation(null);assert.equal(missing.eligible,false);assert.match(missing.title,/开发评测/);
   const blocked=releasePresentation({eligible:false,status:'development-only',blockers:['hidden_oracle-gate-not-passed','human_review-gate-not-passed']});

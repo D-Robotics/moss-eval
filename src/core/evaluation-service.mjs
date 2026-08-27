@@ -74,7 +74,7 @@ export class EvaluationService {
     const capabilities=adapter.describeCapabilities({manifest:request.configuration||null,configuration:request.configuration||null});
     const launch=adapter.id==='manifest-command'
       ? {command:path.posix.join('/target',request.configuration.launch.command),args:request.configuration.launch.args||[],protocol:request.configuration.launch.protocol,working_directory:request.configuration.launch.working_directory||'/workspace'}
-      : {command:'moss',args:['{instruction}'],protocols:capabilities.modes};
+      : {command:preparationPlan.output?.command||'moss',args:[...(preparationPlan.output?.args||[]),'{instruction}'],protocols:capabilities.modes};
     const target = createPreparedTargetManifest({
       sourceRecord: request.source_record,
       adapter,
@@ -222,6 +222,25 @@ export class EvaluationService {
         agent.prepared_target_adapter = preparedTarget.adapter;
         agent.prepared_target_policy = preparedTarget.sandbox_policy;
         if (preparedTarget.adapter.id === 'moss') {
+          agent.adapter = 'moss';
+          agent.command = preparedTarget.launch.command;
+          agent.args = [...(preparedTarget.launch.args || [])];
+          const serverArgs = [
+            ...agent.args.filter((argument) => argument !== '{instruction}'),
+            'agent',
+            'stdio',
+          ];
+          agent.mode_commands = { ...(agent.mode_commands || {}), acp: 'node' };
+          agent.mode_base_args = {
+            ...(agent.mode_base_args || {}),
+            acp: [
+              '{evalRoot}/drivers/acp-client.mjs',
+              '--server', preparedTarget.launch.command,
+              '--server-args', JSON.stringify(serverArgs),
+              '--cwd', '{workspace}',
+              '--prompt', '{instruction}',
+            ],
+          };
           Object.defineProperty(agent, '_moss_auto_approve', { value: true, enumerable: false, configurable: false });
           agent.isolated_workspace_actions_authorized = true;
         }

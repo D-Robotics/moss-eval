@@ -31,6 +31,18 @@ export class MossAdapter extends CommandAdapter {
     const stderr = String(processResult?.stderr || '');
     if (
       processResult?.exitCode !== 0 &&
+      (/(?:exec:\s*["']moss["']|moss): executable file not found in \$PATH/i.test(stderr) ||
+        /Cannot find module ['"]\/target\/packages\/moss-agent\/dist\/cli\.js['"]/i.test(stderr))
+    ) {
+      return {
+        invalid: true,
+        category: 'environment_error',
+        code: 'MOSS_ENTRYPOINT_UNAVAILABLE',
+        message: 'The prepared MOSS CLI entry point is unavailable in the evaluation image.',
+      };
+    }
+    if (
+      processResult?.exitCode !== 0 &&
       /(?:No model configured yet|Moss needs a model configuration before it can run)/i.test(stderr)
     ) {
       return {

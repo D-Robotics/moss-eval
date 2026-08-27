@@ -2,6 +2,8 @@ import { hashObject } from '../lib/json.mjs';
 import { collectMossNativeTelemetry } from '../core/native-telemetry.mjs';
 import { detectMossHarness, inspectHarness } from '../core/harness-inspection.mjs';
 
+export const MOSS_PREPARED_CLI = '/target/packages/moss-agent/dist/cli.js';
+
 export class MossTargetAdapter {
   id = 'moss';
   version = '1.0.0';
@@ -30,15 +32,16 @@ export class MossTargetAdapter {
       steps: [
         { command: 'npm', args: ['ci'], network: true },
         { command: 'npm', args: ['run', 'build', '--workspace', '@rdk-moss/agent'], network: false },
+        { command: 'node', args: ['packages/moss-agent/dist/cli.js', '--version'], network: false },
       ],
-      output: { command: 'moss' },
+      output: { command: 'node', args: [MOSS_PREPARED_CLI] },
     };
   }
 
   createLaunch(context) {
     return {
-      command: 'moss',
-      args: context.args || [],
+      command: 'node',
+      args: [MOSS_PREPARED_CLI, ...(context.args || [])],
       input: context.input ?? null,
       protocol: context.mode,
       cwd: '/workspace',

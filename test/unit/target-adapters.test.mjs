@@ -84,9 +84,12 @@ test('MOSS built-in target adapter preserves mode and telemetry behavior from th
     faultEnvironment: {},
   });
   const targetAdapter = createBuiltInTargetRegistry().get('moss');
+  const preparationPlan = targetAdapter.createPreparationPlan({ sourceRecord: sourceRecord() });
+  assert.deepEqual(preparationPlan.output, { command: 'node', args: ['/target/packages/moss-agent/dist/cli.js'] });
+  assert.deepEqual(preparationPlan.steps.at(-1), { command: 'node', args: ['packages/moss-agent/dist/cli.js', '--version'], network: false });
   const preparedTarget = createPreparedTargetManifest({
     sourceRecord: sourceRecord(), adapter: targetAdapter, effectiveConfiguration: {},
-    preparationPlan: targetAdapter.createPreparationPlan({ sourceRecord: sourceRecord() }),
+    preparationPlan,
     sandboxPolicy, runtime: { node: '22.16.0' }, imageDigest,
     capabilities: targetAdapter.describeCapabilities(),
   });
@@ -95,6 +98,8 @@ test('MOSS built-in target adapter preserves mode and telemetry behavior from th
   });
   assert.equal(cliLaunch.env.MOSS_EVAL_RUNTIME_MODE, targetLaunch.env.MOSS_EVAL_RUNTIME_MODE);
   assert.equal(targetLaunch.protocol, 'stream-json');
+  assert.equal(targetLaunch.command, 'node');
+  assert.deepEqual(targetLaunch.args, ['/target/packages/moss-agent/dist/cli.js', 'do work']);
   assert.equal(targetLaunch.image, imageDigest);
   assert.equal(targetAdapter.describeCapabilities().telemetry_level, 'L3');
 });
@@ -116,6 +121,19 @@ test('MOSS adapter marks a missing model configuration as an invalid runtime pre
     message: 'MOSS requires a model configuration before evaluation can start.',
   });
   assert.equal(adapter.diagnoseProcess({ exitCode: 0, stderr: '' }), null);
+});
+
+test('MOSS adapter marks a missing prepared CLI as an invalid environment', () => {
+  const adapter = createAdapter('moss', { adapter: 'moss', command: 'moss', args: ['{instruction}'] });
+  assert.deepEqual(adapter.diagnoseProcess({
+    exitCode: 127,
+    stderr: 'exec: "moss": executable file not found in $PATH',
+  }), {
+    invalid: true,
+    category: 'environment_error',
+    code: 'MOSS_ENTRYPOINT_UNAVAILABLE',
+    message: 'The prepared MOSS CLI entry point is unavailable in the evaluation image.',
+  });
 });
 
 test('prepared targets use deterministic fingerprints, immutable digests, cache reuse, and invalidation', async (t) => {
