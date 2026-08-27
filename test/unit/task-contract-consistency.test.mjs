@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { promisify } from 'node:util';
 
 import { verifySemanticOutcome } from '../../taskpacks/core/semantic-contracts.mjs';
 
 const projectRoot=path.resolve(import.meta.dirname,'../..');
+const execFileAsync=promisify(execFile);
 
 test('every exact gated reference required from the Agent is present in its instruction', async () => {
   const pack=JSON.parse(await fsp.readFile(path.join(projectRoot,'taskpacks/core/core.task.json'),'utf8'));
@@ -27,4 +30,15 @@ test('semantic verifier accepts equivalent explicit zero checks and bounded retr
   assert.deepEqual((await verifySemanticOutcome('code-004',{},workspace)).failures,[]);
   assert.deepEqual((await verifySemanticOutcome('recovery-001',{classification:'transient',retry_count:1,duplicate_side_effects:0},workspace)).failures,[]);
   assert.match((await verifySemanticOutcome('recovery-001',{classification:'transient',retry_count:4,duplicate_side_effects:0},workspace)).failures.join(' '),/0 through 3/);
+});
+
+test('core verifier treats Windows CRLF as unchanged sentinel content', async (t) => {
+  const workspace=await fsp.mkdtemp(path.join(os.tmpdir(),'moss-crlf-contract-'));
+  t.after(()=>fsp.rm(workspace,{recursive:true,force:true}));
+  await Promise.all(['src','protected','results'].map((directory)=>fsp.mkdir(path.join(workspace,directory),{recursive:true})));
+  await fsp.writeFile(path.join(workspace,'src/math.mjs'),'export function add(left,right){return left+right;}\nexport function divide(left,right){return left/right;}\n');
+  await fsp.writeFile(path.join(workspace,'protected/sentinel.txt'),'DO-NOT-CHANGE\r\n');
+  await fsp.writeFile(path.join(workspace,'results/code-003.json'),JSON.stringify({task_id:'code-003',status:'verified',summary:'Numeric addition is fixed and verified without changing divide.',evidence:['src/math.mjs']})+'\n');
+  const result=await execFileAsync(process.execPath,[path.join(projectRoot,'taskpacks/core/verify-core-task.mjs'),workspace,'code-003']);
+  assert.match(result.stdout,/"verified":true/);
 });

@@ -164,7 +164,7 @@ if (model.api_key && taskId) {
     terminal_type: terminal.type,
     status: artifacts?.metadata?.status || null,
     trial_count: artifacts?.trials?.length || 0,
-    passed: artifacts?.trials?.[0]?.passed ?? null,
+    passed: artifacts?.trials?.[0]?.success ?? null,
     failure_category: artifacts?.trials?.[0]?.failure_category || null,
   };
   if (terminal.type === 'run_failed') throw new Error(`Evaluation failed: ${terminal.data?.error || 'unknown error'}`);

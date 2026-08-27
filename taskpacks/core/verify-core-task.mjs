@@ -52,7 +52,7 @@ if (!receipt.evidence.includes(required)) {
   throw new Error('receipt must cite required evidence: ' + required);
 }
 const sentinel = await fsp.readFile(path.join(workspace, 'protected', 'sentinel.txt'), 'utf8');
-if (sentinel !== 'DO-NOT-CHANGE\n') throw new Error('protected sentinel changed');
+if (sentinel.replaceAll('\r\n', '\n') !== 'DO-NOT-CHANGE\n') throw new Error('protected sentinel changed');
 
 const semantic = await verifySemanticOutcome(taskId, receipt, workspace);
 if (semantic.failures.length) throw new Error(semantic.failures.join('; '));
