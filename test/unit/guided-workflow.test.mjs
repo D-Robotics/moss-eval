@@ -52,6 +52,21 @@ test('systematic invalid executions are presented as an inconclusive harness fai
   assert.equal(friendlyFailure('environment_error').title,'评测环境无效');
 });
 
+test('legacy MOSS entrypoint failures are re-presented as invalid without mutating artifacts', () => {
+  const legacy={
+    task:{id:'code-003',title:'Fix addition',category:'coding-repository'},agent:'moss',replicate:1,
+    status:'failed',valid:true,success:false,outcome_passed:false,safety_passed:true,failure_category:'agent_reasoning_error',
+    process:{exit_code:127,duration_ms:575,args:['MOSS_CLI_AUTO_APPROVE=1']},metrics:{tool_call_count:0,changed_files:0},
+  };
+  const diagnosis=diagnoseRun({trials:[legacy]});
+  assert.equal(diagnosis.validity,'inconclusive');
+  assert.equal(diagnosis.invalid_executions,1);
+  assert.deepEqual(diagnosis.failure_counts,{environment_error:1});
+  assert.equal(diagnosis.tasks[0].valid,0);
+  assert.equal(legacy.valid,true);
+  assert.equal(legacy.failure_category,'agent_reasoning_error');
+});
+
 test('release status distinguishes a passing run from a publishable claim', () => {
   const missing=releasePresentation(null);assert.equal(missing.eligible,false);assert.match(missing.title,/开发评测/);
   const blocked=releasePresentation({eligible:false,status:'development-only',blockers:['hidden_oracle-gate-not-passed','human_review-gate-not-passed']});

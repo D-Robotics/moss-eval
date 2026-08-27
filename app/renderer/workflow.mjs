@@ -76,13 +76,27 @@ function hasAutoApproval(trial) {
   return (trial?.process?.args||[]).some((item)=>String(item)==='MOSS_CLI_AUTO_APPROVE=1');
 }
 
+function legacyMossEntrypointFailure(trial) {
+  return isMossTrial(trial) && trial?.process?.exit_code===127 &&
+    Number(trial?.metrics?.tool_call_count||0)===0 && Number(trial?.metrics?.changed_files||0)===0 &&
+    Number(trial?.process?.duration_ms||0)<5000;
+}
+
+function presentedFailure(trial) {
+  return legacyMossEntrypointFailure(trial)?'environment_error':trial?.failure_category||'outcome_failed';
+}
+
+function presentedValid(trial) {
+  return trial?.valid!==false&&!legacyMossEntrypointFailure(trial);
+}
+
 export function groupTrialsByTask(trials = []) {
   const groups=new Map();
   for(const trial of trials){
     const id=trial?.task?.id||'unknown-task';
     if(!groups.has(id))groups.set(id,{id,title:trial?.task?.title||id,category:trial?.task?.category||'—',attempts:0,outcomes:0,passed:0,safety_passed:0,valid:0,failures:{},trials:[]});
-    const group=groups.get(id);group.attempts+=1;group.outcomes+=trial?.outcome_passed?1:0;group.passed+=trial?.success?1:0;group.safety_passed+=trial?.safety_passed===false?0:1;group.valid+=trial?.valid===false?0:1;group.trials.push(trial);
-    if(!trial?.success){const category=trial?.failure_category||'outcome_failed';group.failures[category]=(group.failures[category]||0)+1;}
+    const group=groups.get(id);group.attempts+=1;group.outcomes+=trial?.outcome_passed?1:0;group.passed+=trial?.success?1:0;group.safety_passed+=trial?.safety_passed===false?0:1;group.valid+=presentedValid(trial)?1:0;group.trials.push(trial);
+    if(!trial?.success){const category=presentedFailure(trial);group.failures[category]=(group.failures[category]||0)+1;}
   }
   return [...groups.values()].map((group)=>{
     const mainFailure=Object.entries(group.failures).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0]?.[0]||null;
@@ -98,9 +112,9 @@ export function diagnoseRun(run = {}) {
   const safetyPassedExecutions=trials.filter((trial)=>trial?.safety_passed!==false).length;
   const passedTasks=tasks.filter((task)=>task.passed>0).length;
   const outcomePassedTasks=tasks.filter((task)=>task.outcomes>0).length;
-  const invalidExecutions=trials.filter((trial)=>trial?.valid===false).length;
+  const invalidExecutions=trials.filter((trial)=>!presentedValid(trial)).length;
   const failureCounts={};
-  for(const trial of trials)if(!trial?.success){const category=trial?.failure_category||'outcome_failed';failureCounts[category]=(failureCounts[category]||0)+1;}
+  for(const trial of trials)if(!trial?.success){const category=presentedFailure(trial);failureCounts[category]=(failureCounts[category]||0)+1;}
   const missingWithoutApproval=trials.filter((trial)=>isMossTrial(trial)&&receiptMissing(trial)&&!hasAutoApproval(trial)).length;
   const systematicApprovalBlock=trials.length>=2 && missingWithoutApproval>=Math.ceil(trials.length*0.6);
   const repetitions=tasks.length?Math.max(...tasks.map((task)=>task.attempts)):0;
