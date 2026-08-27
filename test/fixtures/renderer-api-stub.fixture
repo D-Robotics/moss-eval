@@ -1,0 +1,27 @@
+window.mossEval = {
+  onEvent() {},
+  async doctor() {
+    return {
+      ready: true,
+      checks: [
+        { id: 'WSL2', status: 'pass', detail: 'WSL2 已可用' },
+        { id: 'Docker Desktop', status: 'pass', detail: 'Docker Desktop 已安装' },
+        { id: 'Docker daemon', status: 'pass', detail: 'Docker 服务正在运行' },
+      ],
+    };
+  },
+  async selectDirectory() {
+    return { canceled: false, filePaths: ['D:\\moss-drobotics'] };
+  },
+  async addLocalSource(directory) {
+    return { type: 'local', canonical_location: directory, original_input: directory, revision: 'fixture-revision' };
+  },
+  async addGithubSource(url, requestedRef) {
+    return { type: 'github', canonical_location: url, original_input: url, requested_ref: requestedRef, revision: 'fixture-revision' };
+  },
+  async inspect() {
+    return { candidates: [{ adapter: 'moss', entry_points: [{ path: 'packages/moss-agent/dist/cli.mjs' }] }] };
+  },
+  async listRuns() { return []; },
+  async remediatePrerequisite() { return { started: true }; },
+};

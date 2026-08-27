@@ -109,6 +109,9 @@ async function createWindow() {
       const stayedOnSource = document.querySelector('#source')?.hidden === false;
       document.querySelectorAll('.source-mode')[1].click();
       document.querySelector('#analyze-source').click();
+      document.querySelector('#source').hidden = true;
+      document.querySelector('#configure').hidden = false;
+      document.querySelector('#start-evaluation').click();
       return {
         api: typeof window.mossEval,
         tab_count: document.querySelectorAll('#tabs button').length,
@@ -122,6 +125,14 @@ async function createWindow() {
         stayed_on_source: stayedOnSource,
         missing_local_message: document.querySelector('#source-local-error')?.textContent || null,
         prerequisite_panel: Boolean(document.querySelector('#prerequisite-panel')),
+        configuration_layout: Boolean(document.querySelector('.configuration-layout')),
+        configuration_card_count: document.querySelectorAll('.configuration-card').length,
+        runtime_card_compact: Boolean(document.querySelector('#prerequisite-panel.runtime-card .runtime-summary')),
+        preparation_card_present: Boolean(document.querySelector('#preparation-card')),
+        step_badge_count: document.querySelectorAll('.step-badge').length,
+        run_settings_advanced: document.querySelector('.run-advanced')?.open === false,
+        blocked_start_message: document.querySelector('#model-base-url-error')?.textContent || null,
+        blocked_start_focus: document.activeElement?.id || null,
         pending_storage_key: localStorage.getItem('moss-eval.pending-preparation.v1'),
         model_provider_present: Boolean(document.querySelector('#model-provider')),
         model_protocol_count: document.querySelectorAll('#model-protocol option').length,
@@ -134,14 +145,16 @@ async function createWindow() {
         api_key_persisted: JSON.stringify({ ...localStorage }).includes('packaged-secret-must-not-persist')
       };
     })()`);
-    if (result.api !== 'object' || result.tab_count !== 5 || result.primary_step_count !== 3 || result.source_heading !== '你想评测哪个 Agent？' || result.guarded_message !== '请先选择并分析要评测的 Agent' || !result.stayed_on_source || result.missing_local_message !== '请先选择电脑上的 Agent 项目文件夹' || !result.prerequisite_panel || result.pending_storage_key !== null || result.model_provider_present || result.model_protocol_count !== 3 || !result.model_protocol_is_advanced || result.model_api_key_type !== 'password' || !result.model_base_url_editable || !result.generic_secrets_hidden || !result.agent_actions_authorization_visible || result.default_trials !== '1' || result.api_key_persisted) {
-      throw new Error(`Packaged renderer smoke failed: ${JSON.stringify(result)}`);
-    }
     if (process.env.MOSS_EVAL_SMOKE_MARKER) {
       await fsp.writeFile(process.env.MOSS_EVAL_SMOKE_MARKER, JSON.stringify(result) + '\n', 'utf8');
     }
+    if (result.api !== 'object' || result.tab_count !== 5 || result.primary_step_count !== 3 || result.source_heading !== '你想评测哪个 Agent？' || result.guarded_message !== '请先选择并分析要评测的 Agent' || !result.stayed_on_source || result.missing_local_message !== '请先选择电脑上的 Agent 项目文件夹' || !result.prerequisite_panel || !result.configuration_layout || result.configuration_card_count !== 2 || !result.runtime_card_compact || !result.preparation_card_present || result.step_badge_count !== 3 || !result.run_settings_advanced || result.blocked_start_message !== '请输入模型服务的 Base URL' || result.blocked_start_focus !== 'model-base-url' || result.pending_storage_key !== null || result.model_provider_present || result.model_protocol_count !== 3 || !result.model_protocol_is_advanced || result.model_api_key_type !== 'password' || !result.model_base_url_editable || !result.generic_secrets_hidden || !result.agent_actions_authorization_visible || result.default_trials !== '1' || result.api_key_persisted) {
+      process.stderr.write(`Packaged renderer smoke failed: ${JSON.stringify(result)}\n`);
+      app.exit(1);
+      return;
+    }
     process.stdout.write('packaged renderer preload passed\n');
-    app.quit();
+    app.exit(0);
     return;
   }
   mainWindow.show();

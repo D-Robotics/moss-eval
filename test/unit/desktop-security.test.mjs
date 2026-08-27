@@ -68,6 +68,27 @@ test('preload and BrowserWindow configuration expose no arbitrary process or fil
   assert.match(renderer, /查看技术详情/);
 });
 
+test('evaluation configuration layout keeps runtime diagnostics compact and guidance contextual', async () => {
+  const renderer = await fsp.readFile(path.join(root, 'app/renderer/app.mjs'), 'utf8');
+  const style = await fsp.readFile(path.join(root, 'app/renderer/style.css'), 'utf8');
+  assert.match(renderer, /class:'configuration-layout'/);
+  assert.match(renderer, /id:'model-configuration-card'/);
+  assert.match(renderer, /id:'run-configuration-card'/);
+  assert.match(renderer, /id:'prerequisite-panel',class:'card runtime-card'/);
+  assert.match(renderer, /id:'environment-details',class:'runtime-details'/);
+  assert.match(renderer, /if\(!state\.doctor\.ready\)details\.open=true/);
+  assert.match(renderer, /id:'model-step-state'/);
+  assert.match(renderer, /id:'preparation-step-state'/);
+  assert.match(renderer, /id:'run-step-state'/);
+  assert.match(renderer, /control\.closest\('details'\)/);
+  assert.match(renderer, /scrollIntoView/);
+  assert.match(renderer, /if\(changed\)window\.scrollTo\(0,0\)/);
+  assert.ok(renderer.indexOf('model_configuration=currentModelConfiguration()') < renderer.indexOf("if(!state.prepared?.target){showFieldError('prepare-target'"));
+  assert.match(style, /body\s*\{[\s\S]*?min-width:\s*0/);
+  assert.match(style, /grid-template-areas:[\s\S]*?"model rail"[\s\S]*?"run rail"/);
+  assert.match(style, /@media \(max-width: 900px\)[\s\S]*?"model"[\s\S]*?"rail"[\s\S]*?"run"/);
+});
+
 test('worker handshake is versioned and unknown operations cannot execute', async () => {
   const sent = [];
   const host = new WorkerProtocolHost({}, (message) => sent.push(message));

@@ -15,21 +15,24 @@ try {
       MOSS_EVAL_PACKAGED_RENDERER_SMOKE: '1',
       MOSS_EVAL_SMOKE_MARKER: marker,
     },
-    stdio: 'ignore',
+    stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
   });
+  let childOutput = '';
+  child.stdout.on('data', (chunk) => { childOutput += chunk; });
+  child.stderr.on('data', (chunk) => { childOutput += chunk; });
   const exitCode = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       child.kill();
       reject(new Error('packaged renderer smoke timed out'));
-    }, 15_000);
+    }, 30_000);
     child.once('error', reject);
     child.once('exit', (code) => {
       clearTimeout(timeout);
       resolve(code);
     });
   });
-  assert.equal(exitCode, 0);
+  assert.equal(exitCode, 0, childOutput.trim() || 'packaged renderer exited unsuccessfully');
   const result = JSON.parse(await fsp.readFile(marker, 'utf8'));
   assert.deepEqual(result, {
     api: 'object',
@@ -44,6 +47,14 @@ try {
     stayed_on_source: true,
     missing_local_message: '请先选择电脑上的 Agent 项目文件夹',
     prerequisite_panel: true,
+    configuration_layout: true,
+    configuration_card_count: 2,
+    runtime_card_compact: true,
+    preparation_card_present: true,
+    step_badge_count: 3,
+    run_settings_advanced: true,
+    blocked_start_message: '请输入模型服务的 Base URL',
+    blocked_start_focus: 'model-base-url',
     pending_storage_key: null,
     model_provider_present: false,
     model_protocol_count: 3,
@@ -57,5 +68,5 @@ try {
   });
   process.stdout.write('packaged renderer preload passed\n');
 } finally {
-  await fsp.rm(directory, { recursive: true, force: true });
+  await fsp.rm(directory, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 }

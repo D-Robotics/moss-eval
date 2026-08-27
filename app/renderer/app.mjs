@@ -22,10 +22,10 @@ const node = (tag, attrs = {}, children = []) => {
 const text = (value) => document.createTextNode(String(value ?? ''));
 const byId = (id) => document.getElementById(id);
 const clear = (element, ...children) => element.replaceChildren(...children);
-const field = (title, control) => {
+const field = (title, control, className = '') => {
   const errorId=control.id?`${control.id}-error`:null;
   if(errorId)control.setAttribute('aria-describedby',errorId);
-  return node('label', {}, [text(title), control,...(errorId?[node('span',{id:errorId,class:'field-error',role:'alert'})]:[])]);
+  return node('label', { class:className }, [text(title), control,...(errorId?[node('span',{id:errorId,class:'field-error',role:'alert'})]:[])]);
 };
 const button = (label, action, className = '') => node('button', { type:'button', class:className, text:label, onclick:action });
 const json = (value) => node('pre', { text: JSON.stringify(value, null, 2) });
@@ -35,7 +35,11 @@ const safely = (work) => async (...args) => { try { return await work(...args); 
 function showFieldError(controlId,message){
   const control=byId(controlId);const target=byId(`${controlId}-error`);
   if(target)target.textContent=message;
-  if(control){control.setAttribute('aria-invalid','true');control.focus();}
+  if(control){
+    const details=control.closest('details');if(details)details.open=true;
+    if(controlId==='prepare-target'){const environmentDetails=byId('environment-details');if(environmentDetails)environmentDetails.open=true;}
+    control.setAttribute('aria-invalid','true');control.focus();control.scrollIntoView?.({block:'center',behavior:'smooth'});
+  }
 }
 function clearFieldError(controlId){const control=byId(controlId);const target=byId(`${controlId}-error`);if(target)target.textContent='';if(control)control.removeAttribute('aria-invalid');}
 function setActionStatus(target,kind,message){if(!target)return;target.className=`action-status ${kind||''}`.trim();target.textContent=message||'';target.setAttribute('role','status');target.setAttribute('aria-live','polite');}
@@ -79,9 +83,19 @@ function updateDoctorBadge(){
 
 function renderPrerequisites(){
   const target=byId('prerequisite-panel');if(!target)return;
-  if(!state.doctor){clear(target,node('h2',{text:'本机运行环境'}),node('p',{class:'muted',text:'正在检查 Windows、WSL2、虚拟化和 Docker…'}));return;}
+  if(!state.doctor){
+    clear(target,
+      node('div',{class:'runtime-summary'},[
+        node('span',{class:'runtime-indicator checking','aria-hidden':'true'}),
+        node('div',{class:'runtime-summary-copy'},[node('span',{class:'section-kicker',text:'本机环境'}),node('h2',{text:'正在检查运行条件'}),node('p',{class:'muted',text:'你可以先填写左侧配置，检查会在后台完成。'})]),
+        node('span',{class:'status',text:'检查中'}),
+      ]),
+    );
+    return;
+  }
   const checks=state.doctor.checks||[];
-  const environmentStatus=node('div',{id:'environment-action-status',class:'action-status',role:'status','aria-live':'polite',text:state.doctor.ready?'运行环境已经就绪。':'完成下面的处理后，客户端会自动重新检测。'});
+  const failedChecks=checks.filter(check=>check.status!=='pass');
+  const environmentStatus=node('div',{id:'environment-action-status',class:'action-status',role:'status','aria-live':'polite',text:state.doctor.ready?'无需处理，可以准备评测环境。':'先处理下面的问题，客户端会自动重新检测。'});
   const rows=checks.map(check=>node('div',{class:`prerequisite ${check.status==='pass'?'pass':'fail'}`},[
     node('div',{class:'prerequisite-copy'},[node('strong',{text:`${check.status==='pass'?'✓':'!'} ${check.id}`}),node('div',{class:'muted',text:check.detail}),...(check.remediation?[node('div',{class:'hint',text:check.remediation})]:[])]),
     ...(check.status!=='pass'&&check.action?[(()=>{let control;control=button(check.action_label||'处理',async()=>{await runAction({control,busyLabel:'正在处理…',status:environmentStatus,busyText:'正在打开处理步骤…',successText:'处理步骤已启动，完成后客户端会自动重新检测。',work:()=>runPrerequisiteAction(check.action)});},'primary');return control;})()]:[]),
@@ -92,7 +106,32 @@ function renderPrerequisites(){
     button('取消自动继续',()=>{clearPendingPreparation();stopDoctorPolling();}),
   ]):null;
   let refreshButton;refreshButton=button('重新检测',async()=>{await runAction({control:refreshButton,busyLabel:'正在检测…',status:environmentStatus,busyText:'正在检查 Windows、WSL2、虚拟化和 Docker…',successText:(doctor)=>doctor?.ready?'运行环境已经就绪。':'仍有项目需要处理，请查看上方提示。',work:refreshDoctor});});
-  clear(target,node('div',{class:'row between'},[node('h2',{text:'本机运行环境'}),node('span',{class:`status ${state.doctor.ready?'ok':'warn'}`,text:state.doctor.ready?'可以开始':'需要处理'})]),...rows,...(pending?[pending]:[]),node('div',{class:'row'},[refreshButton,node('span',{class:'muted',text:'只有准备环境和正式评测需要 Docker；项目分析随时可以进行。'})]),environmentStatus);
+  const primaryFailure=failedChecks[0];
+  let primaryAction=null;
+  if(primaryFailure?.action){
+    primaryAction=button(primaryFailure.action_label||'立即处理',async()=>{await runAction({control:primaryAction,busyLabel:'正在处理…',status:environmentStatus,busyText:'正在打开处理步骤…',successText:'处理步骤已启动，完成后会自动重新检测。',work:()=>runPrerequisiteAction(primaryFailure.action)});},'primary compact');
+  }
+  const details=node('details',{id:'environment-details',class:'runtime-details'},[
+    node('summary',{text:`查看环境详情${checks.length?`（${checks.filter(check=>check.status==='pass').length}/${checks.length} 项通过）`:''}`}),
+    node('div',{class:'runtime-checks'},rows),
+    node('div',{class:'runtime-detail-footer'},[refreshButton,node('span',{class:'muted',text:'仅准备环境和正式评测需要 Docker。'})]),
+  ]);
+  if(!state.doctor.ready)details.open=true;
+  clear(target,
+    node('div',{class:'runtime-summary'},[
+      node('span',{class:`runtime-indicator ${state.doctor.ready?'ready':'blocked'}`,'aria-hidden':'true'}),
+      node('div',{class:'runtime-summary-copy'},[
+        node('span',{class:'section-kicker',text:'本机环境'}),
+        node('h2',{text:state.doctor.ready?'运行环境已就绪':'运行环境需要处理'}),
+        node('p',{class:'muted',text:state.doctor.ready?'Docker 与隔离运行条件正常。':`${failedChecks.length} 项条件尚未满足，处理后可继续。`}),
+      ]),
+      node('span',{class:`status ${state.doctor.ready?'ok':'warn'}`,text:state.doctor.ready?'已就绪':'需处理'}),
+    ]),
+    ...(primaryAction?[node('div',{class:'runtime-primary-action'},[primaryAction])]:[]),
+    ...(pending?[pending]:[]),
+    details,
+    environmentStatus,
+  );
 }
 
 async function runPrerequisiteAction(action){
@@ -149,9 +188,11 @@ function updateNavigationState(){
 }
 
 function showDirect(name){
+  const changed=state.currentView!==name;
   state.currentView=name;
   for(const item of tabs){const view=byId(item.id);if(view)view.hidden=item.id!==name;const control=document.querySelector(`[data-tab="${item.id}"]`);if(control){control.classList.toggle('active',item.id===name);control.setAttribute('aria-current',item.id===name?'step':'false');}}
   updateNavigationState();
+  if(changed)window.scrollTo(0,0);
   if(name==='history')loadHistory();if(name==='report')renderReport();
 }
 
@@ -258,21 +299,36 @@ function renderConfigure(){
   modelProtocol.value=draft.model_protocol||(draft.model_provider==='anthropic'?'anthropic':'auto');
   const protocolStatus=node('p',{id:'model-protocol-status',class:'hint'});
   const connectionStatus=node('div',{id:'model-connection-status',class:'action-status',role:'status','aria-live':'polite',text:'填写配置后可以先测试连接。'});
-  const configurationStatus=node('div',{id:'configuration-action-status',class:'action-status',role:'status','aria-live':'polite',text:state.prepared?.target?'评测环境已准备，可以测试模型连接并开始评测。':'请先确认设置并准备评测环境。'});
+  const preparationStatus=node('div',{id:'preparation-action-status',class:'action-status',role:'status','aria-live':'polite',text:state.prepared?.target?'隔离评测环境已准备完成。':'确认后创建一次性评测环境。'});
+  const configurationStatus=node('div',{id:'configuration-action-status',class:'action-status',role:'status','aria-live':'polite',text:state.prepared?.target?'配置已具备启动条件。':'下一步：填写模型配置并准备运行环境。'});
   const random=node('input',{id:'randomize',type:'checkbox',checked:draft.randomize!==false});
   const review=node('input',{id:'review-confirm',type:'checkbox',checked:Boolean(draft.confirmed)});
+  const modelState=node('span',{id:'model-step-state',class:'step-badge pending',text:'待填写'});
+  const preparationState=node('span',{id:'preparation-step-state',class:'step-badge pending',text:'待准备'});
+  const runState=node('span',{id:'run-step-state',class:'step-badge pending',text:'待确认'});
 
   const updateProtocolStatus=()=>{
     const resolved=inferApiProtocol(modelBaseUrl.value,modelProtocol.value);
     const label=resolved==='anthropic'?'Anthropic Messages':'OpenAI Compatible';
     protocolStatus.textContent=modelProtocol.value==='auto'?`已自动识别 API 协议：${label}`:`已手动选择 API 协议：${label}`;
   };
-  modelProtocol.addEventListener('change',()=>{updateProtocolStatus();setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
-  modelName.addEventListener('input',()=>{clearFieldError('model-name');setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
-  modelBaseUrl.addEventListener('input',()=>{clearFieldError('model-base-url');updateProtocolStatus();setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
-  modelApiKey.addEventListener('input',()=>{clearFieldError('model-api-key');setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');});
-  approveRuntimeNetwork.addEventListener('change',()=>clearFieldError('approve-runtime-network'));
-  approveAgentActions.addEventListener('change',()=>clearFieldError('approve-agent-actions'));
+  const updateSectionStates=()=>{
+    const moss=adapter.value==='moss';
+    const modelComplete=!moss||(Boolean(modelBaseUrl.value.trim())&&Boolean(modelApiKey.value.trim())&&Boolean(modelName.value.trim())&&approveRuntimeNetwork.checked);
+    modelState.textContent=modelComplete?'配置完整':'待填写';modelState.className=`step-badge ${modelComplete?'complete':'pending'}`;
+    const prepared=Boolean(state.prepared?.target);preparationState.textContent=prepared?'已准备':state.doctor?.ready?'可准备':'环境待处理';preparationState.className=`step-badge ${prepared?'complete':state.doctor?.ready?'ready':'pending'}`;
+    const authorized=!moss||approveAgentActions.checked;runState.textContent=modelComplete&&prepared&&authorized?'可以开始':'待完成';runState.className=`step-badge ${modelComplete&&prepared&&authorized?'complete':'pending'}`;
+    if(!modelComplete)setActionStatus(configurationStatus,'','下一步：填写模型 URL、API Key、模型名并授权联网。');
+    else if(!prepared)setActionStatus(configurationStatus,'','下一步：在右侧准备一次性评测环境。');
+    else if(!authorized)setActionStatus(configurationStatus,'','下一步：允许 Agent 操作隔离副本。');
+    else setActionStatus(configurationStatus,'success','设置完整，可以开始评测。');
+  };
+  modelProtocol.addEventListener('change',()=>{updateProtocolStatus();setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');updateSectionStates();});
+  modelName.addEventListener('input',()=>{clearFieldError('model-name');setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');updateSectionStates();});
+  modelBaseUrl.addEventListener('input',()=>{clearFieldError('model-base-url');updateProtocolStatus();setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');updateSectionStates();});
+  modelApiKey.addEventListener('input',()=>{clearFieldError('model-api-key');setActionStatus(connectionStatus,'','配置已更改，请重新测试连接');updateSectionStates();});
+  approveRuntimeNetwork.addEventListener('change',()=>{clearFieldError('approve-runtime-network');updateSectionStates();});
+  approveAgentActions.addEventListener('change',()=>{clearFieldError('approve-agent-actions');updateSectionStates();});
   updateProtocolStatus();
 
   const captureDraft=()=>({adapter_id:adapter.value,manifest_config:manifestConfig.value,base_image:baseImage.value,approve_network:buildNetwork.checked,confirmed:review.checked,trials:Number(trials.value),concurrency:Number(concurrency.value),suite:suite.value,telemetry:telemetry.value,runtime_secrets:runtimeSecrets.value,approve_runtime_secrets:approveSecrets.checked,approve_runtime_network:approveRuntimeNetwork.checked,approve_agent_workspace_actions:approveAgentActions.checked,model_protocol:modelProtocol.value,model_name:modelName.value,model_base_url:modelBaseUrl.value,randomize:random.checked});
@@ -290,25 +346,30 @@ function renderConfigure(){
   };
   let prepareButton,startButton,testConnectionButton;
   const prepare=async()=>{
-    await runAction({control:prepareButton,busyLabel:'正在准备…',status:configurationStatus,busyText:'正在创建隔离的评测环境，这可能需要几分钟…',successText:()=>state.doctor?.ready?'评测环境准备完成，可以继续测试模型连接。':'设置已保存，运行环境就绪后会自动继续。',work:async()=>{
+    await runAction({control:prepareButton,busyLabel:'正在准备…',status:preparationStatus,busyText:'正在创建隔离的评测环境，这可能需要几分钟…',successText:()=>state.doctor?.ready?'评测环境准备完成，可以继续测试模型连接。':'设置已保存，运行环境就绪后会自动继续。',work:async()=>{
       state.configureDraft=captureDraft();const request=makePreparationRequest();
       if(!state.doctor?.ready){savePendingPreparation({schema_version:'1.0',saved_at:new Date().toISOString(),source_record:state.sourceRecord,inspection:state.inspection,draft:state.configureDraft,request});startDoctorPolling();return null;}
       return executePreparation(request);
     }});
+    updateSectionStates();
   };
   const startRun=async()=>{
-    if(!state.prepared?.target){showFieldError('prepare-target','请先准备评测环境');setActionStatus(configurationStatus,'failure','请先准备评测环境，再开始评测');return;}
+    let model_configuration=null;
+    try{model_configuration=currentModelConfiguration();}catch(error){setActionStatus(configurationStatus,'failure',friendlyError(error));return;}
+    if(adapter.value==='moss'&&!approveAgentActions.checked){const message='请允许 Agent 在隔离评测副本中修改文件并运行测试；原项目不会被修改';showFieldError('approve-agent-actions',message);setActionStatus(configurationStatus,'failure',message);return;}
+    if(!state.prepared?.target){showFieldError('prepare-target','请先准备一次性评测环境');setActionStatus(configurationStatus,'failure','模型设置已填写；现在请在右侧准备评测环境。');return;}
     await runAction({control:startButton,busyLabel:'正在启动…',status:configurationStatus,busyText:'正在启动评测并打开实时状态…',successText:'评测已经启动',work:async()=>{
-      if(adapter.value==='moss'&&!approveAgentActions.checked){const message='请允许 Agent 在隔离评测副本中修改文件并运行测试；原项目不会被修改';showFieldError('approve-agent-actions',message);throw Object.assign(new Error(message),{code:'AGENT_ACTIONS_NOT_AUTHORIZED'});}
-      state.configureDraft=captureDraft();const approved_secret_names=approveSecrets.checked?runtimeSecrets.value.split(',').map(v=>v.trim()).filter(Boolean):[];const model_configuration=currentModelConfiguration();
+      state.configureDraft=captureDraft();const approved_secret_names=approveSecrets.checked?runtimeSecrets.value.split(',').map(v=>v.trim()).filter(Boolean):[];
       const started=await api.startRun({config_id:'moss.example.json',target_fingerprint:state.prepared.target.target_fingerprint,approved_secret_names,approve_runtime_network:approveRuntimeNetwork.checked,approve_agent_workspace_actions:approveAgentActions.checked,model_configuration,suite:suite.value,trials:Number(trials.value),concurrency:Number(concurrency.value),k:Number(trials.value),randomize:random.checked,minimum_telemetry_level:telemetry.value});
       modelApiKey.value='';state.activeRun=started.run_id;state.events=[];renderLive();updateNavigationState();show('live');return started;
     }});
   };
   const testConnection=async()=>{
+    let model_configuration;
+    try{model_configuration=currentModelConfiguration();}catch(error){setActionStatus(connectionStatus,'failure',friendlyError(error));return;}
     if(!state.prepared?.target){showFieldError('prepare-target','请先准备评测环境');setActionStatus(connectionStatus,'failure','请先准备评测环境，再测试模型连接');return;}
     await runAction({control:testConnectionButton,busyLabel:'正在测试…',status:connectionStatus,busyText:'正在通过隔离环境连接模型服务…',successText:(result)=>`连接成功 · HTTP ${result.status} · ${result.latency_ms} ms`,work:async()=>{
-      const result=await api.testModelConnection({target_fingerprint:state.prepared.target.target_fingerprint,approve_runtime_network:approveRuntimeNetwork.checked,model_configuration:currentModelConfiguration()});
+      const result=await api.testModelConnection({target_fingerprint:state.prepared.target.target_fingerprint,approve_runtime_network:approveRuntimeNetwork.checked,model_configuration});
       if(!result.ok)throw Object.assign(new Error(`连接失败${result.status?`，HTTP ${result.status}`:''}。请检查 API Key、Model 和 Base URL`),{code:result.error_code||'MODEL_CONNECTION_FAILED'});return result;
     }});
   };
@@ -317,34 +378,78 @@ function renderConfigure(){
   testConnectionButton=button('测试连接',testConnection);testConnectionButton.id='test-model-connection';
 
   const modelConfigurationPanel=node('div',{id:'moss-model-configuration',class:'stack'},[
-    node('h3',{text:'连接模型服务'}),
-    field('Base URL',modelBaseUrl),field('API Key',modelApiKey),field('模型名',modelName),protocolStatus,
+    node('div',{class:'form-grid model-fields'},[
+      field('Base URL',modelBaseUrl,'field-span-2'),field('API Key',modelApiKey),field('模型名',modelName),
+    ]),
+    protocolStatus,
     node('details',{class:'advanced'},[node('summary',{text:'高级设置'}),field('API 协议',modelProtocol),node('p',{class:'hint',text:'大多数自定义网关使用 OpenAI Compatible；只有兼容 Anthropic Messages 的网关才需要手动切换。'})]),
-    node('div',{class:'row'},[testConnectionButton]),connectionStatus,
+    node('div',{class:'inline-action'},[testConnectionButton,connectionStatus]),
     node('p',{class:'hint',text:'API Key 只在本次评测中使用，不会保存到客户端设置、日志或报告。评测结束后，临时配置会自动删除。'}),
   ]);
   const genericSecretsPanel=node('div',{id:'generic-runtime-secrets',class:'stack'},[field('声明的运行时 secret 名称（不填写值）',runtimeSecrets),node('label',{class:'check'},[approveSecrets,text('本次 Run 授权注入上述已配置环境变量')])]);
   const agentActionsAuthorization=node('div',{id:'agent-actions-authorization',class:'authorization-box'},[node('label',{class:'check'},[approveAgentActions,text('允许 Agent 修改评测副本并运行测试')]),node('p',{class:'hint',text:'只影响 Docker 中的一次性副本，不会修改你选择的原项目。MOSS 需要这项授权才能真正完成编码任务。'}),node('span',{id:'approve-agent-actions-error',class:'field-error',role:'alert'})]);
-  const updateAdapterConfiguration=()=>{const moss=adapter.value==='moss';modelConfigurationPanel.hidden=!moss;agentActionsAuthorization.hidden=!moss;genericSecretsPanel.hidden=moss;};
+  const updateAdapterConfiguration=()=>{const moss=adapter.value==='moss';modelConfigurationPanel.hidden=!moss;agentActionsAuthorization.hidden=!moss;genericSecretsPanel.hidden=moss;updateSectionStates();};
   adapter.addEventListener('change',updateAdapterConfiguration);updateAdapterConfiguration();
 
   const detectedAdapter=state.inspection?.candidates?.[0]?.adapter||adapter.value;
   clear(byId('configure'),node('div',{class:'guided-page'},[
-    node('section',{class:'hero'},[node('span',{class:'eyebrow',text:'第 2 步，共 3 步'}),node('h2',{text:'配置这次评测'}),node('p',{text:`已识别 Agent 类型：${detectedAdapter}。确认运行环境和模型设置后即可开始。`})]),
-    node('article',{id:'prerequisite-panel',class:'card full'}),
-    node('div',{class:'grid'},[
-      node('article',{class:'card'},[node('h2',{text:'准备评测环境'}),node('div',{class:'stack'},[
-        node('p',{class:'muted',text:'客户端会在 Docker 中创建独立环境，构建和评测不会修改原项目。'}),
-        node('label',{class:'check'},[buildNetwork,text('允许准备环境时访问公网安装项目依赖')]),
-        node('label',{class:'check'},[review,text('我确认使用以上项目和网络设置准备评测环境')]),node('span',{id:'review-confirm-error',class:'field-error',role:'alert'}),
-        node('div',{class:'row'},[prepareButton,button('取消准备',safely(async()=>{if(state.preparationId)await api.cancelPreparation(state.preparationId);else if(state.pendingPreparation){clearPendingPreparation();stopDoctorPolling();toast('已取消自动继续');}else toast('当前没有正在准备的环境');}),'danger')]),
-        node('span',{id:'prepare-target-error',class:'field-error',role:'alert'}),configurationStatus,
-        node('details',{class:'technical-details'},[node('summary',{text:'评测环境技术详情'}),field('Adapter',adapter),field('Manifest 配置',manifestConfig),field('基础镜像',baseImage),json({runtime_network:'disabled by default',secrets:'named authorization only',cpu:2,memory_mb:4096,pids:256,disk_mb:4096,wall_seconds:600})])
-      ])]),
-      node('article',{class:'card'},[node('h2',{text:'评测设置'}),node('div',{class:'stack'},[field('任务集',suite),field('每条任务尝试次数',trials),node('p',{class:'hint',text:'1 次就是完整跑一轮；提高次数可测稳定性，但会增加时间和模型费用。'}),field('并发任务数',concurrency),field('需要的轨迹详细度',telemetry),modelConfigurationPanel,genericSecretsPanel,node('label',{class:'check network-approval'},[approveRuntimeNetwork,text('允许本次评测访问模型公网')]),node('span',{id:'approve-runtime-network-error',class:'field-error',role:'alert'}),agentActionsAuthorization,node('label',{class:'check'},[random,text('随机排列任务顺序')]),node('p',{class:'muted',text:'release 是经过校验的正式任务集；能力不匹配的任务会标记为“不适用”，不会算作失败。'}),startButton])])
-    ])
+    node('section',{class:'hero configure-hero'},[node('span',{class:'eyebrow',text:'第 2 步，共 3 步'}),node('h2',{text:'配置这次评测'}),node('p',{text:`已识别 ${detectedAdapter}。填写模型连接，确认运行方式，然后开始评测。高级参数已收起。`})]),
+    node('div',{class:'configuration-layout'},[
+      node('article',{id:'model-configuration-card',class:'card configuration-card'},[
+        node('div',{class:'section-heading'},[
+          node('div',{class:'section-number',text:'1'}),
+          node('div',{class:'section-title'},[node('h2',{text:'连接模型服务'}),node('p',{class:'muted',text:'只需要 URL、API Key 和模型名。'})]),
+          modelState,
+        ]),
+        node('div',{class:'stack'},[
+          modelConfigurationPanel,genericSecretsPanel,
+          node('div',{class:'authorization-line'},[
+            node('label',{class:'check network-approval'},[approveRuntimeNetwork,text('允许评测时访问模型公网')]),
+            node('span',{id:'approve-runtime-network-error',class:'field-error',role:'alert'}),
+          ]),
+        ]),
+      ]),
+      node('aside',{class:'configuration-rail','aria-label':'运行环境与隔离准备'},[
+        node('article',{id:'prerequisite-panel',class:'card runtime-card'}),
+        node('article',{id:'preparation-card',class:'card preparation-card'},[
+          node('div',{class:'section-heading compact-heading'},[
+            node('div',{class:'section-number',text:'✓'}),
+            node('div',{class:'section-title'},[node('h2',{text:'隔离评测环境'}),node('p',{class:'muted',text:'原项目不会被修改。'})]),
+            preparationState,
+          ]),
+          node('div',{class:'stack compact-stack'},[
+            node('label',{class:'check'},[buildNetwork,text('构建时允许联网安装依赖')]),
+            node('label',{class:'check'},[review,text('确认使用当前项目和设置')]),node('span',{id:'review-confirm-error',class:'field-error',role:'alert'}),
+            node('div',{class:'row'},[prepareButton,button('取消',safely(async()=>{if(state.preparationId)await api.cancelPreparation(state.preparationId);else if(state.pendingPreparation){clearPendingPreparation();stopDoctorPolling();toast('已取消自动继续');}else toast('当前没有正在准备的环境');}),'danger')]),
+            node('span',{id:'prepare-target-error',class:'field-error',role:'alert'}),preparationStatus,
+            node('details',{class:'technical-details'},[node('summary',{text:'高级运行设置'}),field('Adapter',adapter),field('Manifest 配置',manifestConfig),field('基础镜像',baseImage),json({runtime_network:'disabled by default',secrets:'named authorization only',cpu:2,memory_mb:4096,pids:256,disk_mb:4096,wall_seconds:600})]),
+          ]),
+        ]),
+      ]),
+      node('article',{id:'run-configuration-card',class:'card configuration-card'},[
+        node('div',{class:'section-heading'},[
+          node('div',{class:'section-number',text:'2'}),
+          node('div',{class:'section-title'},[node('h2',{text:'确认并开始'}),node('p',{class:'muted',text:'默认设置适合第一次完整评测。'})]),
+          runState,
+        ]),
+        node('div',{class:'compact-field-grid'},[field('任务集',suite),field('每条任务尝试次数',trials)]),
+        node('p',{class:'hint',text:'建议先运行 1 次；提高次数可测稳定性，但会增加时间和模型费用。'}),
+        node('details',{class:'advanced run-advanced'},[
+          node('summary',{text:'更多评测设置'}),
+          node('div',{class:'compact-field-grid'},[field('并发任务数',concurrency),field('轨迹详细度',telemetry)]),
+          node('label',{class:'check'},[random,text('随机排列任务顺序')]),
+          node('p',{class:'muted',text:'release 是经过校验的正式任务集；能力不匹配的任务会标记为“不适用”，不会算作失败。'}),
+        ]),
+        agentActionsAuthorization,
+        node('div',{class:'start-bar'},[
+          node('div',{class:'start-copy'},[node('strong',{text:'准备好后即可开始'}),configurationStatus]),
+          startButton,
+        ]),
+      ]),
+    ]),
   ]));
   renderPrerequisites();
+  updateSectionStates();
 }
 
 function eventRunId(event){return event?.data?.run_id||event?.data?.runId||null}
